@@ -24,7 +24,7 @@ const SettingsDetailItem = ({
 }: SettingsDetailItemProps) => {
   return (
     <View
-      className={`flex-row justify-between items-center ${!isLast && 'border-b border-gray-100 pb-4'}`}
+      className={`flex-row justify-between items-center bg-slate-100 rounded-2xl p-4 ${!isLast && 'border-b border-gray-100 pb-4'}`}
     >
       <Text className="text-base font-medium text-black">{label}</Text>
       <View className="flex-row items-center">

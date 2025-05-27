@@ -3,7 +3,7 @@ import { View, Pressable, Modal, FlatList, TouchableOpacity } from 'react-native
 import { Text } from '@/components/ui/text';
 import SettingsDetailItem from '@/components/settings-detail-item';
 import { cn } from '@/lib/utils';
-import SettingsSubpage from '@/components/layouts/settings-subpage';
+import { SubPageLayout } from '@/components/layouts';
 
 const hairGoalOptions = [
   'Longer',
@@ -78,7 +78,7 @@ export default function AdjustHairGoalsScreen() {
   };
 
   return (
-    <SettingsSubpage title="Adjust Hair Goals">
+    <SubPageLayout title="Adjust Hair Goals">
       <View className="bg-white mx-4 p-4 rounded-2xl shadow flex flex-col gap-4">
         {Object.entries(details).map(([field, value], index) => (
           <SettingsDetailItem
@@ -151,6 +151,6 @@ export default function AdjustHairGoalsScreen() {
           </View>
         </View>
       </Modal>
-    </SettingsSubpage>
+    </SubPageLayout>
   );
 }

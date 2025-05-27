@@ -1,8 +1,10 @@
+import type { PRODUCT_TYPE } from '@/constants/product-type';
+
 export type Product = {
   id: string;
   brand: string;
   name: string;
-  type: 'Gel' | 'Conditioner' | 'Bonding Agent' | 'Mousse' | 'Oil' | 'Relaxer' | 'Shampoo';
+  type: (typeof PRODUCT_TYPE)[keyof typeof PRODUCT_TYPE];
   size: string;
   barcode: string;
   for: string;

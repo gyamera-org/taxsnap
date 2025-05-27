@@ -3,3 +3,7 @@ export * from './text';
 export * from './confirmation-modal';
 export * from './tabs';
 export * from './selectable-card';
+export * from './text-input';
+export * from './select-button';
+export * from './chip';
+export * from './badge';

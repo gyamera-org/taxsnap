@@ -1,45 +1,41 @@
 import { View, Text, Pressable } from 'react-native';
-import { Plus, Bookmark } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
 import { cn } from '@/lib/utils';
 
 type ProductListItemProps = {
   name: string;
-  category: string;
+  type: string;
   brand?: string;
-  isSaved?: boolean;
   onPress?: () => void;
 };
 
-export default function ProductListItem({
-  name,
-  category,
-  brand,
-  isSaved = false,
-  onPress,
-}: ProductListItemProps) {
+export default function ProductListItem({ name, type, brand, onPress }: ProductListItemProps) {
   return (
-    <View className="flex-row items-center justify-between bg-gray-50 dark:bg-neutral-900 px-4 py-3 rounded-2xl mb-3">
-      <View>
-        <Text className="text-base font-semibold text-black dark:text-white">{name}</Text>
-        <Text className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-          {brand ? `${brand} · ` : ''}
-          {category}
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center justify-between bg-gray-50 p-4 rounded-2xl mb-3"
+    >
+      <View className="flex-1 mr-4">
+        <Text numberOfLines={1} className="text-lg font-medium text-black mb-1">
+          {name}
         </Text>
+
+        <View className="flex-row items-center">
+          <View className={cn('px-2 py-1 rounded-xl bg-slate-200')}>
+            <Text className="text-sm font-medium">{type}</Text>
+          </View>
+
+          {brand && (
+            <Text numberOfLines={1} className="text-gray-600 ml-2">
+              {brand}
+            </Text>
+          )}
+        </View>
       </View>
 
-      <Pressable
-        onPress={onPress}
-        className={cn(
-          'w-9 h-9 rounded-full items-center justify-center',
-          isSaved ? 'bg-gray-200 dark:bg-gray-700' : 'bg-black'
-        )}
-      >
-        {isSaved ? (
-          <Bookmark size={18} color={isSaved ? 'black' : 'white'} />
-        ) : (
-          <Plus size={20} color="white" />
-        )}
-      </Pressable>
-    </View>
+      <View className="bg-black/90 rounded-full p-2">
+        <Plus size={18} color="white" />
+      </View>
+    </Pressable>
   );
 }

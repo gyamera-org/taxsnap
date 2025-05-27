@@ -8,7 +8,14 @@ interface ButtonProps extends PressableProps {
   disabled?: boolean;
 }
 
-export function Button({ variant = 'primary', label, className, style, disabled, ...props }: ButtonProps) {
+export function Button({
+  variant = 'primary',
+  label,
+  className,
+  style,
+  disabled,
+  ...props
+}: ButtonProps) {
   return (
     <Pressable
       className={cn(
@@ -21,46 +28,42 @@ export function Button({ variant = 'primary', label, className, style, disabled,
       )}
       style={({ pressed }) => [
         typeof style === 'function' ? style({ pressed, hovered: false }) : style,
-        pressed && { opacity: 0.8 }
+        pressed && { opacity: 0.8 },
       ]}
       {...props}
       disabled={disabled}
     >
-      <Text 
+      <Text
         variant="button"
-        className={cn(
-          variant === 'primary' ? 'text-white' : 'text-black',
-          'font-bold'
-        )}
+        className={cn(variant === 'primary' ? 'text-white' : 'text-black', 'font-bold')}
       >
         {label}
       </Text>
     </Pressable>
   );
-} 
+}
 
 interface ButtonWithIconProps extends ButtonProps {
   icon: React.ElementType;
 }
 
-export function ButtonWithIcon({ 
-  variant = 'primary', 
-  label, 
-  onPress, 
+export function ButtonWithIcon({
+  variant = 'primary',
+  label,
+  onPress,
   className = '',
   icon: Icon,
-  children 
+  children,
 }: ButtonWithIconProps) {
   return (
-    <Pressable
-      onPress={onPress}
-      className={`${className}`}
-    >
+    <Pressable onPress={onPress} className={`${className}`}>
       {children || (
-        <View className="flex-row items-center justify-center">
-          <Text className="text-base font-medium">
-            {label}
-          </Text>
+        <View
+          className={cn(
+            'flex-row items-center justify-center px-2 py-1 rounded-xl border border-black'
+          )}
+        >
+          <Text className={cn('text-base font-medium text-black')}>{label}</Text>
           {Icon && <Icon size={20} className="ml-2" />}
         </View>
       )}

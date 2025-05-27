@@ -9,10 +9,16 @@ import {
 } from 'react-native';
 import { Settings, TextSearch, ListTodo, ScanBarcode } from 'lucide-react-native';
 import { usePathname, useRouter } from 'expo-router';
-import clsx from 'clsx';
+import { cn } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
 
-const HIDDEN_ROUTES = ['/scan'];
+const HIDDEN_ROUTES = [
+  '/scan',
+  '/settings/personal-details',
+  '/settings/adjust-hair-goals',
+  '/products/add',
+  '/products/[id]',
+];
 
 export default function TabLayout() {
   const pathname = usePathname();
@@ -32,6 +38,7 @@ export default function TabLayout() {
   return (
     <View className="flex-1 bg-white">
       <Tabs
+        backBehavior="history"
         screenOptions={{
           headerShown: false,
           tabBarShowLabel: false,
@@ -51,7 +58,7 @@ export default function TabLayout() {
             height: 84,
             paddingBottom: 14,
             paddingTop: 8,
-            backgroundColor: 'rgba(255, 255, 255, 0.94)',
+            backgroundColor: 'white',
             borderTopWidth: 0,
             elevation: Platform.OS === 'android' ? 10 : 0,
             shadowColor: '#000',
@@ -120,9 +127,9 @@ export default function TabLayout() {
         />
 
         <Tabs.Screen name="products/[id]" options={{ href: null, headerShown: false }} />
+        <Tabs.Screen name="products/add" options={{ href: null, headerShown: false }} />
       </Tabs>
 
-      {/* Floating Scan Button */}
       {!shouldHideTabBar && (
         <Pressable
           onPress={() => router.push('/scan')}
@@ -153,9 +160,7 @@ function TabButton({ Icon, label, isActive, onPress, ...rest }: TabButtonProps) 
   return (
     <Pressable onPress={onPress} className="flex-1 items-center justify-start pt-1" {...rest}>
       <Icon size={24} color={isActive ? 'black' : '#C1C1C1'} />
-      <Text
-        className={clsx('text-sm mt-1', isActive ? 'text-black font-medium' : 'text-[#C1C1C1]')}
-      >
+      <Text className={cn('text-sm mt-1', isActive ? 'text-black font-medium' : 'text-[#C1C1C1]')}>
         {label}
       </Text>
     </Pressable>

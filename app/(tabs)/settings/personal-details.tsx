@@ -5,7 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import SettingsDetailItem from '@/components/settings-detail-item';
 import { cn } from '@/lib/utils';
 import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import SettingsSubpage from '@/components/layouts/settings-subpage';
+import { SubPageLayout } from '@/components/layouts';
 
 import { useColorScheme } from 'react-native';
 
@@ -52,7 +52,7 @@ export default function PersonalDetailsScreen() {
   };
 
   return (
-    <SettingsSubpage title="Personal Details">
+    <SubPageLayout title="Personal Details">
       <View className="bg-white mx-4 p-4 rounded-2xl shadow flex flex-col gap-4">
         {Object.entries(details).map(([field, value], index) => (
           <SettingsDetailItem
@@ -107,6 +107,6 @@ export default function PersonalDetailsScreen() {
             onChange={handleDateChange}
           />
         ))}
-    </SettingsSubpage>
+    </SubPageLayout>
   );
 }
