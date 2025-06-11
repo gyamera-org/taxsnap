@@ -1,6 +1,3 @@
-import 'react-native-gesture-handler';
-import 'react-native-reanimated';
-
 import { Slot } from 'expo-router';
 
 import { RootProvider } from '@/context/root-provider';

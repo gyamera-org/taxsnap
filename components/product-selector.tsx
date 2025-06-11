@@ -1,112 +1,74 @@
-import { View, Pressable, Modal, ScrollView } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { TextInput } from '@/components/ui/text-input';
-import { Plus, X } from 'lucide-react-native';
-import { useState } from 'react';
-import products from '@/mock/products.json';
-import { Button, ButtonWithIcon } from '@/components/ui';
-type Product = {
-  id: string;
-  name: string;
-  brand: string;
-  type: string;
-};
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Product } from '@/lib/api/types';
 
-type ProductSelectorProps = {
+interface ProductSelectorProps {
+  products: Product[];
   selectedProducts: Product[];
-  onProductsChange: (products: Product[]) => void;
-};
+  onSelectProduct: (product: Product) => void;
+}
 
-export function ProductSelector({ selectedProducts, onProductsChange }: ProductSelectorProps) {
-  const [showModal, setShowModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const addProduct = (product: Product) => {
-    if (!selectedProducts.find((p) => p.id === product.id)) {
-      onProductsChange([...selectedProducts, product]);
-    }
-    setShowModal(false);
-  };
-
-  const removeProduct = (productId: string) => {
-    onProductsChange(selectedProducts.filter((p) => p.id !== productId));
-  };
-
+export const ProductSelector: React.FC<ProductSelectorProps> = ({
+  products,
+  selectedProducts,
+  onSelectProduct,
+}) => {
   return (
-    <View>
-      {/* Selected Products List */}
-      <View className="mb-4">
-        {selectedProducts.map((product) => (
-          <View
+    <View style={styles.container}>
+      <Text style={styles.title}>Select Products</Text>
+      <View style={styles.productList}>
+        {products.map((product) => (
+          <TouchableOpacity
             key={product.id}
-            className="flex-row items-center justify-between bg-gray-100 p-4 rounded-xl mb-2"
+            style={[
+              styles.productItem,
+              selectedProducts.some((p) => p.id === product.id) && styles.selectedProduct,
+            ]}
+            onPress={() => onSelectProduct(product)}
           >
-            <View>
-              <Text className="text-base font-medium">{product.name}</Text>
-              <Text className="text-sm text-gray-600">
-                {product.brand} · {product.type}
-              </Text>
-            </View>
-            <Pressable onPress={() => removeProduct(product.id)} hitSlop={8} className="p-2">
-              <X size={20} color="#4B5563" />
-            </Pressable>
-          </View>
+            <Text style={styles.productName}>{product.name}</Text>
+            <Text style={styles.productBrand}>{product.brand}</Text>
+            <Text style={styles.productType}>{product.type}</Text>
+          </TouchableOpacity>
         ))}
       </View>
-
-      <ButtonWithIcon icon={Plus} label="Add Product" onPress={() => setShowModal(true)} />
-
-      <Modal
-        visible={showModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View className="flex-1 bg-white">
-          <View className="p-4">
-            <Text className="text-xl font-semibold mb-4 text-center">Add Product</Text>
-            <View className="flex-row items-center rounded-xl px-4 py-2">
-              <TextInput
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder="Search products..."
-                className="flex-1 ml-2 text-base "
-              />
-            </View>
-          </View>
-
-          <ScrollView className="flex-1">
-            <View className="flex flex-col gap-2 px-6 py-4">
-              {filteredProducts.map((product) => (
-                <Pressable
-                  key={product.id}
-                  onPress={() => addProduct(product)}
-                  className=" bg-gray-50 rounded-xl px-4 py-2"
-                >
-                  <Text className="text-base font-medium">{product.name}</Text>
-                  <Text className="text-sm text-gray-600">
-                    {product.brand} · {product.type}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-
-          <Button
-            variant="secondary"
-            className="m-4 mb-12"
-            onPress={() => setShowModal(false)}
-            label="Cancel"
-          />
-        </View>
-      </Modal>
     </View>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  productList: {
+    gap: 8,
+  },
+  productItem: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+  },
+  selectedProduct: {
+    backgroundColor: '#e6f3ff',
+    borderColor: '#007AFF',
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  productBrand: {
+    fontSize: 14,
+    color: '#666',
+  },
+  productType: {
+    fontSize: 14,
+    color: '#666',
+    textTransform: 'capitalize',
+  },
+});

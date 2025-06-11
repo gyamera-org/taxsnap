@@ -33,32 +33,86 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<'free' | 'pro' | null>(null);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.access_token) {
-        apiClient.setToken(session.access_token);
+  // Enhanced session restoration with retry logic
+  const restoreSession = async (retries = 3) => {
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error('Session restoration error:', error);
+        if (retries > 0) {
+          // Retry after a short delay
+          setTimeout(() => restoreSession(retries - 1), 1000);
+          return;
+        }
+        // If all retries failed, clear any corrupt session data
+        await supabase.auth.signOut();
+        return;
+      }
+
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+
+        if (session.access_token) {
+          apiClient.setToken(session.access_token);
+          // Check subscription status for existing sessions
+          await checkSubscriptionStatus();
+        }
       } else {
+        setSession(null);
+        setUser(null);
         apiClient.setToken(null);
       }
+    } catch (error) {
+      console.error('Failed to restore session:', error);
+      if (retries > 0) {
+        setTimeout(() => restoreSession(retries - 1), 1000);
+      } else {
+        // Clear session on final failure
+        setSession(null);
+        setUser(null);
+        apiClient.setToken(null);
+      }
+    } finally {
       setLoading(false);
-    });
+    }
+  };
+
+  useEffect(() => {
+    // Initial session restoration
+    restoreSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(
+        'Auth state change:',
+        event,
+        session ? `User: ${session.user?.email}` : 'No session'
+      );
+
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.access_token) {
         apiClient.setToken(session.access_token);
-        if (event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           await checkSubscriptionStatus();
-          await ensureBackendAccount(session.user);
+          if (event === 'SIGNED_IN') {
+            await ensureBackendAccount(session.user);
+          }
         }
       } else {
         apiClient.setToken(null);
+        setIsSubscribed(false);
+        setSubscriptionPlan(null);
+      }
+
+      if (event === 'SIGNED_OUT') {
         setIsSubscribed(false);
         setSubscriptionPlan(null);
       }
@@ -75,6 +129,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setIsSubscribed(response.isActive || false);
       setSubscriptionPlan(response.plan || 'free');
     } catch (error) {
+      console.error('Failed to check subscription status:', error);
       setIsSubscribed(false);
       setSubscriptionPlan('free');
     }
@@ -184,14 +239,30 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try {
       setLoading(true);
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+
+      // Ensure session is properly set
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+        apiClient.setToken(data.session.access_token);
+      }
+
       // Auth state change will handle the rest
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Sign in failed:', error);
+      // Don't clear existing session on network errors
+      if (error.message?.includes('network') || error.message?.includes('timeout')) {
+        toast.error('Network error. Please check your connection and try again.');
+      }
       throw error;
     } finally {
       setLoading(false);

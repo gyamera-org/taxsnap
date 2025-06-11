@@ -22,10 +22,8 @@ export default function ProductsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>('all');
   const { user } = useAuth();
 
-  // Only fetch data if authenticated
   const enableQueries = !!user;
 
-  // API queries - Updated to use infinite scroll for "all" products
   const {
     data: allProductsData,
     isLoading: isLoadingProducts,
@@ -37,22 +35,19 @@ export default function ProductsScreen() {
     selectedType !== 'all' ? { category: selectedType as any } : { search: searchQuery },
     {
       enabled: enableQueries && activeTab === 'all',
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: false, // Don't retry failed API calls
-      refetchOnWindowFocus: false, // Don't refetch when window focus changes
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+      refetchOnWindowFocus: false,
     }
   );
 
-  // Flatten the infinite query data
   const allProducts = useMemo(() => {
     if (!allProductsData) return [];
 
-    // Handle infinite query structure
     if ('pages' in allProductsData && Array.isArray(allProductsData.pages)) {
       return allProductsData.pages.flatMap((page: any) => page.products || []);
     }
 
-    // Handle single page structure (fallback)
     if ('products' in allProductsData) {
       return (allProductsData as any).products || [];
     }
@@ -88,14 +83,12 @@ export default function ProductsScreen() {
             : [];
           break;
         case 'my-products':
-          // Transform CustomProduct objects to match ProductListItem props
           products = Array.isArray(customProducts)
             ? customProducts.map((customProduct: CustomProduct) => ({
                 id: customProduct.id,
                 name: customProduct.name,
                 type: 'Custom Product',
                 brand: 'Custom',
-                // Add additional properties that might be needed for navigation
                 description: customProduct.description,
                 ingredients: customProduct.ingredients,
               }))
@@ -113,7 +106,6 @@ export default function ProductsScreen() {
         );
       }
 
-      // Deduplicate products by ID to prevent duplicate keys
       const uniqueProducts = products.reduce((acc: any[], current) => {
         const existingProduct = acc.find((p) => p.id === current.id);
         if (!existingProduct && current.id) {
@@ -164,7 +156,6 @@ export default function ProductsScreen() {
       );
     }
 
-    // Only show API error message if there's actually an error
     if (productsError && activeTab === 'all') {
       return (
         <EmptyState

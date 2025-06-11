@@ -11,8 +11,26 @@ import { useAuth } from '@/context/auth-provider';
 import { Accordion } from '@/components/ui/accordion';
 
 export default function ProductDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
+
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+
+  if (!id) {
+    return (
+      <SubPageLayout title="Product Not Found">
+        <View className="flex-1 items-center justify-center px-6">
+          <AlertCircle size={48} color="#6B7280" />
+          <Text className="text-xl font-medium text-gray-600 mt-4 text-center">
+            Invalid Product ID
+          </Text>
+          <Text className="text-gray-500 mt-2 text-center">
+            The product URL is invalid or malformed.
+          </Text>
+        </View>
+      </SubPageLayout>
+    );
+  }
 
   const {
     data: product,
@@ -20,7 +38,7 @@ export default function ProductDetailScreen() {
     error: productError,
   } = useQuery({
     queryKey: ['product', id],
-    queryFn: () => api.products.getProduct(id!),
+    queryFn: () => api.products.getProduct(id),
     enabled: !!id,
     retry: 1,
   });

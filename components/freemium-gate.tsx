@@ -31,7 +31,7 @@ export function FreemiumGate({
       case 'product_scan':
         return {
           remaining: getRemainingFreeScans(),
-          total: 5,
+          total: 150,
           resetPeriod: 'month',
         };
       case 'routine_generation':

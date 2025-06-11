@@ -3,13 +3,9 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Trash2, Edit, Package, X } from 'lucide-react-native';
 import { Text } from '@/components/ui/text';
 import { TextInput } from '@/components/ui/text-input';
-import { Button, ButtonWithIcon, ConfirmationModal } from '@/components/ui';
+import { Button, ConfirmationModal } from '@/components/ui';
 import SubPageLayout from '@/components/layouts/sub-page';
-import {
-  useCustomProduct,
-  useDeleteCustomProduct,
-  useCreateCustomProduct,
-} from '@/lib/hooks/use-api';
+import { useCustomProduct, useDeleteCustomProduct } from '@/lib/hooks/use-api';
 import { ProductItemSkeleton } from '@/components/ui/skeleton';
 import EmptyState from '@/components/empty-state';
 import { Accordion } from '@/components/ui/accordion';
@@ -23,12 +19,32 @@ interface IngredientForm {
 }
 
 export default function CustomProductDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: product, isLoading, error } = useCustomProduct(id!);
-  const deleteProductMutation = useDeleteCustomProduct();
-  const createProductMutation = useCreateCustomProduct();
+  const params = useLocalSearchParams<{ id: string }>();
 
-  // Edit modal state
+  // Ensure id is a string and handle array case
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+
+  // Early return if no id parameter
+  if (!id) {
+    return (
+      <SubPageLayout title="Product Not Found">
+        <EmptyState
+          icon={Package}
+          title="Invalid Product ID"
+          description="The product URL is invalid or malformed."
+          action={{
+            label: 'Go Back',
+            onPress: () => router.back(),
+            icon: Package,
+          }}
+        />
+      </SubPageLayout>
+    );
+  }
+
+  const { data: product, isLoading, error } = useCustomProduct(id);
+  const deleteProductMutation = useDeleteCustomProduct();
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editFormData, setEditFormData] = useState({
@@ -57,7 +73,7 @@ export default function CustomProductDetailScreen() {
   };
 
   const handleConfirmDelete = () => {
-    deleteProductMutation.mutate(id!, {
+    deleteProductMutation.mutate(id, {
       onSuccess: () => {
         setShowDeleteModal(false);
         router.back();

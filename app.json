@@ -18,7 +18,8 @@
       "userInterfaceStyle": "light",
       "bundleIdentifier": "com.hairdeetai.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "This app needs access to your camera to scan products and ingredients labels."
+        "NSCameraUsageDescription": "This app needs access to your camera to scan products and ingredients labels.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select product images for ingredient analysis."
       }
     },
     "android": {
@@ -53,6 +54,8 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      "expo-camera",
+      "expo-image-picker",
       [
         "expo-splash-screen",
         {

@@ -1,28 +1,32 @@
 import { View, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { ChevronLeft } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 
 type SubPageLayoutProps = {
   children: React.ReactNode;
-  title: string;
+  title?: string;
   rightElement?: React.ReactNode;
   onBack?: () => void;
 };
 
-const SubPageLayout = ({ children, title, rightElement, onBack }: SubPageLayoutProps) => {
-  const navigation = useNavigation();
-
+const SubPageLayout = ({ children, title = 'Page', rightElement, onBack }: SubPageLayoutProps) => {
   const handleGoBack = () => {
     if (onBack) {
       onBack();
     } else {
-      // Use react-navigation instead of expo-router
-      if (navigation.canGoBack()) {
-        navigation.goBack();
+      // Use expo-router navigation
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        // Fallback to replace with products tab if can't go back
+        router.replace('/(tabs)/products');
       }
     }
   };
+
+  // Ensure title is a string
+  const safeTitle = typeof title === 'string' ? title : 'Page';
 
   return (
     <View className="flex-1 bg-white pt-14">
@@ -34,7 +38,7 @@ const SubPageLayout = ({ children, title, rightElement, onBack }: SubPageLayoutP
           <ChevronLeft size={24} color="#000" />
         </Pressable>
         <View className="flex-1 items-center">
-          <Text className="text-xl font-semibold ml-2">{title}</Text>
+          <Text className="text-xl font-semibold ml-2">{safeTitle}</Text>
         </View>
         {rightElement && <View className="ml-auto">{rightElement}</View>}
       </View>

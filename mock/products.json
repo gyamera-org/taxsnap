@@ -3,15 +3,9 @@
     "id": "prod_001",
     "brand": "Cantu",
     "name": "Shea Butter Sulfate-Free Cleansing Cream Shampoo",
-    "type": "Shampoo",
-    "size": "13.5 fl oz (400 ml)",
-    "barcode": "817513015311",
-    "for": "Curls, Coils & Waves",
+    "type": "shampoo",
+    "category": "shampoo",
     "description": "Gently removes heavy buildup. Ideal for natural hair.",
-    "sulfate_free": true,
-    "silicone_free": true,
-    "cruelty_free": true,
-    "made_in": "Poland",
     "ingredients": [
       {
         "name": "Aqua (Water)",
@@ -64,40 +58,26 @@
         "effect": "Stabilizes formula by binding to metal ions"
       }
     ],
-    "suggestedFor": {
-      "hairGoals": {
-        "Longer": false,
-        "Healthier": true,
-        "Defined curls": true,
-        "Protective styling": false,
-        "Edge growth": false,
-        "All of the above": true
-      },
-      "porosity": {
-        "High": true,
-        "Mid": true,
-        "Low": false
-      },
-      "routine": {
-        "Daily": false,
-        "Weekly": true,
-        "During protective style": false
-      }
-    }
+    "suitableHairTypes": ["3A", "3B", "3C", "4A", "4B", "4C"],
+    "price": 8.99,
+    "size": "13.5 fl oz (400 ml)",
+    "barcode": "817513015311",
+    "imageUrl": "https://example.com/cantu-shampoo.jpg",
+    "isCustom": false,
+    "sulfateFree": true,
+    "siliconeFree": true,
+    "crueltyFree": true,
+    "coilyHairFriendly": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
   },
   {
     "id": "prod_002",
     "brand": "Brand2",
     "name": "Product 2 Name",
-    "type": "Conditioner",
-    "size": "12 fl oz",
-    "barcode": "80000000002",
-    "for": "Dry, Damaged Hair",
+    "type": "conditioner",
+    "category": "conditioner",
     "description": "Restorative formula for hydration and strength. Product 2 edition.",
-    "sulfate_free": true,
-    "silicone_free": true,
-    "cruelty_free": true,
-    "made_in": "USA",
     "ingredients": [
       {
         "name": "Aqua (Water)",
@@ -125,40 +105,26 @@
         "effect": "Adds pleasant smell"
       }
     ],
-    "suggestedFor": {
-      "hairGoals": {
-        "Longer": true,
-        "Healthier": true,
-        "Defined curls": false,
-        "Protective styling": false,
-        "Edge growth": false,
-        "All of the above": false
-      },
-      "porosity": {
-        "High": true,
-        "Mid": true,
-        "Low": false
-      },
-      "routine": {
-        "Daily": false,
-        "Weekly": true,
-        "During protective style": false
-      }
-    }
+    "suitableHairTypes": ["2A", "2B", "2C", "3A", "3B", "3C"],
+    "price": 12.99,
+    "size": "12 fl oz",
+    "barcode": "80000000002",
+    "imageUrl": "https://example.com/product2.jpg",
+    "isCustom": false,
+    "sulfateFree": true,
+    "siliconeFree": true,
+    "crueltyFree": true,
+    "coilyHairFriendly": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
   },
   {
     "id": "prod_003",
     "brand": "Brand3",
     "name": "Product 3 Name",
-    "type": "Oil",
-    "size": "12 fl oz",
-    "barcode": "80000000003",
-    "for": "Dry, Damaged Hair",
+    "type": "oil",
+    "category": "oil",
     "description": "Restorative formula for hydration and strength. Product 3 edition.",
-    "sulfate_free": true,
-    "silicone_free": false,
-    "cruelty_free": true,
-    "made_in": "USA",
     "ingredients": [
       {
         "name": "Aqua (Water)",
@@ -186,26 +152,18 @@
         "effect": "Adds pleasant smell"
       }
     ],
-    "suggestedFor": {
-      "hairGoals": {
-        "Longer": false,
-        "Healthier": true,
-        "Defined curls": true,
-        "Protective styling": true,
-        "Edge growth": false,
-        "All of the above": true
-      },
-      "porosity": {
-        "High": true,
-        "Mid": false,
-        "Low": true
-      },
-      "routine": {
-        "Daily": true,
-        "Weekly": true,
-        "During protective style": true
-      }
-    }
+    "suitableHairTypes": ["3A", "3B", "3C", "4A", "4B", "4C"],
+    "price": 15.99,
+    "size": "12 fl oz",
+    "barcode": "80000000003",
+    "imageUrl": "https://example.com/product3.jpg",
+    "isCustom": false,
+    "sulfateFree": true,
+    "siliconeFree": false,
+    "crueltyFree": true,
+    "coilyHairFriendly": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
   },
   {
     "id": "prod_004",
