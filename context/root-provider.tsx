@@ -24,14 +24,14 @@ export const RootProvider = ({ children }: PropsWithChildren) => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SubscriptionProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <BottomSheetModalProvider>
-              {children}
-              <Toaster />
-            </BottomSheetModalProvider>
-          </GestureHandlerRootView>
-        </SubscriptionProvider>
+        {/* <SubscriptionProvider> */}
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <BottomSheetModalProvider>
+            {children}
+            <Toaster />
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+        {/* </SubscriptionProvider> */}
       </AuthProvider>
     </QueryClientProvider>
   );

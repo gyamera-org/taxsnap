@@ -28,7 +28,7 @@ export default function Index() {
 
   useEffect(() => {
     if (fontsReady && !authLoading) {
-      if (session) {
+      if (session && session.user) {
         SplashScreen.hideAsync()
           .then(() => {
             router.replace('/(tabs)/explore');

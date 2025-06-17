@@ -39,13 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } = await supabase.auth.getSession();
         setSession(restored);
         setUser(restored?.user ?? null);
-        if (!restored) {
-          router.replace('/');
-        }
       } catch (err) {
         setSession(null);
         setUser(null);
-        router.replace('/');
       } finally {
         setLoading(false);
       }
@@ -56,16 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
 
-        // Remove automatic navigation - let Index component handle it
-        // if (session?.access_token) {
-        //   if (event === 'SIGNED_IN') {
-        //     router.replace('/(tabs)/explore');
-        //   }
-        // } else {
-        //   if (event === 'SIGNED_OUT') {
-        //     router.replace('/');
-        //   }
-        // }
+        // Only handle explicit sign out events
+        if (event === 'SIGNED_OUT') {
+          router.replace('/');
+        }
 
         setLoading(false);
       }
@@ -80,6 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
+    if (data.user) {
+      router.replace('/(tabs)/explore');
+    }
     setLoading(false);
     if (error) throw error;
   };
@@ -98,6 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { first_name: firstName, last_name: lastName },
       },
     });
+    if (data.user) {
+      router.replace('/(tabs)/explore');
+    }
     setLoading(false);
     if (error) throw error;
 

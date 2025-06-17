@@ -8,9 +8,9 @@ import { ProductCardSkeleton } from '@/components/saves/ProductCardSkeleton';
 import { ProductDetailModal } from '@/components/saves/ProductDetailModal';
 import { ScannedProductUI, convertScannedProductToUI } from '@/lib/types/product';
 import { useLocalSearchParams } from 'expo-router';
-import { useScansInfinite, useToggleFavorite } from '@/lib/hooks/use-scans';
+import { useScansInfinite, useToggleFavorite, useRefreshScans } from '@/lib/hooks/use-scans';
 
-type FilterType = 'all' | 'favorites' | 'recent';
+type FilterType = 'all' | 'favorites';
 type SortType = 'newest' | 'oldest' | 'name' | 'safety';
 
 const sortOptions = [
@@ -30,31 +30,18 @@ export default function SavesScreen() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [sortBy, setSortBy] = useState<SortType>('newest');
 
-  const { data, fetchNextPage, isLoading, isFetchingNextPage, hasNextPage } = useScansInfinite(
-    activeFilter,
-    sortBy,
-    searchQuery
-  );
+  const { data, fetchNextPage, isLoading, isFetchingNextPage, hasNextPage, refetch } =
+    useScansInfinite(activeFilter, sortBy, searchQuery);
   const flatProducts = data?.pages.flat().map(convertScannedProductToUI) ?? [];
+  const refreshScans = useRefreshScans();
 
   useEffect(() => {
-    if (filter === 'recent') {
-      setActiveFilter('recent');
-    } else if (filter === 'favorites') {
+    if (filter === 'favorites') {
       setActiveFilter('favorites');
+    } else {
+      setActiveFilter('all');
     }
   }, [filter]);
-
-  const getFilterTitle = () => {
-    switch (activeFilter) {
-      case 'favorites':
-        return 'Favorites';
-      case 'recent':
-        return 'Recent Scans';
-      default:
-        return 'All Products';
-    }
-  };
 
   const getEmptyStateConfig = () => {
     if (searchQuery.trim()) {
@@ -72,12 +59,7 @@ export default function SavesScreen() {
           title: 'No Favorites Yet',
           subtitle: 'Products you favorite will appear here',
         };
-      case 'recent':
-        return {
-          icon: Package,
-          title: 'No Recent Scans',
-          subtitle: 'Your recently scanned products will appear here',
-        };
+
       default:
         return {
           icon: Package,
@@ -118,6 +100,10 @@ export default function SavesScreen() {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
+  };
+
+  const handleRefresh = async () => {
+    await refreshScans.mutateAsync();
   };
 
   const closeModal = () => {
@@ -233,7 +219,7 @@ export default function SavesScreen() {
         {/* Filter Tabs - Centered */}
         <View className="items-center">
           <View className="flex-row gap-2">
-            {(['all', 'favorites', 'recent'] as FilterType[]).map((filter) => (
+            {(['all', 'favorites'] as FilterType[]).map((filter) => (
               <TouchableOpacity
                 key={filter}
                 onPress={() => setActiveFilter(filter)}
@@ -246,7 +232,7 @@ export default function SavesScreen() {
                     activeFilter === filter ? 'text-white' : 'text-gray-600'
                   }`}
                 >
-                  {filter === 'all' ? 'All' : filter === 'favorites' ? 'Favorites' : 'Recent'}
+                  {filter === 'all' ? 'All' : 'Favorites'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -255,11 +241,7 @@ export default function SavesScreen() {
       </View>
 
       {/* Content */}
-      <View className="flex-1 px-6 py-6">
-        <Text className="text-lg font-bold text-black mb-4">
-          {getFilterTitle()} ({isLoading ? '...' : flatProducts.length})
-        </Text>
-
+      <View className="flex-1 px-6 py-2">
         {isLoading ? (
           <FlatList
             data={Array.from({ length: 6 }, (_, i) => i)} // Show 6 skeleton cards
@@ -289,6 +271,8 @@ export default function SavesScreen() {
             contentContainerStyle={{ paddingBottom: 20 }}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.1}
+            refreshing={refreshScans.isPending}
+            onRefresh={handleRefresh}
             ListFooterComponent={
               isFetchingNextPage ? (
                 <View className="py-4 flex-row justify-center">

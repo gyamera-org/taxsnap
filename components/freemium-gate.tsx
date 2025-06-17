@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, Dimensions } from 'rea
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useSubscription } from '../context/subscription-provider';
+// import { useSubscription } from '../context/subscription-provider';
 
 const { width } = Dimensions.get('window');
 
@@ -24,13 +24,13 @@ export function FreemiumGate({
   icon,
   onClose,
 }: FreemiumGateProps) {
-  const { getRemainingFreeScans, canAccessFeature } = useSubscription();
+  // const { getRemainingFreeScans, canAccessFeature } = useSubscription();
 
   const getFeatureDetails = () => {
     switch (feature) {
       case 'product_scan':
         return {
-          remaining: getRemainingFreeScans(),
+          remaining: 0,
           total: 150,
           resetPeriod: 'month',
         };

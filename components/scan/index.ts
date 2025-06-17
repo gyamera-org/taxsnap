@@ -1,4 +1,3 @@
-export { CameraPermissionScreen } from './CameraPermissionScreen';
 export { CropOverlay } from './CropOverlay';
 export { ProcessingOverlay } from './ProcessingOverlay';
 export { CameraControls } from './CameraControls';

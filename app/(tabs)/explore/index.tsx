@@ -59,7 +59,7 @@ export default function ExploreScreen() {
     setSelectedProduct(null);
   };
 
-  const navigateToSaves = (filter: 'recent' | 'favorites') => {
+  const navigateToSaves = (filter: 'all' | 'favorites') => {
     router.push(`/saves?filter=${filter}`);
   };
 
@@ -87,7 +87,7 @@ export default function ExploreScreen() {
                 <Text className="text-xl font-bold text-black ml-2">Recent Scans</Text>
               </View>
               <TouchableOpacity
-                onPress={() => navigateToSaves('recent')}
+                onPress={() => navigateToSaves('all')}
                 className="flex-row items-center"
               >
                 <Text className="text-gray-600 mr-1">See More</Text>

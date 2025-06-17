@@ -2,7 +2,6 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner-native';
 import { queryKeys } from './query-keys';
-
 import { ProductAnalysisResult, ScannedProduct } from '@/lib/types/product';
 
 const PAGE_SIZE = 100;
@@ -56,7 +55,7 @@ export function useRecentScansPreview() {
       const { data, error } = await supabase.rpc('get_scans_for_user', {
         p_limit: 3,
         p_offset: 0,
-        p_filter: 'recent',
+        p_filter: 'all',
         p_sort: 'newest',
         p_search: '',
       });
@@ -85,7 +84,6 @@ export function useFavoriteScansPreview() {
 
 export function useSaveScan() {
   const queryClient = useQueryClient();
-
   return useMutation<string, Error, ProductAnalysisResult>({
     mutationFn: async (prod: ProductAnalysisResult) => {
       const { data, error } = await supabase.rpc('save_scan', {
@@ -108,6 +106,20 @@ export function useSaveScan() {
     },
     onError: (err) => {
       toast.error(`Save failed: ${err.message}`);
+    },
+  });
+}
+
+export function useRefreshScans() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      return Promise.resolve();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.scans.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.favorites.all });
     },
   });
 }

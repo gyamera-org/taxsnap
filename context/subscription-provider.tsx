@@ -80,26 +80,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loadSubscriptionStatus = async () => {
-    const { data, error } = (await supabase.rpc('get_account_for_user')) as {
-      data: { subscription_status: string; subscription_plan: string } | null;
-      error: Error | null;
-    };
-    if (!error && data) {
-      setState((s) => ({
-        ...s,
-        isSubscribed: data.subscription_status === 'active',
-        subscriptionType: data.subscription_plan === 'pro' ? 'yearly' : 'free',
-      }));
-    } else {
-      setState((s) => ({
-        ...s,
-        isSubscribed: false,
-        subscriptionType: 'free',
-      }));
-    }
-  };
-
   const loadFreeUsage = async () => {
     try {
       const json = await AsyncStorage.getItem('free_usage');

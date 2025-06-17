@@ -35,16 +35,16 @@ export function CameraControls({
   if (showCapturedImage) {
     return (
       <View className="absolute bottom-0 left-0 right-0 bg-black/80 p-6 pb-12">
-        <View className="flex-row justify-center items-center space-x-6">
+        <View className="flex-row justify-center items-center gap-4">
           <TouchableOpacity onPress={onRetakePhoto} className="bg-white/20 p-4 rounded-full">
             <RotateCcw size={24} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={onCropAndAnalyze}
-            className="bg-green-500 px-8 py-4 rounded-full flex-row items-center"
+            className="bg-yellow-400 px-8 py-4 rounded-full flex-row items-center"
           >
-            <Check size={20} color="#fff" className="mr-2" />
+            <Check size={20} color="#000" className="mr-2" />
           </TouchableOpacity>
         </View>
       </View>

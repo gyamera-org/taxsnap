@@ -55,13 +55,7 @@ export const checkSessionStatus = async () => {
       data: { session },
       error,
     } = await supabase.auth.getSession();
-    console.log('Session check:', {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      email: session?.user?.email,
-      expiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null,
-      error: error?.message,
-    });
+
     return session;
   } catch (error) {
     console.error('Session check failed:', error);

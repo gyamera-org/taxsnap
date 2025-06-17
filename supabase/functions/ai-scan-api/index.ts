@@ -1,40 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import OpenAI from 'npm:openai';
-
-export interface ScannedProductUI {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  safetyScore: number;
-  image: string;
-  ingredients: string[];
-  keyIngredients: Array<{
-    name: string;
-    type: 'beneficial' | 'harmful' | 'neutral';
-    description: string;
-  }>;
-  productLinks?: Array<{
-    title: string;
-    url: string;
-    source: string;
-    thumbnailUrl?: string | null;
-  }>;
-  isFavorite?: boolean;
-  scannedAt?: string;
-  savedAt?: string;
-}
-
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
-
 const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY') ?? '',
 });
-
-function jsonError(message: string, status: number = 500) {
+function jsonError(message, status = 500) {
   return new Response(
     JSON.stringify({
       error: message,
@@ -47,38 +20,31 @@ function jsonError(message: string, status: number = 500) {
     }
   );
 }
-
-async function uploadBase64Image(dataUrl: string): Promise<string> {
+async function uploadBase64Image(dataUrl) {
   const match = dataUrl.match(/^data:(.+);base64,(.+)$/);
   if (!match) throw new Error('Invalid base64 image format');
-
   const [, mimeType, base64] = match;
   const buffer = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
   const ext = mimeType.split('/')[1];
   const filename = `scan-${Date.now()}.${ext}`;
-
   const { error } = await supabase.storage.from('product-images').upload(filename, buffer, {
     contentType: mimeType,
     upsert: false,
   });
-
-  if (error) {
-    throw new Error(`Upload failed: ${error.message}`);
-  }
-
+  if (error) throw new Error(`Upload failed: ${error.message}`);
+  await new Promise((res) => setTimeout(res, 500));
   const { data } = supabase.storage.from('product-images').getPublicUrl(filename);
-  if (!data || !data.publicUrl) {
-    throw new Error('Could not get public URL for uploaded image.');
-  }
+  if (!data || !data.publicUrl) throw new Error('Could not get public URL for uploaded image.');
   return data.publicUrl;
 }
-
-async function searchWithSerper(imageUrl: string) {
+async function searchWithSerper(imageUrl) {
   const serperApiKey = Deno.env.get('SERPER_API_KEY');
-  if (!serperApiKey) {
-    throw new Error('SERPER_API_KEY is not set in environment variables.');
+  if (!serperApiKey) throw new Error('SERPER_API_KEY is not set');
+  try {
+    new URL(imageUrl);
+  } catch {
+    throw new Error(`Invalid URL format: ${imageUrl}`);
   }
-
   const res = await fetch('https://google.serper.dev/lens', {
     method: 'POST',
     headers: {
@@ -89,213 +55,126 @@ async function searchWithSerper(imageUrl: string) {
       url: imageUrl,
     }),
   });
-
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Serper error: ${errorText}`);
+    const err = await res.text();
+    throw new Error(`Serper error: ${err}`);
   }
-
   const result = await res.json();
-
-  const productLinks = (result.organic ?? [])
+  const product_links = (result.organic ?? [])
     .slice(0, 3)
-    .map((item: any) => ({
+    .map((item) => ({
       title: item.title || 'Product',
       url: item.link || '',
       source: item.source || 'Unknown',
       thumbnailUrl: item.thumbnailUrl || item.imageUrl || null,
     }))
-    .filter((link: any) => link.title && link.url);
-
-  const productName = productLinks.length > 0 ? productLinks[0].title : 'Unknown Product';
-
+    .filter((link) => link.title && link.url);
+  const productName = product_links.length > 0 ? product_links[0].title : 'Unknown Product';
   return {
-    productLinks,
     productName,
+    product_links,
   };
 }
+async function enrichWithGPT(productName, product_links) {
+  const prompt = `You are a beauty product expert. Based on the product name and provided links, return only valid JSON structured as follows:
 
-Deno.serve(async (req) => {
-  if (req.method !== 'POST') {
-    return jsonError('Method Not Allowed', 405);
-  }
-
-  try {
-    const { image_url }: { image_url: string } = await req.json();
-
-    if (!image_url) {
-      return jsonError('image_url is required', 400);
+{
+  "name": string,
+  "brand": string,
+  "category": string,
+  "safety_score": number (1-10),
+  "ingredients": string[],
+  "key_ingredients": [
+    {
+      "name": string,
+      "type": "beneficial" | "harmful" | "neutral",
+      "description": string,
+      "effect": string
     }
+  ],
+  "product_links": [
+    {
+      "title": string,
+      "url": string,
+      "source": string,
+      "thumbnailUrl": string
+    }
+  ]
+}
 
+Only return the JSON. Do not include any explanation. Guess missing info based on brand/product name if necessary.`;
+  const userContent = `Product Name: ${productName}\nProduct Links:\n${JSON.stringify(product_links, null, 2)}`;
+  const chat = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    temperature: 0.3,
+    messages: [
+      {
+        role: 'system',
+        content: prompt,
+      },
+      {
+        role: 'user',
+        content: userContent,
+      },
+    ],
+  });
+  const message = chat.choices[0]?.message?.content ?? '';
+  try {
+    const match = message.match(/\{[\s\S]*\}/);
+    if (match) return JSON.parse(match[0]);
+    throw new Error('No valid JSON found');
+  } catch {
+    throw new Error('Failed to parse JSON from OpenAI');
+  }
+}
+Deno.serve(async (req) => {
+  if (req.method !== 'POST') return jsonError('Method Not Allowed', 405);
+  try {
+    const { image_url } = await req.json();
+    if (!image_url) return jsonError('image_url is required', 400);
+    if (!image_url.startsWith('data:image/') && !/^https?:\/\//.test(image_url)) {
+      return jsonError('Invalid image_url format', 400);
+    }
     const finalImageUrl = image_url.startsWith('data:image/')
       ? await uploadBase64Image(image_url)
       : image_url;
-
-    const { productLinks, productName } = await searchWithSerper(finalImageUrl);
-
-    let gptResult: Partial<ScannedProductUI> = {};
-
+    const { productName, product_links } = await searchWithSerper(finalImageUrl);
+    let gptResult = {};
     try {
-      const jsonSchema = {
-        type: 'object',
-        properties: {
-          name: { type: 'string', description: 'The name of the beauty product.' },
-          brand: { type: 'string', description: 'The brand of the beauty product.' },
-          category: {
-            type: 'string',
-            description:
-              'The category of the beauty product (e.g., Skincare, Haircare, Makeup, Fragrance).',
-          },
-          safetyScore: {
-            type: 'number',
-            description: 'A safety score for the product from 1 to 10, where 10 is safest.',
-          },
-          ingredients: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'A list of all ingredients in the product.',
-          },
-          keyIngredients: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                type: { type: 'string', enum: ['beneficial', 'harmful', 'neutral'] },
-                description: { type: 'string' },
-              },
-              required: ['name', 'type', 'description'],
-            },
-            description:
-              'A list of key ingredients with their type (beneficial, harmful, neutral) and a brief description.',
-          },
-          productLinks: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                url: { type: 'string' },
-                source: { type: 'string' },
-              },
-              required: ['title', 'url', 'source'],
-            },
-            description: 'Relevant product links found during analysis.',
-          },
-        },
-        required: ['name', 'brand', 'category', 'safetyScore', 'ingredients', 'keyIngredients'],
-      };
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content: `You are an expert beauty product analyst. Your task is to analyze beauty products based on provided information and return a structured JSON object. Focus on identifying ingredients, assessing safety, and categorizing the product. Ensure the output strictly follows the provided JSON schema. If information is not available, use "Unknown" or provide a reasonable default. Safety score should be between 1 and 10. For keyIngredients, provide at least 3-5 key ingredients if possible, classifying them as 'beneficial', 'harmful', or 'neutral'.`,
-          },
-          {
-            role: 'user',
-            content: `Analyze this beauty product based on the following:
-            
-            Product Name: ${productName}
-            Available Product Links (for ingredient and product information, if available): ${JSON.stringify(productLinks, null, 2)}
-            
-            Based on this information, provide a comprehensive analysis. Look up ingredients and product details from the provided links or general knowledge.
-            `,
-          },
-        ],
-        temperature: 0.7,
-      });
-
-      const messageContent = response.choices[0].message?.content;
-      if (messageContent) {
-        gptResult = JSON.parse(messageContent);
-      } else {
-        throw new Error('OpenAI response content was empty.');
-      }
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          id: crypto.randomUUID(),
-          name: productName || 'Unknown Product',
-          brand: 'Unknown Brand',
-          category: 'Analysis Failed',
-          safetyScore: 1,
-          image: finalImageUrl,
-          ingredients: [],
-          keyIngredients: [
-            {
-              name: 'Analysis Failed',
-              type: 'harmful',
-              description:
-                'Failed to analyze product information. Please try again or provide more details.',
-            },
-          ],
-          productLinks:
-            productLinks.length > 0
-              ? productLinks
-              : [
-                  {
-                    title: 'Search for this product',
-                    url: `https://www.google.com/search?q=${encodeURIComponent(productName)}`,
-                    source: 'Google',
-                    thumbnailUrl: null,
-                  },
-                ],
-          isFavorite: false,
-          scannedAt: new Date().toISOString(),
-          savedAt: null,
-        } as ScannedProductUI),
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      );
+      gptResult = await enrichWithGPT(productName, product_links);
+    } catch {
+      gptResult = {};
     }
-
-    const scannedProduct: ScannedProductUI = {
+    const result = {
       id: crypto.randomUUID(),
       name: gptResult.name || productName || 'Unknown Product',
       brand: gptResult.brand || 'Unknown Brand',
       category: gptResult.category || 'Other',
-      safetyScore: typeof gptResult.safetyScore === 'number' ? gptResult.safetyScore : 6,
-      image: finalImageUrl,
+      safety_score: typeof gptResult.safety_score === 'number' ? gptResult.safety_score : 5,
       ingredients: Array.isArray(gptResult.ingredients) ? gptResult.ingredients : [],
-      keyIngredients:
-        Array.isArray(gptResult.keyIngredients) && gptResult.keyIngredients.length > 0
-          ? gptResult.keyIngredients
-          : [
-              {
-                name: 'Analysis Pending',
-                type: 'neutral',
-                description: 'Ingredient analysis is being processed. Please try scanning again.',
-              },
-            ],
-      productLinks:
-        Array.isArray(gptResult.productLinks) && gptResult.productLinks.length > 0
-          ? gptResult.productLinks
-          : productLinks.length > 0
-            ? productLinks
-            : [
-                {
-                  title: 'Search for this product',
-                  url: `https://www.google.com/search?q=${encodeURIComponent(productName)}`,
-                  source: 'Google',
-                  thumbnailUrl: null,
-                },
-              ],
+      key_ingredients: Array.isArray(gptResult.key_ingredients)
+        ? gptResult.key_ingredients.map((k) => ({
+            name: k.name ?? 'Unknown',
+            type: ['beneficial', 'harmful', 'neutral'].includes(k.type) ? k.type : 'neutral',
+            description: k.description ?? '',
+            effect: k.effect ?? '',
+          }))
+        : [],
+      product_links:
+        Array.isArray(gptResult.product_links) && gptResult.product_links.length > 0
+          ? gptResult.product_links
+          : product_links,
+      image_url: finalImageUrl,
       isFavorite: false,
       scannedAt: new Date().toISOString(),
       savedAt: null,
     };
-
-    return new Response(JSON.stringify(scannedProduct), {
+    return new Response(JSON.stringify(result), {
       headers: {
         'Content-Type': 'application/json',
       },
     });
   } catch (err) {
-    return jsonError(err.message || 'Unexpected internal server error');
+    return jsonError(err.message || 'Internal server error');
   }
 });

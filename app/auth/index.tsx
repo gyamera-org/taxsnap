@@ -8,7 +8,7 @@ import { toast } from 'sonner-native';
 import { useLocalSearchParams, router } from 'expo-router';
 
 export default function AuthScreen() {
-  const { signInWithEmail, signUpWithEmail, loading } = useAuth();
+  const { signInWithEmail, signUpWithEmail } = useAuth();
 
   const { mode } = useLocalSearchParams<{ mode?: 'signin' | 'signup' }>();
   const [isSignUp, setIsSignUp] = useState(mode === 'signup');
