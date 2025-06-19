@@ -49,7 +49,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user) {
       initializeIAP();
-      // loadSubscriptionStatus(); // Temporarily disabled - causes RPC timeout
+      loadSubscriptionStatus();
       loadFreeUsage();
     }
   }, [user]);
@@ -84,8 +84,51 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loadSubscriptionStatus = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('subscription_status, subscription_plan, subscription_expires')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) {
+        console.warn('Failed to load subscription status:', error);
+        return;
+      }
+
+      if (data) {
+        const isActive =
+          data.subscription_status === 'active' &&
+          data.subscription_expires &&
+          new Date(data.subscription_expires) > new Date();
+
+        setState((s) => ({
+          ...s,
+          isSubscribed: isActive,
+          subscriptionType:
+            data.subscription_plan === 'yearly'
+              ? 'yearly'
+              : data.subscription_plan === 'weekly'
+                ? 'monthly'
+                : 'free',
+        }));
+      }
+    } catch (error) {
+      console.warn('Error loading subscription status:', error);
+    }
+  };
+
   const verifyWithBackend = async (purchase: PurchaseResult) => {
-    await supabase.functions.invoke('verify_receipt', {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase.functions.invoke('verify-receipt', {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
       body: {
         receipt: purchase.transactionReceipt,
         productId: purchase.productId,
@@ -93,6 +136,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         transactionId: purchase.transactionId,
       },
     });
+
+    if (error) {
+      throw new Error(error.message || 'Receipt verification failed');
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+
+    return data;
   };
 
   const purchaseSubscription = async (productId: string) => {
@@ -100,12 +153,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     try {
       const result = await iapService.purchaseProduct(productId);
       await verifyWithBackend(result);
-      setState((s) => ({
-        ...s,
-        isSubscribed: true,
-        subscriptionType: productId.includes('yearly') ? 'yearly' : 'monthly',
-        loading: false,
-      }));
+
+      // Reload subscription status from backend after verification
+      await loadSubscriptionStatus();
+
+      setState((s) => ({ ...s, loading: false }));
       Alert.alert('Success', 'Subscription activated!');
     } catch (e: any) {
       setState((s) => ({
@@ -127,13 +179,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
             ['com.beautyscan.app.yearly', 'com.beautyscan.app.weekly'].includes(p.productId)
           ) || purchases[0];
         await verifyWithBackend(active);
-        setState((s) => ({
-          ...s,
-          isSubscribed: true,
-          subscriptionType: active.productId.includes('yearly') ? 'yearly' : 'monthly',
-          loading: false,
-        }));
-        // loadSubscriptionStatus(); // Temporarily disabled - causes RPC timeout
+
+        // Reload subscription status from backend after verification
+        await loadSubscriptionStatus();
+
+        setState((s) => ({ ...s, loading: false }));
         Alert.alert('Restored', 'Your subscription has been restored');
       } else {
         setState((s) => ({ ...s, loading: false }));
