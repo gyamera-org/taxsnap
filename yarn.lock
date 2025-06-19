@@ -3799,9 +3799,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"beauty-scan@workspace:.":
+"beautyscan@workspace:.":
   version: 0.0.0-use.local
-  resolution: "beauty-scan@workspace:."
+  resolution: "beautyscan@workspace:."
   dependencies:
     "@babel/core": "npm:^7.27.1"
     "@dev-plugins/react-query": "npm:^0.3.1"

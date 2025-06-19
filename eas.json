@@ -1,0 +1,30 @@
+{
+  "cli": {
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "environment": "development",
+      "corepack": false
+    },
+    "production": {
+      "distribution": "store",
+      "ios": {
+        "simulator": false
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "autoIncrement": true,
+      "environment": "production",
+      "corepack": false
+    }
+  }
+}

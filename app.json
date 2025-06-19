@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "beauty-scan",
-    "slug": "beauty-scan",
+    "name": "beautyscan",
+    "slug": "beautyscan",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "beauty-scan",
+    "scheme": "beautyscan",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -30,7 +30,11 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.hairdeetai.app",
-      "permissions": ["android.permission.CAMERA", "android.permission.READ_EXTERNAL_STORAGE"],
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -69,6 +73,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "91f6f133-5998-4ed1-af6e-e2d6be3fccf8"
+      }
+    },
+    "owner": "josephine19001"
   }
 }
