@@ -8,7 +8,11 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "populate-db": "node scripts/populate_supabase.js"
+    "populate-db": "node scripts/populate_supabase.js",
+    "eas:env:pull": "eas env:pull --environment production",
+    "eas:build": "eas build --platform ios --profile production",
+    "eas:submit": "eas submit -p ios --latest",
+    "eas-build-pre-install": "corepack enable && yarn set version 4"
   },
   "jest": {
     "preset": "jest-expo"
@@ -30,6 +34,7 @@
     "eslint-config-expo": "^9.2.0",
     "eslint-config-turbo": "^2.5.3",
     "expo": "53.0.11",
+    "expo-apple-authentication": "^7.2.4",
     "expo-auth-session": "~6.2.0",
     "expo-av": "~15.1.6",
     "expo-blur": "~14.1.5",
@@ -103,5 +108,5 @@
     "metro-config": "^0.81.2"
   },
   "private": true,
-  "packageManager": "yarn@4.9.1"
+  "packageManager": "yarn@4.9.2"
 }

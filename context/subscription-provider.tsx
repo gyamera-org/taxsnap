@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { iapService, PurchaseResult, Product } from '@/lib/services/iap-service';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from './auth-provider';
-import type { Account } from '@/lib/hooks/use-accounts';
 
 interface SubscriptionState {
   isSubscribed: boolean;
@@ -62,20 +61,13 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       const products = await iapService.getProducts();
       setState((s) => ({ ...s, products, loading: false }));
     } catch (e: any) {
-      if (e.message === 'E_IAP_NOT_AVAILABLE') {
-        console.warn('IAP not available in development mode');
-        setState((s) => ({
-          ...s,
-          loading: false,
-          products: [],
-          error: null,
-        }));
-        return;
-      }
+      console.warn('IAP initialization failed:', e.message);
+      // In development or when IAP is not available, continue without error
       setState((s) => ({
         ...s,
         loading: false,
-        error: e.message || 'Failed to load products',
+        products: [],
+        error: null, // Don't show error to user in development
       }));
     }
   };
@@ -107,10 +99,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const result = await iapService.purchaseProduct(productId);
-      // skip for __DEV__ mocks
-      if (!(__DEV__ && result.transactionId.startsWith('mock_'))) {
-        await verifyWithBackend(result);
-      }
+      await verifyWithBackend(result);
       setState((s) => ({
         ...s,
         isSubscribed: true,
@@ -134,9 +123,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       const purchases = await iapService.restorePurchases();
       if (purchases.length) {
         const active =
-          purchases.find((p) => ['beautyscan_yearly', 'beautyscan_weekly'].includes(p.productId)) ||
-          purchases[0];
-        if (!(__DEV__ && active.transactionId.startsWith('mock_'))) await verifyWithBackend(active);
+          purchases.find((p) =>
+            ['com.beautyscan.app.yearly', 'com.beautyscan.app.weekly'].includes(p.productId)
+          ) || purchases[0];
+        await verifyWithBackend(active);
         setState((s) => ({
           ...s,
           isSubscribed: true,

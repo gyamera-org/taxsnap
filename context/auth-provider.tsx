@@ -3,6 +3,8 @@ import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { router } from 'expo-router';
 import { toast } from 'sonner-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 
 interface AuthContextType {
   session: Session | null;
@@ -15,6 +17,7 @@ interface AuthContextType {
     firstName: string,
     lastName: string
   ) => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
   // Temporarily disabled subscription features
   isSubscribed: boolean;
@@ -102,6 +105,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInWithApple = async () => {
+    setLoading(true);
+    try {
+      const nonce = Math.random().toString(36).substring(2, 10);
+      const hashedNonce = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        nonce
+      );
+
+      const appleCredential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+        nonce: hashedNonce,
+      });
+
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: appleCredential.identityToken!,
+        nonce,
+      });
+
+      if (data.user) {
+        router.replace('/(tabs)/explore');
+      }
+
+      if (error) throw error;
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        // User canceled the sign-in flow
+        return;
+      }
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     setLoading(true);
     const { error } = await supabase.auth.signOut();
@@ -116,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signInWithEmail,
     signUpWithEmail,
+    signInWithApple,
     signOut,
     isSubscribed,
     subscriptionPlan,

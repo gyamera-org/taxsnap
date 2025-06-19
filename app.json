@@ -16,11 +16,13 @@
     "ios": {
       "supportsTablet": false,
       "userInterfaceStyle": "light",
-      "bundleIdentifier": "com.hairdeetai.app",
+      "bundleIdentifier": "com.beautyscan.app",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to your camera to scan products and ingredients labels.",
-        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select product images for ingredient analysis."
-      }
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select product images for ingredient analysis.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "buildNumber": "4"
     },
     "android": {
       "userInterfaceStyle": "light",
@@ -29,7 +31,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.hairdeetai.app",
+      "package": "com.beautyscan.app",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -46,7 +48,10 @@
               "pathPrefix": "/auth/v1/callback"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -61,6 +66,7 @@
       "expo-camera",
       "expo-image-picker",
       "expo-video",
+      "expo-apple-authentication",
       [
         "expo-splash-screen",
         {

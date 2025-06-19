@@ -36,8 +36,8 @@ export default function PaywallScreen() {
   const handlePurchase = async () => {
     try {
       setLoading(true);
-      let productId = 'beautyscan_weekly';
-      if (selectedPlan === 'yearly') productId = 'beautyscan_yearly';
+      let productId = 'com.beautyscan.app.weekly';
+      if (selectedPlan === 'yearly') productId = 'com.beautyscan.app.yearly';
 
       await purchaseSubscription(productId);
 
@@ -79,27 +79,27 @@ export default function PaywallScreen() {
 
         {/* Header */}
         <View className="items-center mt-16 mb-10">
-          <Text className="text-4xl font-bold text-white text-center mb-2">Know Your Beauty.</Text>
-          <Text className="text-4xl font-bold text-white text-center mb-5">Choose Better ✨</Text>
+          <Text className="text-4xl font-bold text-white text-center mb-2">Stop Guessing.</Text>
+          <Text className="text-4xl font-bold text-white text-center mb-5">Start Knowing. 🧬</Text>
 
           {/* Features */}
           <View className="items-start mb-10">
             <View className="flex-row items-center mb-3">
               <Ionicons name="scan" size={20} color="#FF69B4" className="mr-3" />
               <Text className="text-white text-lg">
-                <Text className="font-bold">Scan</Text> any beauty product instantly
+                <Text className="font-bold">Instantly decode</Text> any ingredient list
               </Text>
             </View>
             <View className="flex-row items-center mb-3">
-              <Ionicons name="flask" size={20} color="#FF69B4" className="mr-3" />
+              <Ionicons name="warning" size={20} color="#FF69B4" className="mr-3" />
               <Text className="text-white text-lg">
-                Decode <Text className="font-bold">ingredients & safety</Text>
+                Identify <Text className="font-bold">harmful toxins & allergens</Text>
               </Text>
             </View>
             <View className="flex-row items-center mb-3">
-              <Ionicons name="heart" size={20} color="#FF69B4" className="mr-3" />
+              <Ionicons name="shield-checkmark" size={20} color="#FF69B4" className="mr-3" />
               <Text className="text-white text-lg">
-                Build your <Text className="font-bold">perfect beauty routine</Text>
+                Make <Text className="font-bold">science-backed</Text> beauty choices
               </Text>
             </View>
           </View>
@@ -170,7 +170,7 @@ export default function PaywallScreen() {
                 <Text className="text-white text-lg font-bold">3-DAY FREE TRIAL</Text>
               </View>
               <View className="items-end">
-                <Text className="text-white/70 text-sm">then $4.99</Text>
+                <Text className="text-white/70 text-sm">then $3.99</Text>
                 <Text className="text-white/70 text-sm">per week</Text>
               </View>
             </View>

@@ -1,6 +1,6 @@
-import { View, Pressable, Linking } from 'react-native';
+import { View, Pressable, Linking, Share, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { UserRound, FileText, Shield, UserMinus, LogOut } from 'lucide-react-native';
+import { UserRound, FileText, Shield, UserMinus, LogOut, Star, Share2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ConfirmationModal, Skeleton } from '@/components/ui';
@@ -73,6 +73,26 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleShareApp = async () => {
+    try {
+      const shareMessage =
+        `Hey, I just found this random app that shows me what all those weird ingredient names actually mean 🤔\n\n` +
+        `Turns out half my "clean" products aren't that clean 😉\n\n` +
+        `You need to start using this, check their app: https://apps.apple.com/app/id6747519576`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        title: 'What are you really putting on your skin?',
+      });
+
+      if (result.action === Share.sharedAction) {
+        toast.success('Thanks for sharing BeautyScan! 💕');
+      }
+    } catch (error) {
+      Alert.alert('Share Failed', 'Unable to share the app. Please try again.');
+    }
+  };
+
   return (
     <>
       <PageLayout title="Settings">
@@ -92,14 +112,25 @@ export default function SettingsScreen() {
 
             <View className="bg-white mx-4 rounded-2xl shadow mt-4">
               <SettingsItem
+                icon={Star}
+                label="Rate BeautyScan"
+                onPress={() =>
+                  Linking.openURL('https://apps.apple.com/app/id6747519576?action=write-review')
+                }
+              />
+              <SettingsItem icon={Share2} label="Share App" onPress={handleShareApp} isLast />
+            </View>
+
+            <View className="bg-white mx-4 rounded-2xl shadow mt-4">
+              <SettingsItem
                 icon={FileText}
                 label="Terms and Conditions"
-                onPress={() => Linking.openURL('https://www.hairdeet.ai/terms')}
+                onPress={() => Linking.openURL('https://www.beautyscan.app/terms')}
               />
               <SettingsItem
                 icon={Shield}
                 label="Privacy Policy"
-                onPress={() => Linking.openURL('https://www.hairdeet.ai/privacy')}
+                onPress={() => Linking.openURL('https://www.beautyscan.app/privacy')}
               />
               <SettingsItem
                 icon={UserMinus}

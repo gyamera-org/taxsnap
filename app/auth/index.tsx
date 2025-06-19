@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { View, Pressable, ActivityIndicator, Linking } from 'react-native';
+import { View, Pressable, Linking, Platform } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { TextInput } from '@/components/ui/text-input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-provider';
 import { toast } from 'sonner-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { Eye, EyeOff } from 'lucide-react-native';
 
 export default function AuthScreen() {
-  const { signInWithEmail, signUpWithEmail } = useAuth();
+  const { signInWithEmail, signUpWithEmail, signInWithApple } = useAuth();
 
   const { mode } = useLocalSearchParams<{ mode?: 'signin' | 'signup' }>();
   const [isSignUp, setIsSignUp] = useState(mode === 'signup');
@@ -17,6 +19,7 @@ export default function AuthScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const canSignUp = mode === 'signup';
 
@@ -45,6 +48,17 @@ export default function AuthScreen() {
       }
     } catch (error: any) {
       toast.error(error.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setIsSubmitting(true);
+    try {
+      await signInWithApple();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign in with Apple');
     } finally {
       setIsSubmitting(false);
     }
@@ -123,14 +137,27 @@ export default function AuthScreen() {
             className="mb-4"
             editable={!isSubmitting}
           />
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Password"
-            secureTextEntry
-            className="mb-6"
-            editable={!isSubmitting}
-          />
+          <View className="relative mb-6">
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              className="pr-12"
+              editable={!isSubmitting}
+            />
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-0 h-12 justify-center"
+              disabled={isSubmitting}
+            >
+              {showPassword ? (
+                <EyeOff size={20} color="#9CA3AF" />
+              ) : (
+                <Eye size={20} color="#9CA3AF" />
+              )}
+            </Pressable>
+          </View>
 
           <Button
             title={isSignUp ? 'Create Account' : 'Sign In'}
@@ -140,6 +167,30 @@ export default function AuthScreen() {
             loading={isSubmitting}
             className="mb-4"
           />
+
+          {/* Apple Sign In - Only show on iOS and when not signing up */}
+          {Platform.OS === 'ios' && !isSignUp && (
+            <>
+              <View className="flex-row items-center mb-4">
+                <View className="flex-1 h-px bg-slate-300" />
+                <Text className="mx-4 text-slate-500">or</Text>
+                <View className="flex-1 h-px bg-slate-300" />
+              </View>
+
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={100}
+                style={{
+                  width: '100%',
+                  height: 50,
+                  marginBottom: 16,
+                  opacity: isSubmitting ? 0.5 : 1,
+                }}
+                onPress={isSubmitting ? () => {} : handleAppleSignIn}
+              />
+            </>
+          )}
 
           {(isSignUp || canSignUp) && (
             <Pressable onPress={toggleAuthMode} disabled={isSubmitting}>
@@ -167,14 +218,14 @@ export default function AuthScreen() {
             By continuing, you agree to our{' '}
             <Text
               className="text-pink-500 underline"
-              onPress={() => openLink('https://your-website.com/terms')}
+              onPress={() => openLink('https://www.beautyscan.app/terms')}
             >
               Terms
             </Text>{' '}
             and{' '}
             <Text
               className="text-pink-500 underline"
-              onPress={() => openLink('https://your-website.com/privacy')}
+              onPress={() => openLink('https://www.beautyscan.app/privacy')}
             >
               Privacy Policy
             </Text>

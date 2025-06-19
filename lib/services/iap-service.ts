@@ -5,9 +5,14 @@ import { Platform } from 'react-native';
 declare const __DEV__: boolean;
 
 // Product IDs - these need to match your App Store Connect and Google Play Console
+// SKU: beautyscan2025
+// App Store Connect App ID: 6747519576
+// Bundle Identifier: com.beautyscan.app
+// App Name: BeautyScan
+// Pricing: $3.99/week, $39.99/year (save 80%+)
 export const PRODUCT_IDS = {
-  WEEKLY: Platform.OS === 'ios' ? 'beautyscan_weekly' : 'beautyscan_weekly',
-  YEARLY: Platform.OS === 'ios' ? 'beautyscan_yearly' : 'beautyscan_yearly',
+  WEEKLY: Platform.OS === 'ios' ? 'com.beautyscan.app.weekly' : 'com.beautyscan.app.weekly',
+  YEARLY: Platform.OS === 'ios' ? 'com.beautyscan.app.yearly' : 'com.beautyscan.app.yearly',
 };
 
 export const SUBSCRIPTION_SKUS = [PRODUCT_IDS.WEEKLY, PRODUCT_IDS.YEARLY];
@@ -32,7 +37,6 @@ export interface PurchaseResult {
 class IAPService {
   private initialized = false;
   private products: Product[] = [];
-  private isDevelopment = __DEV__;
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -42,14 +46,6 @@ class IAPService {
       this.initialized = true;
     } catch (err: any) {
       console.error('Failed to initialize IAP:', err);
-
-      // In development, we can mock the behavior
-      if (this.isDevelopment && err.code === 'E_IAP_NOT_AVAILABLE') {
-        console.warn('IAP not available in development - using mock mode');
-        this.initialized = true; // Allow the app to continue
-        return;
-      }
-
       throw err;
     }
   }
@@ -57,29 +53,6 @@ class IAPService {
   async getProducts(): Promise<Product[]> {
     if (!this.initialized) {
       await this.initialize();
-    }
-
-    // Return mock products in development if IAP is not available
-    if (this.isDevelopment && this.products.length === 0) {
-      this.products = [
-        {
-          productId: 'beautyscan_weekly',
-          price: '4.99',
-          currency: 'USD',
-          title: 'Weekly Subscription',
-          description: 'Weekly subscription to BeautyScan',
-          localizedPrice: '$4.99',
-        },
-        {
-          productId: 'beautyscan_yearly',
-          price: '39.99',
-          currency: 'USD',
-          title: 'Yearly Subscription',
-          description: 'Yearly subscription to BeautyScan',
-          localizedPrice: '$39.99',
-        },
-      ];
-      return this.products;
     }
 
     try {
@@ -97,32 +70,6 @@ class IAPService {
       return this.products;
     } catch (err) {
       console.error('Failed to get products:', err);
-
-      // Return mock products in development
-      if (this.isDevelopment) {
-        console.warn('Using mock products due to IAP error in development');
-        return this.products.length > 0
-          ? this.products
-          : [
-              {
-                productId: 'beautyscan_weekly',
-                price: '4.99',
-                currency: 'USD',
-                title: 'Weekly Subscription',
-                description: 'Weekly subscription to BeautyScan',
-                localizedPrice: '$4.99',
-              },
-              {
-                productId: 'beautyscan_yearly',
-                price: '39.99',
-                currency: 'USD',
-                title: 'Yearly Subscription',
-                description: 'Yearly subscription to BeautyScan',
-                localizedPrice: '$39.99',
-              },
-            ];
-      }
-
       throw err;
     }
   }
@@ -130,18 +77,6 @@ class IAPService {
   async purchaseProduct(productId: string): Promise<PurchaseResult> {
     if (!this.initialized) {
       await this.initialize();
-    }
-
-    // Mock purchase in development
-    if (this.isDevelopment) {
-      console.warn('Mock purchase in development mode');
-      return {
-        productId,
-        transactionId: `mock_${Date.now()}`,
-        transactionReceipt: `mock_receipt_${Date.now()}`,
-        purchaseToken: `mock_token_${Date.now()}`,
-        packageName: 'com.beautyscan.app',
-      };
     }
 
     try {
@@ -175,22 +110,6 @@ class IAPService {
   async restorePurchases(): Promise<PurchaseResult[]> {
     if (!this.initialized) {
       await this.initialize();
-    }
-
-    // Mock restore in development
-    if (this.isDevelopment) {
-      console.warn('Mock restore in development mode');
-
-      // Return a mock purchase to test the restore flow
-      return [
-        {
-          productId: 'beautyscan_yearly',
-          transactionId: `mock_restore_${Date.now()}`,
-          transactionReceipt: `mock_restore_receipt_${Date.now()}`,
-          purchaseToken: `mock_restore_token_${Date.now()}`,
-          packageName: 'com.beautyscan.app',
-        },
-      ];
     }
 
     try {

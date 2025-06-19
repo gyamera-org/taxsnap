@@ -1,8 +1,7 @@
-import React from 'react';
-import { View, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { View, TouchableOpacity, Modal, ScrollView, Share, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/text';
-import { ArrowLeft, Heart } from 'lucide-react-native';
+import { ArrowLeft, Heart, Share2 } from 'lucide-react-native';
 import { ScannedProductUI } from '@/lib/types/product';
 import { ProductHero } from './ProductHero';
 import { ProductStats } from './ProductStats';
@@ -32,14 +31,35 @@ export function ProductDetailModal({
 }: ProductDetailModalProps) {
   if (!product) return null;
 
+  const handleShare = async () => {
+    try {
+      const shareMessage =
+        `Hey, I just found this random app that shows me the exact meaning of the jargons on beauty ingredients 🤔\n\n` +
+        `Did you know "${product.name}" has a ${product.safetyScore}/100 safety score? I had no idea!\n\n` +
+        `You need to start using this, it's actually mind-blowing 🤯\n\n` +
+        `Check their app: https://apps.apple.com/app/id6747519576`;
+
+      const result = await Share.share({
+        message: shareMessage,
+        title: `What's really in your beauty products?`,
+      });
+
+      if (result.action === Share.sharedAction) {
+        // Successfully shared
+      }
+    } catch (error) {
+      Alert.alert('Share Failed', 'Unable to share this product. Please try again.');
+    }
+  };
+
   if (modalHeight === '80%') {
     return (
       <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
         <View className="flex-1 bg-black/50 justify-end">
           <View className="h-4/5 bg-slate-50 rounded-t-3xl">
-            <SafeAreaView className="flex-1 mt-4" edges={['bottom']}>
+            <SafeAreaView className="flex-1" edges={['bottom']}>
               {/* Header */}
-              <View className="flex-row items-center justify-between px-6 py-4 bg-slate-50 rounded-t-3xl">
+              <View className="flex-row items-center justify-between px-6 pt-6 pb-4 bg-slate-50 rounded-t-3xl">
                 <TouchableOpacity
                   onPress={onClose}
                   className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-sm"
@@ -48,6 +68,13 @@ export function ProductDetailModal({
                 </TouchableOpacity>
 
                 <View className="flex-1" />
+
+                <TouchableOpacity
+                  onPress={handleShare}
+                  className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-sm mr-2"
+                >
+                  <Share2 size={20} color="#000" />
+                </TouchableOpacity>
 
                 {onToggleFavorite && (
                   <TouchableOpacity
@@ -96,9 +123,9 @@ export function ProductDetailModal({
   // Full height modal
   return (
     <Modal animationType="slide" transparent={false} visible={visible} onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-slate-50 mt-4" edges={['top']}>
+      <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
         {/* Header */}
-        <View className="flex-row items-center justify-between px-6 py-4">
+        <View className="flex-row items-center justify-between px-6 pt-4 pb-4">
           <TouchableOpacity
             onPress={onClose}
             className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-sm"
@@ -107,6 +134,13 @@ export function ProductDetailModal({
           </TouchableOpacity>
 
           <View className="flex-1" />
+
+          <TouchableOpacity
+            onPress={handleShare}
+            className="w-10 h-10 items-center justify-center bg-white rounded-full shadow-sm mr-2"
+          >
+            <Share2 size={20} color="#000" />
+          </TouchableOpacity>
 
           {onToggleFavorite && (
             <TouchableOpacity
