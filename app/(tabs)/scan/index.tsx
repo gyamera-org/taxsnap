@@ -46,6 +46,18 @@ export default function ScanScreen() {
   } = useAnalyzeScan();
   const saveScan = useSaveScan();
 
+  // Comprehensive reset function to clear all scan-related states
+  const resetScanState = () => {
+    setCapturedImage(null);
+    setShowCapturedImage(false);
+    setIsProcessingImage(false);
+    setProcessedImageUrl(null);
+    setScannedProduct(null);
+    setShowModal(false);
+    resetAnalysis();
+    saveScan.reset();
+  };
+
   // Clear any previous errors on component mount to prevent crashes
   useEffect(() => {
     resetAnalysis();
@@ -66,9 +78,6 @@ export default function ScanScreen() {
 
   useEffect(() => {
     if (analysisError) {
-      // Reset processing state when there's an error
-      setIsProcessingImage(false);
-
       // Handle non-beauty product errors specifically
       if (analysisError instanceof NonBeautyProductError) {
         toast.warning('Not a Beauty Product', {
@@ -77,10 +86,7 @@ export default function ScanScreen() {
           action: {
             label: 'Scan Another',
             onClick: () => {
-              resetAnalysis();
-              setShowCapturedImage(false);
-              setCapturedImage(null);
-              setIsProcessingImage(false);
+              resetScanState();
               toast.dismiss();
             },
           },
@@ -91,18 +97,15 @@ export default function ScanScreen() {
           action: {
             label: 'Try Again',
             onClick: () => {
-              resetAnalysis();
-              setShowCapturedImage(false);
-              setCapturedImage(null);
-              setIsProcessingImage(false);
+              resetScanState();
             },
           },
         });
       }
 
-      // Clear the error after handling it to prevent future crashes
+      // Reset all states when there's an error
       setTimeout(() => {
-        resetAnalysis();
+        resetScanState();
       }, 100);
     }
   }, [analysisError]);
@@ -187,62 +190,66 @@ export default function ScanScreen() {
 
     setIsProcessingImage(true);
 
-    const cropX = cropArea.x / screenWidth;
-    const cropY = cropArea.y / screenHeight;
-    const cropWidth = cropArea.width / screenWidth;
-    const cropHeight = cropArea.height / screenHeight;
+    try {
+      const cropX = cropArea.x / screenWidth;
+      const cropY = cropArea.y / screenHeight;
+      const cropWidth = cropArea.width / screenWidth;
+      const cropHeight = cropArea.height / screenHeight;
 
-    const croppedImage = await ImageManipulator.manipulateAsync(
-      capturedImage.uri,
-      [
-        {
-          crop: {
-            originX: cropX * capturedImage.width,
-            originY: cropY * capturedImage.height,
-            width: cropWidth * capturedImage.width,
-            height: cropHeight * capturedImage.height,
+      const croppedImage = await ImageManipulator.manipulateAsync(
+        capturedImage.uri,
+        [
+          {
+            crop: {
+              originX: cropX * capturedImage.width,
+              originY: cropY * capturedImage.height,
+              width: cropWidth * capturedImage.width,
+              height: cropHeight * capturedImage.height,
+            },
           },
-        },
-      ],
-      { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true }
-    );
+        ],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+      );
 
-    setCapturedImage(croppedImage);
+      setCapturedImage(croppedImage);
 
-    const filename = `scan-${Date.now()}.jpeg`;
-    const base64Data = croppedImage.base64;
-    if (!base64Data) throw new Error('No base64 data available');
-    const buffer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+      const filename = `scan-${Date.now()}.jpeg`;
+      const base64Data = croppedImage.base64;
+      if (!base64Data) throw new Error('No base64 data available');
+      const buffer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
 
-    const { error: uploadError } = await supabase.storage
-      .from(PRODUCT_IMAGES_BUCKET)
-      .upload(filename, buffer, {
-        contentType: 'image/jpeg',
-        upsert: false,
-      });
+      const { error: uploadError } = await supabase.storage
+        .from(PRODUCT_IMAGES_BUCKET)
+        .upload(filename, buffer, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        });
 
-    if (uploadError) {
-      throw new Error(`Upload failed: ${uploadError.message}`);
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      const { data: urlData } = supabase.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(filename);
+
+      if (!urlData?.publicUrl) {
+        throw new Error('Could not get public URL for uploaded image');
+      }
+
+      setProcessedImageUrl(urlData.publicUrl);
+
+      analyzeImage({ imageUrl: urlData.publicUrl });
+
+      setIsProcessingImage(false);
+    } catch (error: any) {
+      // Reset all states on any error during processing
+      resetScanState();
+
+      toast.error(error.message || 'Failed to process image. Please try again.');
     }
-
-    const { data: urlData } = supabase.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(filename);
-
-    if (!urlData?.publicUrl) {
-      throw new Error('Could not get public URL for uploaded image');
-    }
-
-    setProcessedImageUrl(urlData.publicUrl);
-
-    analyzeImage({ imageUrl: urlData.publicUrl });
-
-    setIsProcessingImage(false);
   };
 
   const retakePhoto = () => {
-    setCapturedImage(null);
-    setShowCapturedImage(false);
-    setIsProcessingImage(false);
-    resetAnalysis();
+    resetScanState();
   };
 
   const pickImage = async () => {
@@ -294,13 +301,7 @@ export default function ScanScreen() {
   };
 
   const closeScan = () => {
-    setScannedProduct(null);
-    setShowModal(false);
-    setCapturedImage(null);
-    setShowCapturedImage(false);
-    setIsProcessingImage(false);
-    resetAnalysis();
-    saveScan.reset();
+    resetScanState();
 
     // Navigate back to the previous screen or home
     if (router.canGoBack()) {

@@ -33,30 +33,6 @@ export function IngredientCard({ ingredient }: IngredientCardProps) {
   const config = getIngredientConfig(ingredient?.type);
   const IconComponent = config.icon;
 
-  const getSimplifiedDescription = (name: string, description: string) => {
-    if (!description) return 'No description available';
-
-    // If description mentions the ingredient name, use it as is
-    if (description.toLowerCase().includes(name.toLowerCase())) {
-      return description;
-    }
-
-    // Otherwise, create a simple format
-    const action =
-      ingredient?.type === 'beneficial'
-        ? 'helps with'
-        : ingredient?.type === 'harmful'
-          ? 'may cause'
-          : 'provides';
-
-    return `${name} ${action} ${description.toLowerCase()}`;
-  };
-
-  // Get the description text, preferring 'description' over 'effect'
-  const getIngredientText = () => {
-    return ingredient?.description || ingredient?.effect || '';
-  };
-
   return (
     <View
       className="p-4 rounded-2xl mb-3 border"
@@ -73,12 +49,31 @@ export function IngredientCard({ ingredient }: IngredientCardProps) {
           <IconComponent size={16} color="white" />
         </View>
         <View className="flex-1">
-          <Text className="font-bold text-black mb-1">
+          <Text className="font-bold text-black mb-2">
             {ingredient?.name || 'Unknown Ingredient'}
           </Text>
-          <Text className="text-gray-700 text-sm leading-5">
-            {getSimplifiedDescription(ingredient?.name || 'Unknown', getIngredientText())}
-          </Text>
+
+          {/* Description */}
+          {ingredient?.description && (
+            <Text className="text-gray-700 text-sm leading-5 mb-2">{ingredient.description}</Text>
+          )}
+
+          {/* Effect */}
+          {ingredient?.effect && (
+            <View className="bg-white/50 rounded-lg p-3">
+              <Text className="text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+                Effect on Hair/Skin
+              </Text>
+              <Text className="text-gray-800 text-sm leading-5">{ingredient.effect}</Text>
+            </View>
+          )}
+
+          {/* Fallback for missing description and effect */}
+          {!ingredient?.description && !ingredient?.effect && (
+            <Text className="text-gray-500 text-sm italic">
+              No description available for this ingredient
+            </Text>
+          )}
         </View>
       </View>
     </View>

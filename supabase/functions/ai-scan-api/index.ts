@@ -76,42 +76,44 @@ async function searchWithSerper(imageUrl) {
   };
 }
 async function enrichWithGPT(productName, product_links) {
-  const prompt = `You are a beauty product expert. Based on the product name and the provided links, return only valid JSON structured as follows:
+  const prompt = `You are a friendly beauty product expert. Your job is to explain each ingredient in simple, clear, everyday language that anyone can understand. Avoid scientific jargon. Be warm, helpful, and conversational, like you're talking to a friend.
 
-{
-  "name": string,
-  "brand": string,
-  "category": string,
-  "safety_score": number (1-10),
-  "ingredients": string[],
-  "key_ingredients": [
-    {
-      "name": string,
-      "type": "beneficial" | "harmful" | "neutral",
-      "description": string,
-      "effect": string
-    }
-  ],
-  "product_links": [
-    {
-      "title": string,
-      "url": string,
-      "source": string,
-      "thumbnailUrl": string
-    }
-  ]
-}
-
-Instructions:
-- Extract the full list of ingredients from the product links or name.
-- Analyze all ingredients you find, but **return no more than 10** in the \`key_ingredients\` field.
-- If 10 or fewer ingredients are found, analyze all of them.
-- If more than 10 are found, analyze the most relevant ones (based on their effect).
-- Only return JSON. Do not include any explanation or commentary.`;
+  Based on the product name and links, return only valid JSON in the structure below:
+  
+  {
+    "name": string,
+    "brand": string,
+    "category": string,
+    "safety_score": number (1-10),
+    "ingredients": string[],
+    "key_ingredients": [
+      {
+        "name": string,
+        "type": "beneficial" | "harmful" | "neutral",
+        "description": string, // use plain language here!
+        "effect": string        // explain exactly what it does to skin or hair
+      }
+    ],
+    "product_links": [
+      {
+        "title": string,
+        "url": string,
+        "source": string,
+        "thumbnailUrl": string
+      }
+    ]
+  }
+  
+  Instructions:
+  - Only return JSON. No commentary.
+  - For each key ingredient, describe what it does and how it affects the skin or hair. Use plain language. For example:
+    "Sulfates: While they’re great at cleaning, they can also strip your hair’s natural oils and make it dry or frizzy."
+  - Don't use technical or scientific terms unless they’re explained simply.
+  - Limit key_ingredients to 10 max, prioritizing the most impactful ones.
+  `;
 
   const userContent = `Product Name: ${productName}
 Product Links:\n${JSON.stringify(product_links, null, 2)}`;
-
   const chat = await openai.chat.completions.create({
     model: 'gpt-4o',
     temperature: 0.3,
@@ -126,7 +128,6 @@ Product Links:\n${JSON.stringify(product_links, null, 2)}`;
       },
     ],
   });
-
   const message = chat.choices[0]?.message?.content ?? '';
   try {
     const match = message.match(/\{[\s\S]*\}/);
@@ -136,7 +137,6 @@ Product Links:\n${JSON.stringify(product_links, null, 2)}`;
     throw new Error('Failed to parse JSON from OpenAI');
   }
 }
-
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return jsonError('Method Not Allowed', 405);
   try {
@@ -179,10 +179,8 @@ Deno.serve(async (req) => {
         'shampoo',
         'sunscreen',
       ];
-
       const checkText = `${gptResult.category ?? ''} ${gptResult.name ?? ''}`.toLowerCase();
       const isBeauty = beautyKeywords.some((keyword) => checkText.includes(keyword));
-
       if (!isBeauty) {
         return jsonError(
           `We currently only support scanning beauty and personal care products. Detected: "${gptResult.category ?? 'Unknown'}".`,
@@ -192,21 +190,16 @@ Deno.serve(async (req) => {
     } catch {
       gptResult = {};
     }
-
     const keyIngredients = Array.isArray(gptResult.key_ingredients)
       ? gptResult.key_ingredients.slice(0, 10)
       : [];
-
     const totalAnalyzed = keyIngredients.length;
     const harmfulCount = keyIngredients.filter((k) => k.type === 'harmful').length;
-
     let computedSafetyScore = 10;
-
     if (totalAnalyzed > 0) {
       const cautionRatio = harmfulCount / totalAnalyzed;
       computedSafetyScore = Math.round((1 - cautionRatio) * 10);
     }
-
     const result = {
       id: crypto.randomUUID(),
       name: gptResult.name || productName || 'Unknown Product',
