@@ -7,19 +7,35 @@ import {
   Animated,
   type GestureResponderEvent,
 } from 'react-native';
-import { Settings, Compass, Bookmark, ScanBarcode } from 'lucide-react-native';
+import { Settings, Plus, Apple, Activity, CalendarHeart, X } from 'lucide-react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { cn } from '@/lib/utils';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AuthGuard } from '@/components/auth-guard';
+import { LoggerModal } from '@/components/logger-modal';
 
-const HIDDEN_ROUTES = ['/scan', '/settings/personal-details'];
+const HIDDEN_ROUTES = [
+  '/settings/personal-details',
+  '/settings/reminder-settings',
+  '/settings/fitness-goals',
+  '/settings/nutrition-goals',
+  '/settings/weight',
+  '/log-exercise',
+  '/log-mood',
+  '/log-water',
+  '/log-sleep',
+  '/log-meal',
+  '/log-supplements',
+  '/period-tracker',
+  '/scan-food',
+];
 
 export default function TabLayout() {
   const pathname = usePathname();
   const router = useRouter();
   const shouldHideTabBar = HIDDEN_ROUTES.includes(pathname);
   const tabBarAnimation = useRef(new Animated.Value(1)).current;
+  const [showLoggerModal, setShowLoggerModal] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -37,7 +53,7 @@ export default function TabLayout() {
           backBehavior="history"
           screenOptions={{
             headerShown: false,
-            tabBarShowLabel: false,
+            tabBarShowLabel: true,
             tabBarStyle: {
               transform: [
                 {
@@ -64,33 +80,76 @@ export default function TabLayout() {
             },
           }}
         >
+          {/* Nutrition Tab - Macro tracking, food scanning, meal history */}
           <Tabs.Screen
-            name="explore/index"
+            name="nutrition/index"
             options={{
               tabBarButton: (props) => (
                 <TabButton
                   {...props}
-                  label="Explore"
-                  Icon={Compass}
-                  isActive={pathname === '/explore'}
-                />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="saves/index"
-            options={{
-              tabBarButton: (props) => (
-                <TabButton
-                  {...props}
-                  label="Saves"
-                  Icon={Bookmark}
-                  isActive={pathname === '/saves'}
+                  label="Nutrition"
+                  Icon={Apple}
+                  isActive={pathname === '/nutrition'}
                 />
               ),
             }}
           />
 
+          {/* Cycle Tab - Period tracking, symptom logging, predictions */}
+          <Tabs.Screen
+            name="cycle/index"
+            options={{
+              tabBarButton: (props) => (
+                <TabButton
+                  {...props}
+                  label="Cycle"
+                  Icon={CalendarHeart}
+                  isActive={pathname === '/cycle'}
+                />
+              ),
+            }}
+          />
+
+          {/* Logger Tab - Center position with special styling */}
+          <Tabs.Screen
+            name="logger/index"
+            options={{
+              tabBarButton: (props) => (
+                <Pressable
+                  onPress={() =>
+                    showLoggerModal ? setShowLoggerModal(false) : setShowLoggerModal(true)
+                  }
+                  className="flex-1 items-center justify-center"
+                  style={{ marginTop: -20 }}
+                >
+                  <View className="w-14 h-14 rounded-full bg-black items-center justify-center shadow-lg">
+                    {showLoggerModal ? (
+                      <X size={28} color="white" />
+                    ) : (
+                      <Plus size={28} color="white" />
+                    )}
+                  </View>
+                </Pressable>
+              ),
+            }}
+          />
+
+          {/* Exercise Tab - Workouts, performance tracking, cycle-optimized plans */}
+          <Tabs.Screen
+            name="exercise/index"
+            options={{
+              tabBarButton: (props) => (
+                <TabButton
+                  {...props}
+                  label="Exercise"
+                  Icon={Activity}
+                  isActive={pathname === '/exercise'}
+                />
+              ),
+            }}
+          />
+
+          {/* Settings Tab */}
           <Tabs.Screen
             name="settings/index"
             options={{
@@ -104,34 +163,29 @@ export default function TabLayout() {
               ),
             }}
           />
-          <Tabs.Screen
-            name="scan/index"
-            options={{
-              headerShown: false,
-              tabBarButton: () => null,
-            }}
-          />
 
+          {/* Hidden screens */}
           <Tabs.Screen
             name="settings/personal-details"
             options={{ href: null, headerShown: false }}
           />
+          <Tabs.Screen
+            name="settings/reminder-settings"
+            options={{ href: null, headerShown: false }}
+          />
+          <Tabs.Screen name="settings/fitness-goals" options={{ href: null, headerShown: false }} />
+          <Tabs.Screen
+            name="settings/nutrition-goals"
+            options={{ href: null, headerShown: false }}
+          />
+          <Tabs.Screen name="settings/weight" options={{ href: null, headerShown: false }} />
         </Tabs>
 
-        {!shouldHideTabBar && (
-          <Pressable
-            onPress={() => router.push('/scan')}
-            className="absolute right-6 bottom-14 w-16 h-16 rounded-full bg-black items-center justify-center z-50"
-            style={{
-              elevation: 10,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-            }}
-          >
-            <ScanBarcode size={28} color="white" />
-          </Pressable>
+        {/* Logger Modal - Full screen overlay */}
+        {showLoggerModal && (
+          <View className="absolute inset-0 z-[100]">
+            <LoggerModal visible={showLoggerModal} onClose={() => setShowLoggerModal(false)} />
+          </View>
         )}
       </View>
     </AuthGuard>

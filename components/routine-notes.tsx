@@ -12,7 +12,7 @@ export function NotesSection({ logs, timeRange }: NotesSectionProps) {
   return (
     <View className="mt-6">
       <Text className="text-xl font-medium mb-4">Routine Notes</Text>
-      <View className="space-y-4">
+      <View className="gap-4">
         {logs.map(
           (log) =>
             log.notes && (

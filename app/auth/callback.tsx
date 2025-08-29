@@ -3,10 +3,11 @@ import { View, ActivityIndicator, Text } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner-native';
-import { revenueCatService } from '@/lib/services/revenuecat-service';
+import { useAuth } from '@/context/auth-provider';
 
 export default function AuthCallback() {
   const [isProcessing, setIsProcessing] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     handleAuthCallback();
@@ -15,18 +16,16 @@ export default function AuthCallback() {
   // Helper function to determine where to redirect after auth
   const getPostAuthRoute = async (userId: string): Promise<string> => {
     try {
-      // Use the new best practices method
-      const result = await revenueCatService.checkSubscriptionStatus(userId);
-
-      if (result.error) {
-        console.error('Error checking subscription status:', result.error);
+      if (!user) {
+        console.error('User not found');
         // Default to paywall if we can't check subscription
         return '/paywall';
       }
 
-      // If user has active subscription, go to explore
+      // If user has active subscription, go to nutrition
       // Otherwise, go to paywall
-      return result.isSubscribed ? '/(tabs)/explore' : '/paywall';
+      // return result.isSubscribed ? '/(tabs)/nutrition' : '/paywall';
+      return '/(tabs)/nutrition';
     } catch (error) {
       console.error('Error checking subscription status:', error);
       // Default to paywall if we can't check subscription

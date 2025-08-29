@@ -110,7 +110,7 @@ function BeautyFactCardInner({
   return (
     <Animated.View
       entering={SlideInUp.delay(300).duration(800)}
-      className={`${colors.bg} ${colors.border} border-2 rounded-2xl p-6 shadow-sm`}
+      className={`${colors.bg} ${colors.border} border rounded-2xl p-6 shadow-sm`}
     >
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">

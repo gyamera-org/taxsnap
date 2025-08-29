@@ -1,7 +1,7 @@
 import { View, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { ChevronLeft } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 
 type SubPageLayoutProps = {
   children: React.ReactNode;
@@ -11,17 +11,12 @@ type SubPageLayoutProps = {
 };
 
 const SubPageLayout = ({ children, title = 'Page', rightElement, onBack }: SubPageLayoutProps) => {
+  const router = useRouter();
   const handleGoBack = () => {
     if (onBack) {
       onBack();
     } else {
-      // Use expo-router navigation
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        // Fallback to replace with explore tab if can't go back
-        router.replace('/(tabs)/explore');
-      }
+      router.back();
     }
   };
 

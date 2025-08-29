@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Pressable, Linking, Platform } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { TextInput } from '@/components/ui/text-input';
@@ -12,10 +12,11 @@ import { Eye, EyeOff } from 'lucide-react-native';
 export default function AuthScreen() {
   const { signInWithEmail, signUpWithEmail, signUpWithEmailFree, signInWithApple } = useAuth();
 
-  const { mode, free, plan } = useLocalSearchParams<{
+  const { mode, free, plan, onboardingData } = useLocalSearchParams<{
     mode?: 'signin' | 'signup';
     free?: string;
     plan?: 'yearly' | 'monthly';
+    onboardingData?: string;
   }>();
   const [isSignUp, setIsSignUp] = useState(mode === 'signup');
   const [email, setEmail] = useState('');
@@ -28,6 +29,20 @@ export default function AuthScreen() {
   const canSignUp = mode === 'signup';
   const isFreeSignup = free === 'true';
   const selectedPlan = plan || 'monthly';
+
+  // Parse onboarding data
+  const parsedOnboardingData = onboardingData
+    ? JSON.parse(decodeURIComponent(onboardingData))
+    : null;
+
+  // Pre-fill name if coming from onboarding
+  React.useEffect(() => {
+    if (parsedOnboardingData?.name) {
+      const nameParts = parsedOnboardingData.name.split(' ');
+      setFirstName(nameParts[0] || '');
+      setLastName(nameParts.slice(1).join(' ') || '');
+    }
+  }, [parsedOnboardingData]);
 
   const handleEmailAuth = async () => {
     if (!email || !password) {
@@ -49,9 +64,22 @@ export default function AuthScreen() {
     try {
       if (isSignUp) {
         if (isFreeSignup) {
-          await signUpWithEmailFree(email, password, firstName.trim(), lastName.trim());
+          await signUpWithEmailFree(
+            email,
+            password,
+            firstName.trim(),
+            lastName.trim(),
+            parsedOnboardingData
+          );
         } else {
-          await signUpWithEmail(email, password, firstName.trim(), lastName.trim(), selectedPlan);
+          await signUpWithEmail(
+            email,
+            password,
+            firstName.trim(),
+            lastName.trim(),
+            selectedPlan,
+            parsedOnboardingData
+          );
         }
       } else {
         await signInWithEmail(email, password);
@@ -68,7 +96,7 @@ export default function AuthScreen() {
     try {
       if (isSignUp) {
         // For sign up, we'll pass the selected plan if it's a paid signup
-        await signInWithApple(isFreeSignup ? undefined : selectedPlan);
+        await signInWithApple(isFreeSignup ? undefined : selectedPlan, parsedOnboardingData);
       } else {
         await signInWithApple();
       }
@@ -114,25 +142,18 @@ export default function AuthScreen() {
         {/* Header */}
         <View className="mb-12">
           <Text className="text-3xl font-bold text-black text-center mb-3">
-            {isSignUp
-              ? isFreeSignup
-                ? 'Get Started for Free'
-                : 'Create your account'
-              : 'Welcome back'}
-          </Text>
-          <Text className="text-lg text-slate-600 text-center">
-            {isSignUp
-              ? isFreeSignup
-                ? 'Start with 1 free scan per day • No payment required'
-                : selectedPlan === 'yearly'
-                  ? 'For a Yearly Plan'
-                  : 'For a Monthly Plan'
-              : 'Sign in to continue your beauty journey'}
+            {parsedOnboardingData
+              ? 'Complete Your Setup'
+              : isSignUp
+                ? isFreeSignup
+                  ? 'Get Started for Free'
+                  : 'Create your account'
+                : 'Welcome back'}
           </Text>
         </View>
 
         {/* Email Form */}
-        <View className="space-y-4">
+        <View className="flex flex-col gap-4">
           {isSignUp && (
             <>
               <TextInput

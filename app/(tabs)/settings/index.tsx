@@ -1,4 +1,4 @@
-import { View, Pressable, Linking, Share, Alert } from 'react-native';
+import { View, Pressable, Linking, Share, Alert, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import {
   UserRound,
@@ -8,6 +8,10 @@ import {
   LogOut,
   Star,
   Lightbulb,
+  Bell,
+  Target,
+  Apple,
+  Scale,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -16,32 +20,88 @@ import PageLayout from '@/components/layouts/page-layout';
 import { useAuth } from '@/context/auth-provider';
 import { toast } from 'sonner-native';
 import { useAccount, useDeleteAccount } from '@/lib/hooks/use-accounts';
+import { AvatarUpload } from '@/components/settings/avatar-upload';
+import { SetupVerification } from '@/components/settings/setup-verification';
 
 function SettingsPageSkeleton() {
   return (
     <>
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
-        {Array.from({ length: 2 }).map((_, index) => (
-          <View key={index} className="p-4 border-b border-gray-100 last:border-b-0">
-            <View className="flex-row items-center">
-              <Skeleton width={20} height={20} className="mr-3" />
-              <Skeleton width={120} height={16} />
-            </View>
+      {/* User Profile Card Skeleton */}
+      <View className="bg-white mx-4 rounded-2xl shadow mb-4 p-4">
+        <View className="flex-row items-center">
+          <Skeleton width={60} height={60} className="rounded-full mr-4" />
+          <View className="flex-1">
+            <Skeleton width={120} height={20} className="mb-2" />
+            <Skeleton width={80} height={16} />
           </View>
-        ))}
+        </View>
+      </View>
+
+      {/* Settings Items - Individual cards matching the layout */}
+      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+        <View className="p-4">
+          <View className="flex-row items-center">
+            <Skeleton width={20} height={20} className="mr-3" />
+            <Skeleton width={140} height={16} />
+          </View>
+        </View>
       </View>
 
       <View className="bg-white mx-4 rounded-2xl shadow mb-4">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <View key={index} className="p-4 border-b border-gray-100 last:border-b-0">
-            <View className="flex-row items-center">
-              <Skeleton width={20} height={20} className="mr-3" />
-              <Skeleton width={140} height={16} />
-            </View>
+        <View className="p-4">
+          <View className="flex-row items-center">
+            <Skeleton width={20} height={20} className="mr-3" />
+            <Skeleton width={120} height={16} />
           </View>
-        ))}
+        </View>
       </View>
 
+      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+        <View className="p-4">
+          <View className="flex-row items-center">
+            <Skeleton width={20} height={20} className="mr-3" />
+            <Skeleton width={140} height={16} />
+          </View>
+        </View>
+      </View>
+
+      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+        <View className="p-4">
+          <View className="flex-row items-center">
+            <Skeleton width={20} height={20} className="mr-3" />
+            <Skeleton width={120} height={16} />
+          </View>
+        </View>
+      </View>
+
+      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+        <View className="p-4">
+          <View className="flex-row items-center">
+            <Skeleton width={20} height={20} className="mr-3" />
+            <Skeleton width={180} height={16} />
+          </View>
+        </View>
+      </View>
+
+      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+        <View className="p-4">
+          <View className="flex-row items-center">
+            <Skeleton width={20} height={20} className="mr-3" />
+            <Skeleton width={120} height={16} />
+          </View>
+        </View>
+      </View>
+
+      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+        <View className="p-4">
+          <View className="flex-row items-center">
+            <Skeleton width={20} height={20} className="mr-3" />
+            <Skeleton width={140} height={16} />
+          </View>
+        </View>
+      </View>
+
+      {/* Logout section */}
       <View className="bg-white mx-4 rounded-2xl shadow mb-8">
         <View className="p-4">
           <View className="flex-row items-center">
@@ -59,7 +119,7 @@ export default function SettingsScreen() {
   const { signOut, user } = useAuth();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const { isLoading } = useAccount();
+  const { data: account, isLoading } = useAccount();
   const { mutate: deleteAccount } = useDeleteAccount();
 
   const handleLogout = async () => {
@@ -81,6 +141,42 @@ export default function SettingsScreen() {
     }
   };
 
+  const calculateAge = (dateOfBirth: string) => {
+    try {
+      if (!dateOfBirth) return null;
+      const today = new Date();
+      const birthDate = new Date(dateOfBirth);
+
+      // Check if date is valid
+      if (isNaN(birthDate.getTime())) return null;
+
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        return age - 1;
+      }
+      return age;
+    } catch (error) {
+      console.warn('Error calculating age:', error);
+      return null;
+    }
+  };
+
+  // Get user display data with fallbacks
+  const getUserDisplayData = () => {
+    const name = account?.name || 'User';
+
+    let ageText = 'Age not set';
+    const userAge = account?.date_of_birth ? calculateAge(account.date_of_birth) : null;
+
+    if (userAge !== null && userAge >= 0) {
+      ageText = `${userAge} years old`;
+    }
+
+    return { name, ageText };
+  };
+
   return (
     <>
       <PageLayout title="Settings">
@@ -88,17 +184,57 @@ export default function SettingsScreen() {
           <SettingsPageSkeleton />
         ) : (
           <>
-            {/* Settings List */}
+            {/* User Profile Card */}
+            <TouchableOpacity
+              className="bg-white mx-4 rounded-2xl shadow mb-4 p-4"
+              onPress={() => router.push('/settings/personal-details')}
+            >
+              <View className="flex-row items-center">
+                <AvatarUpload size={60} showActions={false} />
+                <View className="ml-4 flex-1">
+                  <Text className="text-xl font-semibold">{getUserDisplayData().name}</Text>
+                  <Text className="text-gray-500">{getUserDisplayData().ageText}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {/* Personal Settings */}
             <View className="bg-white mx-4 rounded-2xl shadow">
-              <SettingsItem
+              {/* <SettingsItem
                 icon={UserRound}
                 label="Personal details"
                 onPress={() => router.push('/settings/personal-details')}
+              /> */}
+              <SettingsItem
+                icon={Bell}
+                label="Reminder settings"
+                onPress={() => router.push('/settings/reminder-settings')}
                 isLast
               />
             </View>
 
+            {/* Health & Fitness */}
             <View className="bg-white mx-4 rounded-2xl shadow mt-4">
+              <SettingsItem
+                icon={Target}
+                label="Fitness goals"
+                onPress={() => router.push('/settings/fitness-goals')}
+              />
+              <SettingsItem
+                icon={Apple}
+                label="Nutrition goals"
+                onPress={() => router.push('/settings/nutrition-goals')}
+              />
+              <SettingsItem
+                icon={Scale}
+                label="Weight tracking"
+                onPress={() => router.push('/settings/weight')}
+                isLast
+              />
+            </View>
+
+            {/* App Feedback */}
+            {/* <View className="bg-white mx-4 rounded-2xl shadow mt-4">
               <SettingsItem
                 icon={Star}
                 label="Rate BeautyScan"
@@ -118,8 +254,9 @@ export default function SettingsScreen() {
                 }
                 isLast
               />
-            </View>
+            </View> */}
 
+            {/* Legal & Account */}
             <View className="bg-white mx-4 rounded-2xl shadow mt-4">
               <SettingsItem
                 icon={FileText}

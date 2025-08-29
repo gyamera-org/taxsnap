@@ -58,7 +58,6 @@ export function useUpdateAccount() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.accounts.detail() });
-      toast.success('Account updated');
     },
     onError: (err: any) => handleError(err, 'Failed to update account'),
   });
@@ -104,7 +103,6 @@ export function useDeleteAccount() {
     },
     onSuccess: () => {
       qc.clear();
-      toast.success('Account successfully deleted');
     },
     onError: (err: any) => handleError(err, 'Failed to delete account'),
   });

@@ -1,11 +1,13 @@
 import React from 'react';
-import { TouchableOpacity, Text, TouchableOpacityProps } from 'react-native';
+import { TouchableOpacity, Text, TouchableOpacityProps, View } from 'react-native';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
   variant?: 'primary' | 'secondary';
   loading?: boolean;
   size?: 'small' | 'medium' | 'large';
+  preIcon?: React.ReactNode;
+  postIcon?: React.ReactNode;
 }
 
 export function Button({
@@ -15,10 +17,12 @@ export function Button({
   size = 'medium',
   disabled,
   className = '',
+  preIcon,
+  postIcon,
   ...props
 }: ButtonProps) {
   const getButtonClasses = () => {
-    let baseClasses = 'rounded-full items-center justify-center';
+    let baseClasses = 'rounded-full items-center justify-center flex-row';
 
     // Size classes
     switch (size) {
@@ -76,7 +80,9 @@ export function Button({
 
   return (
     <TouchableOpacity className={getButtonClasses()} disabled={disabled || loading} {...props}>
+      {preIcon && !loading && <View className="mr-2">{preIcon}</View>}
       <Text className={getTextClasses()}>{loading ? 'Loading...' : title}</Text>
+      {postIcon && !loading && <View className="ml-2">{postIcon}</View>}
     </TouchableOpacity>
   );
 }

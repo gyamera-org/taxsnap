@@ -193,7 +193,7 @@ export function SearchAndFilter({
               </View>
 
               {/* Action Buttons */}
-              <View className="flex-row space-x-3">
+              <View className="flex-row gap-3">
                 {hasActiveFilters && (
                   <TouchableOpacity
                     onPress={clearFilters}

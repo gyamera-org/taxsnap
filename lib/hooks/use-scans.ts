@@ -37,7 +37,6 @@ export function useToggleFavorite() {
       return data as boolean;
     },
     onSuccess: (_, scanId) => {
-      toast.success('Updated favorite!');
       qc.invalidateQueries({ queryKey: queryKeys.scans.all });
       qc.invalidateQueries({ queryKey: queryKeys.favorites.all });
       qc.invalidateQueries({ queryKey: queryKeys.scans.detail(scanId) });
@@ -101,7 +100,6 @@ export function useSaveScan() {
       return data as string;
     },
     onSuccess: () => {
-      toast.success('Product saved!');
       queryClient.invalidateQueries({ queryKey: queryKeys.scans.all });
     },
     onError: (err) => {

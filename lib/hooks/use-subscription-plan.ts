@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/context/auth-provider';
-// import { revenueCatService } from '@/lib/services/revenuecat-service'; // TODO: Update to use useRevenueCat hook
 import { queryKeys } from './query-keys';
 import { handleError } from './utils';
 
@@ -57,7 +56,6 @@ export function useUpdateSelectedPlan() {
     onSuccess: (_, selectedPlan) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subscription.info(user?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts.detail() });
-      toast.success(`Plan updated to ${selectedPlan}`);
     },
     onError: (error: any) => handleError(error, 'Failed to update plan'),
   });
@@ -81,26 +79,26 @@ export function useChangePlan() {
       if (updateError) throw updateError;
 
       // Get current offerings
-      const currentOffering = await revenueCatService.getCurrentOffering();
+      // const currentOffering = await revenueCatService.getCurrentOffering();
 
-      if (!currentOffering?.availablePackages) {
-        throw new Error('No subscription options available');
-      }
+      // if (!currentOffering?.availablePackages) {
+      //   throw new Error('No subscription options available');
+      // }
 
-      // Find the package for the new plan
-      const packageToPurchase = currentOffering.availablePackages.find((pkg: any) =>
-        newPlan === 'yearly'
-          ? pkg.packageType === 'ANNUAL' ||
-            pkg.identifier.includes('yearly') ||
-            pkg.product.identifier.includes('yearly')
-          : pkg.packageType === 'MONTHLY' ||
-            pkg.identifier.includes('monthly') ||
-            pkg.product.identifier.includes('monthly')
-      );
+      // // Find the package for the new plan
+      // const packageToPurchase = currentOffering.availablePackages.find((pkg: any) =>
+      //   newPlan === 'yearly'
+      //     ? pkg.packageType === 'ANNUAL' ||
+      //       pkg.identifier.includes('yearly') ||
+      //       pkg.product.identifier.includes('yearly')
+      //     : pkg.packageType === 'MONTHLY' ||
+      //       pkg.identifier.includes('monthly') ||
+      //       pkg.product.identifier.includes('monthly')
+      // );
 
-      if (!packageToPurchase) {
-        throw new Error('Selected subscription plan not available');
-      }
+      // if (!packageToPurchase) {
+      //   throw new Error('Selected subscription plan not available');
+      // }
 
       // Check if we're in Expo Go - if so, simulate success
       const isExpoGo = __DEV__ && !process.env.EXPO_STANDALONE_APP;
@@ -118,26 +116,26 @@ export function useChangePlan() {
       }
 
       // Process actual plan change with RevenueCat
-      const result = await revenueCatService.purchasePackage(packageToPurchase);
+      // const result = await revenueCatService.purchasePackage(packageToPurchase);
 
-      if (result.success) {
-        // Update subscription status in database
-        await supabase.rpc('update_subscription_status', {
-          p_user_id: user.id,
-          p_subscription_status: 'active',
-          p_subscription_plan: newPlan,
-          p_subscription_active: true,
-        });
+      // if (result.success) {
+      //   // Update subscription status in database
+      //   await supabase.rpc('update_subscription_status', {
+      //     p_user_id: user.id,
+      //     p_subscription_status: 'active',
+      //     p_subscription_plan: newPlan,
+      //     p_subscription_active: true,
+      //   });
 
-        return { success: true, message: 'Plan changed successfully!' };
-      } else {
-        throw new Error(result.error || 'Failed to change plan');
-      }
+      //   return { success: true, message: 'Plan changed successfully!' };
+      // } else {
+      //   throw new Error(result.error || 'Failed to change plan');
+      // }
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subscription.info(user?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts.detail() });
-      toast.success(result.message);
+      // toast.success(result.message);
     },
     onError: (error: any) => handleError(error, 'Failed to change plan'),
   });
@@ -173,34 +171,33 @@ export function useSyncSubscriptionStatus() {
       if (!user?.id) throw new Error('User not authenticated');
 
       // Get subscription status from RevenueCat
-      const result = await revenueCatService.checkSubscriptionStatus(user.id);
+      // const result = await revenueCatService.checkSubscriptionStatus(user.id);
 
-      if (result.error) {
-        throw new Error(result.error);
-      }
+      // if (result.error) {
+      //   throw new Error(result.error);
+      // }
 
-      // Get subscription details
-      const subscriptionInfo = revenueCatService.getSubscriptionInfo(result.customerInfo!);
+      // // Get subscription details
+      // const subscriptionInfo = revenueCatService.getSubscriptionInfo(result.customerInfo!);
 
-      // Update database with current status
-      await supabase.rpc('update_subscription_status', {
-        p_user_id: user.id,
-        p_subscription_status: result.isSubscribed ? 'active' : 'inactive',
-        p_subscription_plan: subscriptionInfo.plan,
-        p_subscription_active: result.isSubscribed,
-        p_subscription_expires: subscriptionInfo.expiresAt?.toISOString() || null,
-      });
+      // // Update database with current status
+      // await supabase.rpc('update_subscription_status', {
+      //   p_user_id: user.id,
+      //   p_subscription_status: result.isSubscribed ? 'active' : 'inactive',
+      //   p_subscription_plan: subscriptionInfo.plan,
+      //   p_subscription_active: result.isSubscribed,
+      //   p_subscription_expires: subscriptionInfo.expiresAt?.toISOString() || null,
+      // });
 
-      return {
-        isSubscribed: result.isSubscribed,
-        plan: subscriptionInfo.plan,
-        expiresAt: subscriptionInfo.expiresAt,
-      };
+      // return {
+      //   isSubscribed: result.isSubscribed,
+      //   plan: subscriptionInfo.plan,
+      //   expiresAt: subscriptionInfo.expiresAt,
+      // };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.subscription.info(user?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.accounts.detail() });
-      toast.success('Subscription status synced');
     },
     onError: (error: any) => handleError(error, 'Failed to sync subscription status'),
   });

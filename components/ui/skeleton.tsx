@@ -96,7 +96,7 @@ export function SettingsItemSkeleton() {
 export function HairGoalsSkeleton() {
   return (
     <View className="bg-white mx-4 p-4 rounded-2xl shadow">
-      <View className="space-y-4">
+      <View className="gap-4">
         {Array.from({ length: 5 }).map((_, index) => (
           <View key={index} className="flex-row justify-between items-center py-2">
             <Skeleton width={120} height={16} />
@@ -111,7 +111,7 @@ export function HairGoalsSkeleton() {
 export function PersonalDetailsSkeleton() {
   return (
     <View className="bg-white mx-4 p-4 rounded-2xl shadow">
-      <View className="space-y-4">
+      <View className="gap-4">
         {Array.from({ length: 2 }).map((_, index) => (
           <View key={index} className="flex-row justify-between items-center py-3">
             <Skeleton width={80} height={16} />

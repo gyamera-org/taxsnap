@@ -6,6 +6,7 @@ import SettingsDetailItem from '@/components/settings-detail-item';
 import { PersonalDetailsSkeleton } from '@/components/ui';
 import SubPageLayout from '@/components/layouts/sub-page';
 import { useAccount, useUpdateAccount } from '@/lib/hooks/use-accounts';
+import { AvatarUpload } from '@/components/settings/avatar-upload';
 import { toast } from 'sonner-native';
 import { useRouter } from 'expo-router';
 
@@ -39,6 +40,7 @@ export default function PersonalDetailsScreen() {
 
     try {
       if (field === 'name') {
+        // Update account
         updateAccount({ name: tempValue });
       }
       setEditingField(null);
@@ -49,6 +51,7 @@ export default function PersonalDetailsScreen() {
 
   const handleDateSelect = async (day: { dateString: string }) => {
     try {
+      // Update account
       updateAccount({ date_of_birth: day.dateString });
       setShowCalendar(false);
     } catch (error) {
@@ -70,6 +73,15 @@ export default function PersonalDetailsScreen() {
 
   return (
     <SubPageLayout title="Personal Details" onBack={handleGoBack}>
+      {/* Avatar Section */}
+      <View className="bg-white mx-4 p-6 rounded-2xl shadow mb-4">
+        <Text className="text-lg font-semibold mb-4 text-center">Profile Photo</Text>
+        <View className="items-center">
+          <AvatarUpload size={100} showActions={true} />
+        </View>
+      </View>
+
+      {/* Personal Information */}
       <View className="bg-white mx-4 p-4 rounded-2xl shadow flex flex-col gap-4">
         {Object.entries(details).map(([field, value], index) => (
           <SettingsDetailItem

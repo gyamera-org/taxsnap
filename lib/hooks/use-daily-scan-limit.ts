@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSubscription } from '@/context/revenuecat-provider';
-// import { revenueCatService } from '@/lib/services/revenuecat-service'; // For future entitlement-specific checks
 
 const DAILY_SCAN_KEY = 'daily_scan_data';
 const FREE_DAILY_LIMIT = 1;

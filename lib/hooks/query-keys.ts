@@ -9,6 +9,34 @@ export const queryKeys = {
     info: (userId?: string) => [...queryKeys.subscription.all, 'info', userId] as const,
     status: () => [...queryKeys.subscription.all, 'status'] as const,
   },
+  settings: {
+    all: ['settings'] as const,
+    detail: () => [...queryKeys.settings.all, 'detail'] as const,
+    avatar: () => [...queryKeys.settings.all, 'avatar'] as const,
+    weightHistory: (limit?: number) =>
+      [...queryKeys.settings.all, 'weight-history', limit] as const,
+    fitnessGoals: () => [...queryKeys.settings.all, 'fitness-goals'] as const,
+    nutritionGoals: () => [...queryKeys.settings.all, 'nutrition-goals'] as const,
+    weightGoals: () => [...queryKeys.settings.all, 'weight-goals'] as const,
+    reminderSettings: ['settings', 'reminder-settings'] as const,
+  },
+  logs: {
+    all: ['logs'] as const,
+    weightEntries: (limit?: number) => [...queryKeys.logs.all, 'weight-entries', limit] as const,
+    mealEntries: ['logs', 'meal-entries'] as const,
+    waterEntries: ['logs', 'water-entries'] as const,
+    waterIntake: ['logs', 'water-intake'] as const,
+    dailyNutrition: ['logs', 'daily-nutrition'] as const,
+    nutritionProgress: ['logs', 'nutrition-progress'] as const,
+    weeklyNutrition: ['logs', 'weekly-nutrition'] as const,
+    nutritionStreak: ['logs', 'nutrition-streak'] as const,
+    exerciseEntries: ['logs', 'exercise-entries'] as const,
+    dailyExercise: ['logs', 'daily-exercise'] as const,
+    exerciseProgress: ['logs', 'exercise-progress'] as const,
+    exerciseStreak: ['logs', 'exercise-streak'] as const,
+    loggedDates: ['logs', 'logged-dates'] as const,
+    weeklyExercisePlans: ['logs', 'weekly-exercise-plans'] as const,
+  },
   scans: {
     all: ['scans'] as const,
     list: (filter: string, sort: string, search?: string) =>
@@ -21,5 +49,19 @@ export const queryKeys = {
   preview: {
     recent: () => queryKeys.scans.list('recent', 'newest'),
     favorites: () => queryKeys.scans.list('favorites', 'newest'),
+  },
+  food: {
+    all: ['food'] as const,
+    search: ['food', 'search'] as const,
+    byCategory: ['food', 'by-category'] as const,
+    popular: ['food', 'popular'] as const,
+  },
+  exercise: {
+    all: ['exercise'] as const,
+    search: ['exercise', 'search'] as const,
+    byCategory: ['exercise', 'by-category'] as const,
+    byMuscleGroup: ['exercise', 'by-muscle-group'] as const,
+    byEquipment: ['exercise', 'by-equipment'] as const,
+    popular: ['exercise', 'popular'] as const,
   },
 } as const;
