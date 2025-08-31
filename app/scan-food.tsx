@@ -74,10 +74,8 @@ export default function ScanFoodScreen() {
 
       // Convert image to base64
       const imageBase64 = await convertImageToBase64(imageUri);
-      console.log('🖼️ Image format:', imageBase64.substring(0, 50) + '...');
 
       // Send image for analysis and auto-save
-      console.log('🍎 Sending image to food scanner with meal type:', selectedMealType);
       scanFood.mutate(
         {
           image_base64: imageBase64,

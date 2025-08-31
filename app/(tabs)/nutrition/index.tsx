@@ -43,11 +43,8 @@ export default function NutritionScreen() {
 
   // Set up real-time subscription for automatic updates
   useMealEntriesRealtime(() => {
-    console.log('🔄 Force updating nutrition screen...');
-    console.log('🔄 Current force update key:', forceUpdateKey);
     setForceUpdateKey((prev) => {
       const newKey = prev + 1;
-      console.log('🔄 New force update key:', newKey);
       return newKey;
     });
   });

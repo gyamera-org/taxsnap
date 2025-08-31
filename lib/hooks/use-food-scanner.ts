@@ -74,7 +74,6 @@ export function useScanFood() {
     onSuccess: (response) => {
       // If meal was auto-saved, invalidate nutrition queries so the UI updates
       if (response.auto_saved) {
-        console.log('🔄 Invalidating nutrition queries after auto-save');
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.logs.mealEntries],
         });

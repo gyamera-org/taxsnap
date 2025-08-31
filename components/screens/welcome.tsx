@@ -5,19 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Text } from '../ui/text';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-provider';
-import { useRevenueCat } from '@/context/revenuecat-provider';
-import { PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
-import {
-  Sparkles,
-  Heart,
-  Shield,
-  ScanLine,
-  Apple,
-  Dumbbell,
-  Moon,
-  Flower2,
-  Droplets,
-} from 'lucide-react-native';
+import { Sparkles, Heart, Apple, Dumbbell, Moon, Droplets } from 'lucide-react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -36,7 +24,7 @@ function IconBackground({ children }: { children: React.ReactNode }) {
   const sparkles2X = useSharedValue(0);
   const heartScale = useSharedValue(1);
   const moonRotation = useSharedValue(0);
-  const flowerY = useSharedValue(-30);
+
   const appleOpacity = useSharedValue(0.3);
   const appleScale = useSharedValue(1);
   const dumbbellRotation = useSharedValue(0);
@@ -67,13 +55,6 @@ function IconBackground({ children }: { children: React.ReactNode }) {
 
     // Slow moon rotation
     moonRotation.value = withRepeat(withTiming(360, { duration: 15000 }), -1, false);
-
-    // Gentle flower float
-    flowerY.value = withRepeat(
-      withSequence(withTiming(height * 0.25, { duration: 6000 }), withTiming(-30, { duration: 0 })),
-      -1,
-      false
-    );
 
     // Apple gentle fade and scale
     appleOpacity.value = withRepeat(
@@ -122,10 +103,6 @@ function IconBackground({ children }: { children: React.ReactNode }) {
     transform: [{ rotate: `${moonRotation.value}deg` }],
   }));
 
-  const flowerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: flowerY.value }],
-  }));
-
   const appleStyle = useAnimatedStyle(() => ({
     opacity: appleOpacity.value,
     transform: [{ scale: appleScale.value }],
@@ -165,10 +142,6 @@ function IconBackground({ children }: { children: React.ReactNode }) {
         <Moon size={28} color="#E0E7FF" />
       </Animated.View>
 
-      <Animated.View style={[{ position: 'absolute', top: 280, left: 50 }, flowerStyle]}>
-        <Flower2 size={30} color="#F472B6" />
-      </Animated.View>
-
       <Animated.View style={[{ position: 'absolute', top: 320, right: 30 }, appleStyle]}>
         <Apple size={32} color="#10B981" />
       </Animated.View>
@@ -192,57 +165,12 @@ function IconBackground({ children }: { children: React.ReactNode }) {
 
 export function WelcomeScreen() {
   const { user, loading } = useAuth();
-  const { offerings, loading: revenueCatLoading } = useRevenueCat();
 
   useEffect(() => {
     if (!loading && user) {
       router.replace('/(tabs)/nutrition');
     }
   }, [user, loading]);
-
-  console.log('offerings', offerings);
-
-  const onYearlySubscription = useCallback(() => {
-    router.push('/onboarding?plan=yearly');
-  }, []);
-
-  const onMonthlySubscription = useCallback(() => {
-    router.push('/onboarding?plan=monthly');
-  }, []);
-
-  // Get packages from offerings state
-  const yearlyPackage =
-    offerings?.current?.availablePackages?.find(
-      (pkg: PurchasesPackage) =>
-        pkg.packageType === 'ANNUAL' ||
-        pkg.identifier.includes('annual') ||
-        pkg.identifier.includes('yearly') ||
-        pkg.product.identifier.includes('yearly')
-    ) || null;
-
-  const monthlyPackage =
-    offerings?.current?.availablePackages?.find(
-      (pkg: PurchasesPackage) =>
-        pkg.packageType === 'MONTHLY' ||
-        pkg.identifier.includes('monthly') ||
-        pkg.product.identifier.includes('monthly')
-    ) || null;
-
-  // Helper function to format price
-  const formatPrice = (pkg: PurchasesPackage | null, isYearly: boolean = false) => {
-    console.log('pkg', pkg);
-
-    if (!pkg) return isYearly ? '$1.67/month' : '$2.99';
-
-    const price = pkg.product.priceString;
-    if (isYearly && pkg.product.price) {
-      // Calculate monthly equivalent for yearly plan
-      const yearlyPrice = pkg.product.price;
-      const monthlyEquivalent = (yearlyPrice / 12).toFixed(2);
-      return `$${monthlyEquivalent}/month`;
-    }
-    return price;
-  };
 
   const onSignIn = useCallback(() => {
     router.push('/auth?mode=signin');
@@ -251,8 +179,17 @@ export function WelcomeScreen() {
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-black justify-center items-center">
-        <ActivityIndicator size="large" color="#fff" />
-        <Text className="mt-4 text-white">Loading...</Text>
+        <Animated.View className="items-center" entering={FadeIn.duration(800)}>
+          <Animated.View entering={SlideInUp.delay(200).duration(600)}>
+            <ActivityIndicator size="large" color="#FF69B4" />
+          </Animated.View>
+          <Animated.Text
+            className="mt-4 text-white text-lg font-medium"
+            entering={FadeIn.delay(400).duration(600)}
+          >
+            Loading...
+          </Animated.Text>
+        </Animated.View>
       </SafeAreaView>
     );
   }

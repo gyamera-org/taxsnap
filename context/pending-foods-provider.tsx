@@ -103,11 +103,8 @@ export function PendingFoodsProvider({ children }: { children: React.ReactNode }
   };
 
   const removePendingFood = (id: string) => {
-    console.log('🗑️ PendingFoodsProvider: Removing food with ID:', id);
     setPendingFoods((prev) => {
       const filtered = prev.filter((food) => food.id !== id);
-      console.log('🗑️ PendingFoodsProvider: Foods before removal:', prev.length);
-      console.log('🗑️ PendingFoodsProvider: Foods after removal:', filtered.length);
       return filtered;
     });
   };

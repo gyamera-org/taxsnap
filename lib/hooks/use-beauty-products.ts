@@ -115,8 +115,6 @@ export function useBeautyProducts(type?: 'skincare' | 'haircare', category?: str
           table: 'user_beauty_products',
         },
         (payload) => {
-          console.log('🔔 Realtime beauty product change:', payload);
-
           // Invalidate and refetch the query when data changes
           queryClient.invalidateQueries({
             queryKey: beautyProductsQueryKeys.products(type, category),
@@ -130,7 +128,6 @@ export function useBeautyProducts(type?: 'skincare' | 'haircare', category?: str
             });
           } else if (payload.eventType === 'DELETE') {
             const product = payload.old as UserBeautyProduct;
-            console.log('🗑️ Product deleted via realtime:', product.name);
             toast.success('Product removed!', {
               description: `${product.name} removed from your collection`,
             });

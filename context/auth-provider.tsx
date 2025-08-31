@@ -70,47 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return '/(tabs)/nutrition';
       }
 
-      // Initialize RevenueCat with the user ID first
-      // TODO: Update to use RevenueCat context
-      // await revenueCatService.identifyUser(userId);
-
-      // Check subscription status
-      // TODO: Update to use RevenueCat context
-      // const result = await revenueCatService.checkSubscriptionStatus(userId);
-      const result = { isSubscribed: false, error: null }; // Temporary fallback
-
-      if (result.error) {
-        console.error('Error checking subscription:', result.error);
-        // If can't check subscription, send to payment if plan specified, otherwise welcome
-        return plan ? `/payment-processing?plan=${plan}` : '/';
-      }
-
-      // If user has active subscription, go directly to main app
-      if (result.isSubscribed) {
-        return '/(tabs)/nutrition';
-      }
-
-      // User doesn't have active subscription
-      if (plan) {
-        // User has a plan (new or existing) - trigger immediate purchase
-        toast.info('Processing your subscription...');
-        const success = await handleImmediatePurchase(userId, plan);
-        if (success) {
-          return '/(tabs)/nutrition';
-        } else {
-          // Payment failed - show payment popup again
-          return await showPaymentRetry(userId, plan);
-        }
-      } else {
-        // No plan specified - user needs to choose a plan first
-        toast.info('Please choose a subscription plan to continue.');
-        return '/'; // Back to welcome screen to choose plan
-      }
+      // For now, always go to main app - the subscription guard will handle showing paywall
+      // This allows users to experience the app during grace period
+      return '/(tabs)/nutrition';
     } catch (error) {
       console.error('Error in getPostAuthRoute:', error);
-      // Fallback: always go back to welcome to choose plan
-      toast.error('Something went wrong. Please try again.');
-      return '/';
+      // Fallback: go to main app, let subscription guard handle the rest
+      return '/(tabs)/nutrition';
     }
   };
 
@@ -179,7 +145,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           p_subscription_active: false,
         });
 
-        console.log('Payment failed:', result.error);
         return false;
       }
     } catch (error: any) {
@@ -273,15 +238,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     setLoading(true);
 
-    console.log('🔐 Starting signup with:', {
-      email,
-      firstName,
-      lastName,
-      plan,
-      hasOnboardingData: !!onboardingData,
-      onboardingData,
-    });
-
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -296,19 +252,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
 
-      console.log('🔐 Signup response:', { data, error });
-
       if (error) {
         console.error('❌ Signup error:', error);
         throw error;
       }
 
       if (data.user && data.session) {
-        console.log('✅ User created successfully:', data.user.id);
-
         // Process onboarding data if provided
         if (onboardingData) {
-          console.log('📋 Processing onboarding data...');
           try {
             const rpcParams = {
               p_user_id: data.user.id,
@@ -326,22 +277,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               p_units: onboardingData.units,
             };
 
-            console.log('📋 RPC params:', rpcParams);
-
             const { data: rpcData, error: rpcError } = await supabase.rpc(
               'process_onboarding_data',
               rpcParams
             );
-
-            console.log('📋 RPC response:', { rpcData, rpcError });
 
             if (rpcError) {
               console.error('❌ Onboarding processing failed:', rpcError);
               toast.error(
                 'Account created but settings could not be saved. Please update them in Settings.'
               );
-            } else {
-              console.log('✅ Onboarding processed successfully');
             }
           } catch (error) {
             console.error('❌ Error processing onboarding data:', error);
@@ -352,7 +297,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         // New user signing up with a plan
-        console.log('🚀 Navigating to post-auth route...');
         const route = await getPostAuthRoute(data.user.id, plan, true);
         router.replace(route as any);
       }

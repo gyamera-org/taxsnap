@@ -1,9 +1,9 @@
 require "jwt"
 
-key_file = "/Users/josephinegyamera/gyamera-org/hair-deets/beautyscan/AuthKey_VB7VYA6558.p8"
+key_file = "/Users/josephinegyamera/gyamera-org/hair-deets/lunasync/AuthKey_7CC96MDFC4.p8"
 team_id = "2AFY6WW292"
 client_id = "com.lunasync.app.signin"
-key_id = "VB7VYA6558"
+key_id = "7CC96MDFC4"
 validity_period = 180 # In days. Max 180 (6 months) according to Apple docs.
 
 private_key = OpenSSL::PKey::EC.new IO.read key_file

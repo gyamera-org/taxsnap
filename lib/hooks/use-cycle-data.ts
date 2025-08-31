@@ -143,7 +143,6 @@ export function usePeriodLogsRealtime(startDate?: string, endDate?: string) {
             filter: `user_id=eq.${session.user.id}`,
           },
           (payload) => {
-            console.log('Period logs changed:', payload);
             // Invalidate all cycle-related queries to refresh predictions
             queryClient.invalidateQueries({ queryKey: cycleQueryKeys.all });
           }

@@ -87,11 +87,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
           appUserID: null, // Anonymous user initially
           userDefaultsSuiteName: undefined,
         });
-
-        console.log(
-          'RevenueCat configured for iOS with key:',
-          APIKeys.apple?.substring(0, 10) + '...'
-        );
       } else {
         console.warn('RevenueCat API key not found or not on iOS platform');
         return;
@@ -118,17 +113,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
   const loadOfferingsWithRetry = async (retries = 3) => {
     for (let i = 0; i < retries; i++) {
       try {
-        console.log(`Attempting to load offerings (attempt ${i + 1}/${retries})`);
         const offerings = await Purchases.getOfferings();
-
-        console.log('RevenueCat offerings loaded:', {
-          current: offerings.current?.identifier,
-          allOfferings: Object.keys(offerings.all),
-          totalPackages: Object.values(offerings.all).reduce(
-            (total, offering) => total + (offering.availablePackages?.length || 0),
-            0
-          ),
-        });
 
         // Get all packages from all offerings
         const allPackages: PurchasesPackage[] = [];
@@ -144,7 +129,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
           packages: allPackages,
         }));
 
-        console.log(`Successfully loaded ${allPackages.length} packages`);
         return; // Success, exit retry loop
       } catch (error) {
         console.error(`Error loading offerings (attempt ${i + 1}):`, error);

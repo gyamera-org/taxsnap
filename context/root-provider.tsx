@@ -11,6 +11,7 @@ import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { AuthProvider } from './auth-provider';
 import { RevenueCatProvider } from './revenuecat-provider';
 import { PendingFoodsProvider } from './pending-foods-provider';
+import { PaywallProvider } from './paywall-provider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,54 +27,27 @@ export const RootProvider = ({ children }: PropsWithChildren) => {
   useReactQueryDevTools(queryClient);
 
   useEffect(() => {
-    const initializeRevenueCat = async () => {
-      try {
-        if (Platform.OS === 'ios') {
-          const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
+    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
-          if (!apiKey || apiKey === 'your_ios_api_key') {
-            return;
-          }
-
-          await Purchases.configure({ apiKey: apiKey });
-        } else if (Platform.OS === 'android') {
-          const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
-
-          if (!apiKey || apiKey === 'your_android_api_key') {
-            return;
-          }
-
-          await Purchases.configure({ apiKey: apiKey });
-        } else {
-          return;
-        }
-
-        // Test the connection
-        try {
-          await Purchases.getOfferings();
-        } catch (offeringsError: any) {
-          // Silent error handling
-        }
-      } catch (error: any) {
-        // Silent error handling
-      }
-    };
-
-    initializeRevenueCat();
+    if (Platform.OS === 'ios') {
+      Purchases.configure({ apiKey: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY! });
+    }
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <RevenueCatProvider>
-          <PendingFoodsProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <BottomSheetModalProvider>
-                {children}
-                <Toaster />
-              </BottomSheetModalProvider>
-            </GestureHandlerRootView>
-          </PendingFoodsProvider>
+          <PaywallProvider>
+            <PendingFoodsProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <BottomSheetModalProvider>
+                  {children}
+                  <Toaster />
+                </BottomSheetModalProvider>
+              </GestureHandlerRootView>
+            </PendingFoodsProvider>
+          </PaywallProvider>
         </RevenueCatProvider>
       </AuthProvider>
     </QueryClientProvider>

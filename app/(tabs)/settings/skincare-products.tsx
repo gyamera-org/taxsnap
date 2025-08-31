@@ -88,15 +88,11 @@ export default function SkincareProductsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🗑️ Deleting product:', product.id, product.name);
-
               const { error, data } = await supabase
                 .from('user_beauty_products')
                 .delete()
                 .eq('id', product.id)
                 .select(); // Add select to see what was deleted
-
-              console.log('🗑️ Delete result:', { error, data });
 
               if (error) {
                 console.error('Delete error:', error);
@@ -104,12 +100,8 @@ export default function SkincareProductsScreen() {
                 return;
               }
 
-              console.log('🗑️ Product deleted successfully, forcing refetch...');
-
               // Force immediate refresh - the realtime should also trigger
               await refetch();
-
-              console.log('🗑️ Refetch completed');
             } catch (error) {
               console.error('Delete error:', error);
               toast.error('Failed to delete product');

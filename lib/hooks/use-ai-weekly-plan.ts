@@ -33,8 +33,6 @@ export function useAIWeeklyPlan() {
           table: 'ai_weekly_plans',
         },
         (payload) => {
-          console.log('AI plan update received:', payload);
-
           // Invalidate and refetch the plan
           queryClient.invalidateQueries({ queryKey: ['ai-weekly-plan'] });
 

@@ -109,11 +109,6 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
               caloriesPerMinute: parseFloat(newExerciseCaloriesPerMinute) || 5,
             };
 
-            console.log('🚀 Calling AI Exercise Moderator:', {
-              exerciseEntryId,
-              userId: user.user.id,
-              exerciseData,
-            });
             const moderationStart = Date.now();
             const { data: moderationResponse, error: moderationError } =
               await supabase.functions.invoke('ai-exercise-moderator', {

@@ -150,7 +150,6 @@ Deno.serve(async (req) => {
           .single();
 
         if (existingFood) {
-          console.log(`Food "${foodItem.food.name}" already exists, skipping`);
           continue;
         }
 
