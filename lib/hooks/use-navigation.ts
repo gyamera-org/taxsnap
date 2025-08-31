@@ -22,13 +22,14 @@ export function useAppNavigation() {
       return '/(tabs)/exercise';
     }
 
-    // Cycle related screens
+    // Cycle related screens (including beauty/skincare scanning)
     if (
       currentPath.includes('/log-mood') ||
       currentPath.includes('/log-symptoms') ||
       currentPath.includes('/period-tracker') ||
       currentPath.includes('/edit-period') ||
       currentPath.includes('/cycle-history') ||
+      currentPath.includes('/scan-beauty') ||
       currentPath.includes('cycle')
     ) {
       return '/(tabs)/cycle';
@@ -37,11 +38,6 @@ export function useAppNavigation() {
     // Settings screens
     if (currentPath.includes('settings')) {
       return '/(tabs)/settings';
-    }
-
-    // Explore/beauty screens
-    if (currentPath.includes('/explore') || currentPath.includes('/scan-beauty')) {
-      return '/(tabs)/explore';
     }
 
     // Food/nutrition related screens

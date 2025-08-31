@@ -26,9 +26,16 @@ export function TodaysSupplements({
 
   if (isLoading) {
     return (
-      <View className="mx-4 mb-6">
-        <Text className="text-xl font-bold text-gray-900 mb-4">Supplements</Text>
-        <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-50">
+      <View className="px-4 mb-6">
+        <View className="bg-white rounded-2xl p-4 border border-gray-100">
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center">
+              <View className="w-10 h-10 rounded-2xl bg-green-100 items-center justify-center mr-3">
+                <Pill size={20} color="#10B981" />
+              </View>
+              <Text className="text-lg font-semibold text-black">Supplements</Text>
+            </View>
+          </View>
           <View className="animate-pulse">
             <View className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
             <View className="h-3 bg-gray-200 rounded w-1/3" />
@@ -39,92 +46,85 @@ export function TodaysSupplements({
   }
 
   return (
-    <View className="mx-4 mb-6">
-      <Text className="text-xl font-bold text-gray-900 mb-4">Supplements</Text>
-
-      {supplementData.length > 0 ? (
-        <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-50">
-          {/* Progress Summary */}
-          <View className="bg-green-50 rounded-2xl p-4 mb-4">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-green-900 text-lg font-bold">
-                  {takenSupplements.length} of {totalSupplements}
-                </Text>
-                <Text className="text-green-700 text-sm">
-                  {takenSupplements.length === totalSupplements
-                    ? 'All supplements taken!'
-                    : 'supplements completed'}
-                </Text>
-              </View>
-              <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center">
-                <Pill size={20} color="#10B981" />
-              </View>
+    <View className="px-4 mb-6">
+      <View className="bg-white rounded-2xl p-4 border border-gray-100">
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center">
+            <View className="w-10 h-10 rounded-2xl bg-green-100 items-center justify-center mr-3">
+              <Pill size={20} color="#10B981" />
             </View>
+            <Text className="text-lg font-semibold text-black">Supplements</Text>
           </View>
-
-          {/* Supplement List */}
-          <View className="space-y-3 mb-4">
-            {supplementData.map((supplement, index) => (
-              <View
-                key={index}
-                className="flex-row items-center justify-between p-3 bg-gray-50 rounded-xl"
-              >
-                <View className="flex-1">
-                  <Text className="font-medium text-gray-900">
-                    {supplement.supplement_name || 'Vitamin D3'}
-                  </Text>
-                  {supplement.dosage && (
-                    <Text className="text-gray-500 text-sm">{supplement.dosage}</Text>
-                  )}
-                </View>
-                <View className="ml-3">
-                  {supplement.taken ? (
-                    <View className="flex-row items-center">
-                      <CheckCircle size={16} color="#10B981" />
-                      <Text className="text-green-600 text-xs ml-1 font-medium">Taken</Text>
-                    </View>
-                  ) : (
-                    <View className="w-4 h-4 rounded-full border-2 border-gray-300" />
-                  )}
-                </View>
-              </View>
-            ))}
-          </View>
-
-          {/* Log Supplements Button */}
           <TouchableOpacity
             onPress={() => router.push('/log-supplements')}
-            className="bg-green-500 py-4 rounded-2xl"
+            className="w-8 h-8 rounded-full bg-green-50 items-center justify-center"
           >
-            <Text className="text-white font-semibold text-center">
-              {takenSupplements.length === 0 ? 'Log Supplements' : 'Update Supplements'}
-            </Text>
+            <Plus size={16} color="#10B981" />
           </TouchableOpacity>
         </View>
-      ) : (
-        <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-50">
-          <View className="items-center py-4">
-            <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center mb-3">
+
+        {supplementData.length > 0 ? (
+          <>
+            {/* Progress Summary */}
+            <View className="bg-green-50 rounded-2xl p-4 mb-4">
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-green-900 text-lg font-bold">
+                    {takenSupplements.length} of {totalSupplements}
+                  </Text>
+                  <Text className="text-green-700 text-sm">
+                    {takenSupplements.length === totalSupplements
+                      ? 'All supplements taken!'
+                      : 'supplements completed'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Supplement List */}
+            <View className="gap-3">
+              {supplementData.map((supplement, index) => (
+                <View
+                  key={index}
+                  className="flex-row items-center justify-between p-3 bg-gray-50 rounded-xl"
+                >
+                  <View className="flex-1">
+                    <Text className="font-medium text-gray-900">
+                      {supplement.supplement_name || 'Vitamin D3'}
+                    </Text>
+                    {supplement.dosage && (
+                      <Text className="text-gray-500 text-sm">{supplement.dosage}</Text>
+                    )}
+                  </View>
+                  <View className="ml-3">
+                    {supplement.taken ? (
+                      <View className="flex-row items-center">
+                        <CheckCircle size={16} color="#10B981" />
+                        <Text className="text-green-600 text-xs ml-1 font-medium">Taken</Text>
+                      </View>
+                    ) : (
+                      <View className="w-4 h-4 rounded-full border border-gray-300" />
+                    )}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </>
+        ) : (
+          <View className="items-center py-8">
+            <View className="w-16 h-16 rounded-2xl bg-green-50 items-center justify-center mb-3">
               <Pill size={24} color="#10B981" />
             </View>
-            <Text className="text-gray-500 text-center text-lg font-medium mb-2">
-              No supplements tracked
-            </Text>
-            <Text className="text-gray-400 text-center text-sm mb-4">
-              Add supplements like Vitamin D, B12, or Iron
-            </Text>
-
+            <Text className="text-gray-600 text-center mb-3">No supplements tracked yet</Text>
             <TouchableOpacity
               onPress={() => router.push('/log-supplements')}
-              className="bg-green-500 py-3 px-6 rounded-xl flex-row items-center"
+              className="bg-green-500 px-4 py-2 rounded-xl"
             >
-              <Plus size={16} color="white" />
-              <Text className="text-white font-semibold ml-2">Add Supplements</Text>
+              <Text className="text-white font-medium">Add Your First Supplement</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 }

@@ -38,9 +38,16 @@ export function TodaysSymptoms({ selectedDate, symptomData, isLoading }: TodaysS
 
   if (isLoading) {
     return (
-      <View className="mx-4 mb-6">
-        <Text className="text-xl font-bold text-gray-900 mb-4">Symptoms</Text>
-        <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-50">
+      <View className="px-4 mb-6">
+        <View className="bg-white rounded-2xl p-4 border border-gray-100">
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center">
+              <View className="w-10 h-10 rounded-2xl bg-orange-100 items-center justify-center mr-3">
+                <AlertCircle size={20} color="#F97316" />
+              </View>
+              <Text className="text-lg font-semibold text-black">Symptoms</Text>
+            </View>
+          </View>
           <View className="animate-pulse">
             <View className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
             <View className="h-3 bg-gray-200 rounded w-1/3" />
@@ -51,94 +58,89 @@ export function TodaysSymptoms({ selectedDate, symptomData, isLoading }: TodaysS
   }
 
   return (
-    <View className="mx-4 mb-6">
-      <Text className="text-xl font-bold text-gray-900 mb-4">Symptoms</Text>
-
-      {symptomData?.symptoms && symptomData.symptoms.length > 0 ? (
-        <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-50">
-          {/* Symptoms Summary */}
-          <View className="bg-orange-50 rounded-2xl p-4 mb-4">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-orange-900 text-lg font-bold">
-                  {symptomData.symptoms.length} Symptoms
-                </Text>
-                <Text className="text-orange-700 text-sm">
-                  {symptomData.severity
-                    ? `${symptomData.severity} intensity`
-                    : 'Tracking your experience'}
-                </Text>
-              </View>
-              <View className="w-12 h-12 bg-orange-100 rounded-full items-center justify-center">
-                <AlertCircle size={20} color="#F97316" />
-              </View>
+    <View className="px-4 mb-6">
+      <View className="bg-white rounded-2xl p-4 border border-gray-100">
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center">
+            <View className="w-10 h-10 rounded-2xl bg-orange-100 items-center justify-center mr-3">
+              <AlertCircle size={20} color="#F97316" />
             </View>
+            <Text className="text-lg font-semibold text-black">Symptoms</Text>
           </View>
-
-          {/* Symptoms List */}
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {symptomData.symptoms.slice(0, 6).map((symptom, index) => (
-              <View
-                key={index}
-                className="px-4 py-2 rounded-full bg-gray-50 border border-gray-100"
-                style={{ alignSelf: 'flex-start' }}
-              >
-                <Text className="text-sm font-medium text-gray-700 capitalize">{symptom}</Text>
-              </View>
-            ))}
-            {symptomData.symptoms.length > 6 && (
-              <View
-                className="px-4 py-2 rounded-full bg-gray-50 border border-gray-100"
-                style={{ alignSelf: 'flex-start' }}
-              >
-                <Text className="text-sm font-medium text-gray-600">
-                  +{symptomData.symptoms.length - 6} more
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {symptomData.notes && (
-            <View className="bg-gray-50 rounded-xl p-3 mb-4">
-              <Text className="text-gray-700 text-sm">{symptomData.notes}</Text>
-            </View>
-          )}
-
-          {/* Update Symptoms Button */}
           {!isFuture && (
             <TouchableOpacity
               onPress={() => router.push('/log-symptoms')}
-              className="bg-orange-500 py-4 rounded-2xl"
+              className="w-8 h-8 rounded-full bg-orange-50 items-center justify-center"
             >
-              <Text className="text-white font-semibold text-center">Update Symptoms</Text>
+              <Plus size={16} color="#F97316" />
             </TouchableOpacity>
           )}
         </View>
-      ) : (
-        <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-50">
-          <View className="items-center py-4">
-            <View className="w-12 h-12 bg-orange-100 rounded-full items-center justify-center mb-3">
+
+        {symptomData?.symptoms && symptomData.symptoms.length > 0 ? (
+          <>
+            {/* Symptoms Summary */}
+            <View className="bg-orange-50 rounded-2xl p-4 mb-4">
+              <View className="flex-row items-center justify-between">
+                <View>
+                  <Text className="text-orange-900 text-lg font-bold">
+                    {symptomData.symptoms.length} Symptoms
+                  </Text>
+                  <Text className="text-orange-700 text-sm">
+                    {symptomData.severity
+                      ? `${symptomData.severity} intensity`
+                      : 'Tracking your experience'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Symptoms List */}
+            <View className="flex-row flex-wrap gap-2 mb-4">
+              {symptomData.symptoms.slice(0, 6).map((symptom, index) => (
+                <View
+                  key={index}
+                  className="px-4 py-2 rounded-full bg-gray-50 border border-gray-100"
+                  style={{ alignSelf: 'flex-start' }}
+                >
+                  <Text className="text-sm font-medium text-gray-700 capitalize">{symptom}</Text>
+                </View>
+              ))}
+              {symptomData.symptoms.length > 6 && (
+                <View
+                  className="px-4 py-2 rounded-full bg-gray-50 border border-gray-100"
+                  style={{ alignSelf: 'flex-start' }}
+                >
+                  <Text className="text-sm font-medium text-gray-600">
+                    +{symptomData.symptoms.length - 6} more
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {symptomData.notes && (
+              <View className="bg-gray-50 rounded-xl p-3">
+                <Text className="text-gray-700 text-sm">{symptomData.notes}</Text>
+              </View>
+            )}
+          </>
+        ) : (
+          <View className="items-center py-8">
+            <View className="w-16 h-16 rounded-2xl bg-orange-50 items-center justify-center mb-3">
               <AlertCircle size={24} color="#F97316" />
             </View>
-            <Text className="text-gray-500 text-center text-lg font-medium mb-2">
-              No symptoms logged
-            </Text>
-            <Text className="text-gray-400 text-center text-sm mb-4">
-              Track symptoms like cramps, headaches, or mood changes
-            </Text>
-
+            <Text className="text-gray-600 text-center mb-3">No symptoms logged yet</Text>
             {!isFuture && (
               <TouchableOpacity
                 onPress={() => router.push('/log-symptoms')}
-                className="bg-orange-500 py-3 px-6 rounded-xl flex-row items-center"
+                className="bg-orange-500 px-4 py-2 rounded-xl"
               >
-                <Plus size={16} color="white" />
-                <Text className="text-white font-semibold ml-2">Log Symptoms</Text>
+                <Text className="text-white font-medium">Log Your Symptoms</Text>
               </TouchableOpacity>
             )}
           </View>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 }

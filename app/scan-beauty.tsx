@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import SubPageLayout from '@/components/layouts/sub-page';
@@ -8,7 +8,7 @@ import { toast } from 'sonner-native';
 import { useAnalyzeScan, NonBeautyProductError } from '@/lib/hooks/use-analyze-scan';
 import { useSaveScanWithInsights } from '@/lib/hooks/use-beauty-recommendations';
 
-import { Camera, ImageIcon, Sparkles, X } from 'lucide-react-native';
+import { Camera, ImageIcon, Sparkles } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ProductDetailModal } from '@/components/saves/ProductDetailModal/ProductDetailModal';
@@ -20,7 +20,7 @@ export default function ScanBeautyScreen() {
   const saveScanWithInsights = useSaveScanWithInsights();
 
   const [activeButton, setActiveButton] = useState<'camera' | 'gallery' | null>(null);
-  const [showCameraModal, setShowCameraModal] = useState(false);
+
   const [scannedProduct, setScannedProduct] = useState<ScannedProductUI | null>(null);
   const [showProductDetail, setShowProductDetail] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -140,7 +140,6 @@ export default function ScanBeautyScreen() {
     const hasPermission = await requestPermission('camera');
     if (!hasPermission) return;
 
-    setShowCameraModal(false);
     setActiveButton('camera');
 
     try {
@@ -226,21 +225,21 @@ export default function ScanBeautyScreen() {
   };
 
   return (
-    <SubPageLayout title="Scan Beauty Product">
+    <SubPageLayout title="Scan Skincare Product">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-4 py-8">
           {/* Header */}
           <View className="mb-8">
-            <Text className="text-2xl font-bold text-black mb-2">Scan Your Product</Text>
+            <Text className="text-2xl font-bold text-black mb-2">Scan Your Skincare</Text>
             <Text className="text-gray-600">
-              Get instant insights about ingredients and women's health compatibility
+              Get instant insights about skincare ingredients and cycle compatibility
             </Text>
           </View>
 
           {/* Scan Options */}
-          <View className="space-y-4">
+          <View className="gap-4">
             <TouchableOpacity
-              onPress={() => setShowCameraModal(true)}
+              onPress={handleTakePhoto}
               disabled={activeButton === 'camera'}
               className={`
                 bg-white rounded-2xl p-6 border border-gray-200 flex-row items-center
@@ -284,7 +283,7 @@ export default function ScanBeautyScreen() {
               <Sparkles size={20} color="#EC4899" />
               <Text className="text-lg font-semibold text-black ml-2">Scanning Tips</Text>
             </View>
-            <View className="space-y-2">
+            <View className="gap-2">
               <Text className="text-gray-700 text-sm">
                 • Make sure the product label is clearly visible
               </Text>
@@ -293,46 +292,12 @@ export default function ScanBeautyScreen() {
                 • Focus on ingredients list if available
               </Text>
               <Text className="text-gray-700 text-sm">
-                • Works best with skincare, makeup, and hair products
+                • Works best with skincare products (serums, creams, cleansers)
               </Text>
             </View>
           </View>
         </View>
       </ScrollView>
-
-      {/* Camera Modal */}
-      <Modal
-        visible={showCameraModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowCameraModal(false)}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white rounded-t-3xl p-6 pb-8">
-            <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-xl font-semibold text-black">Take Photo</Text>
-              <TouchableOpacity onPress={() => setShowCameraModal(false)}>
-                <X size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-
-            <View className="space-y-3">
-              <Button
-                title="Open Camera"
-                onPress={handleTakePhoto}
-                variant="primary"
-                size="large"
-              />
-              <Button
-                title="Cancel"
-                onPress={() => setShowCameraModal(false)}
-                variant="secondary"
-                size="large"
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Product Detail Modal */}
       <ProductDetailModal

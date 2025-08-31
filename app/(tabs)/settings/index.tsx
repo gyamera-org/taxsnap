@@ -1,4 +1,4 @@
-import { View, Pressable, Linking, Share, Alert, TouchableOpacity } from 'react-native';
+import { View, Pressable, Linking, Share, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
 import {
   UserRound,
@@ -12,6 +12,9 @@ import {
   Target,
   Apple,
   Scale,
+  Sparkles,
+  Scissors,
+  Pill,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -180,61 +183,92 @@ export default function SettingsScreen() {
   return (
     <>
       <PageLayout title="Settings">
-        {isLoading ? (
-          <SettingsPageSkeleton />
-        ) : (
-          <>
-            {/* User Profile Card */}
-            <TouchableOpacity
-              className="bg-white mx-4 rounded-2xl shadow mb-4 p-4"
-              onPress={() => router.push('/settings/personal-details')}
-            >
-              <View className="flex-row items-center">
-                <AvatarUpload size={60} showActions={false} />
-                <View className="ml-4 flex-1">
-                  <Text className="text-xl font-semibold">{getUserDisplayData().name}</Text>
-                  <Text className="text-gray-500">{getUserDisplayData().ageText}</Text>
+        <ScrollView
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
+          {isLoading ? (
+            <SettingsPageSkeleton />
+          ) : (
+            <>
+              {/* User Profile Card */}
+              <TouchableOpacity
+                className="bg-white mx-4 rounded-2xl shadow mb-4 p-4"
+                onPress={() => router.push('/settings/personal-details')}
+              >
+                <View className="flex-row items-center">
+                  <AvatarUpload size={60} showActions={false} />
+                  <View className="ml-4 flex-1">
+                    <Text className="text-xl font-semibold">{getUserDisplayData().name}</Text>
+                    <Text className="text-gray-500">{getUserDisplayData().ageText}</Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
 
-            {/* Personal Settings */}
-            {/* <View className="bg-white mx-4 rounded-2xl shadow"> */}
-            {/* <SettingsItem
+              {/* Personal Settings */}
+              {/* <View className="bg-white mx-4 rounded-2xl shadow"> */}
+              {/* <SettingsItem
                 icon={UserRound}
                 label="Personal details"
                 onPress={() => router.push('/settings/personal-details')}
               /> */}
-            {/* <SettingsItem
+              {/* <SettingsItem
                 icon={Bell}
                 label="Reminder settings"
                 onPress={() => router.push('/settings/reminder-settings')}
                 isLast
               /> */}
-            {/* </View> */}
+              {/* </View> */}
 
-            {/* Health & Fitness */}
-            <View className="bg-white mx-4 rounded-2xl shadow mt-4">
-              <SettingsItem
-                icon={Target}
-                label="Fitness goals"
-                onPress={() => router.push('/settings/fitness-goals')}
-              />
-              <SettingsItem
-                icon={Apple}
-                label="Nutrition goals"
-                onPress={() => router.push('/settings/nutrition-goals')}
-              />
-              <SettingsItem
-                icon={Scale}
-                label="Weight tracking"
-                onPress={() => router.push('/settings/weight')}
-                isLast
-              />
-            </View>
+              {/* Beauty Section */}
+              {/* <View className="mx-4 mt-4">
+                <Text className="text-lg font-semibold text-black mb-3">Beauty</Text>
+              </View> */}
+              {/* <View className="bg-white mx-4 rounded-2xl shadow">
+                <SettingsItem
+                  icon={Sparkles}
+                  label="Skincare Products"
+                  onPress={() => router.push('/settings/skincare-products')}
+                />
+                <SettingsItem
+                  icon={Scissors}
+                  label="Haircare Products"
+                  onPress={() => router.push('/settings/haircare-products')}
+                />
+                <SettingsItem
+                  icon={Pill}
+                  label="Supplements"
+                  onPress={() => router.push('/settings/supplements')}
+                  isLast
+                />
+              </View> */}
 
-            {/* App Feedback */}
-            {/* <View className="bg-white mx-4 rounded-2xl shadow mt-4">
+              {/* Wellness Section */}
+              {/* <View className="mx-4 mt-3">
+                <Text className="text-lg font-semibold text-black mb-3">Wellness</Text>
+              </View> */}
+              <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+                <SettingsItem
+                  icon={Target}
+                  label="Fitness goals"
+                  onPress={() => router.push('/settings/fitness-goals')}
+                />
+                <SettingsItem
+                  icon={Apple}
+                  label="Nutrition goals"
+                  onPress={() => router.push('/settings/nutrition-goals')}
+                />
+                <SettingsItem
+                  icon={Scale}
+                  label="Weight tracking"
+                  onPress={() => router.push('/settings/weight')}
+                  isLast
+                />
+              </View>
+
+              {/* App Feedback */}
+              {/* <View className="bg-white mx-4 rounded-2xl shadow mt-4">
               <SettingsItem
                 icon={Star}
                 label="Rate BeautyScan"
@@ -256,32 +290,32 @@ export default function SettingsScreen() {
               />
             </View> */}
 
-            {/* Legal & Account */}
-            <View className="bg-white mx-4 rounded-2xl shadow mt-4">
-              <SettingsItem
-                icon={FileText}
-                label="Terms and Conditions"
-                onPress={() => Linking.openURL('https://www.beautyscan.app/terms')}
-              />
-              <SettingsItem
-                icon={Shield}
-                label="Privacy Policy"
-                onPress={() => Linking.openURL('https://www.beautyscan.app/privacy')}
-              />
-              <SettingsItem
-                icon={UserMinus}
-                label="Delete Account"
-                onPress={() => setShowDeleteModal(true)}
-                isLast
-              />
-            </View>
-
-            {/* Logout */}
-            <View className="bg-white mx-4 rounded-2xl shadow mt-4 mb-8">
-              <SettingsItem icon={LogOut} label="Logout" isLast onPress={handleLogout} />
-            </View>
-          </>
-        )}
+              {/* Legal & Account Section */}
+              {/* <View className="mx-4 mt-3 mb-8">
+                <Text className="text-lg font-semibold text-black mb-3">Legal & Account</Text>
+              </View> */}
+              <View className="bg-white mx-4 rounded-2xl shadow">
+                <SettingsItem
+                  icon={FileText}
+                  label="Terms and Conditions"
+                  onPress={() => Linking.openURL('https://www.beautyscan.app/terms')}
+                />
+                <SettingsItem
+                  icon={Shield}
+                  label="Privacy Policy"
+                  onPress={() => Linking.openURL('https://www.beautyscan.app/privacy')}
+                />
+                <SettingsItem
+                  icon={UserMinus}
+                  label="Delete Account"
+                  onPress={() => setShowDeleteModal(true)}
+                  isLast
+                />
+                <SettingsItem icon={LogOut} label="Logout" isLast onPress={handleLogout} />
+              </View>
+            </>
+          )}
+        </ScrollView>
       </PageLayout>
 
       <ConfirmationModal

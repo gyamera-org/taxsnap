@@ -17,6 +17,19 @@ export async function analyzeImageWithOpenAI(
   barcode?: string,
   text_hint?: string
 ): Promise<FoodAnalysis> {
+  // Handle both full data URLs and raw base64 strings
+  console.log('🔍 Received image format:', imageBase64.substring(0, 100) + '...');
+
+  let imageUrl: string;
+  if (imageBase64.startsWith('data:image/')) {
+    // Already a complete data URL
+    console.log('✅ Using complete data URL');
+    imageUrl = imageBase64;
+  } else {
+    // Raw base64 - default to JPEG (most common from mobile cameras)
+    console.log('⚠️ Converting raw base64 to JPEG data URL');
+    imageUrl = `data:image/jpeg;base64,${imageBase64}`;
+  }
   const prompt = `
 You are a nutrition vision expert. Analyze the image and detect 1–5 distinct food/beverage items.
 
@@ -70,7 +83,7 @@ ${text_hint ? `User text hint: ${text_hint}` : ''}
         role: 'user',
         content: [
           { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
+          { type: 'image_url', image_url: { url: imageUrl } },
         ],
       },
     ],

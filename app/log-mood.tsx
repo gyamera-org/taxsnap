@@ -2,10 +2,10 @@ import { View, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { router } from 'expo-router';
 import { useAppNavigation } from '@/lib/hooks/use-navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SubPageLayout from '@/components/layouts/sub-page';
 import { Heart, Sparkles } from 'lucide-react-native';
-import { useLogPeriodData, usePeriodLogs } from '@/lib/hooks/use-cycle-data';
+import { useLogPeriodData, usePeriodLogs, useTodaysPeriodLog } from '@/lib/hooks/use-cycle-data';
 
 export default function LogMoodScreen() {
   const { goBack } = useAppNavigation();
@@ -18,6 +18,31 @@ export default function LogMoodScreen() {
 
   const logPeriodData = useLogPeriodData();
   const { data: periodLogs = [] } = usePeriodLogs();
+  const todaysLog = useTodaysPeriodLog();
+
+  // Set initial state from existing data
+  useEffect(() => {
+    if (todaysLog) {
+      if (todaysLog.mood) {
+        setSelectedMood(todaysLog.mood);
+      }
+
+      // Extract energy level from notes if it exists
+      if (todaysLog.notes) {
+        const energyMatch = todaysLog.notes.match(/Energy: (high|medium|low)/);
+        if (energyMatch) {
+          setSelectedEnergy(energyMatch[1] as 'high' | 'medium' | 'low');
+          // Remove energy note from notes and set the remaining text
+          const notesWithoutEnergy = todaysLog.notes
+            .replace(/Energy: (high|medium|low)\s*/, '')
+            .trim();
+          setNotes(notesWithoutEnergy);
+        } else {
+          setNotes(todaysLog.notes);
+        }
+      }
+    }
+  }, [todaysLog]);
 
   const moodOptions = [
     { value: 'happy', label: 'Happy', emoji: '😊', color: '#EC4899' },

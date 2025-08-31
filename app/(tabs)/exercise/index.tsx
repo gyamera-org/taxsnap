@@ -619,7 +619,7 @@ function WorkoutSection({
 
                 {/* Add More Workout Button */}
                 <TouchableOpacity
-                  onPress={() => router.push('/(tabs)/logger')}
+                  onPress={() => router.push('/log-exercise')}
                   className="bg-purple-500 py-4 rounded-2xl w-full"
                 >
                   <Text className="text-white font-semibold text-center">Log Exercise</Text>
@@ -728,7 +728,7 @@ function PlannedExerciseItem({
       >
         {/* Exercise Info */}
         <View className="p-4">
-          {/* Exercise Name & Type */}
+          {/* Exercise Name & Action Icons */}
           <View className="flex-row items-start justify-between mb-3">
             <View style={{ flex: 1, marginRight: 16 }}>
               <Text
@@ -744,12 +744,45 @@ function PlannedExerciseItem({
               </Text>
             </View>
 
-            {/* Status Badge */}
-            {isCompleted && (
-              <View className="bg-green-100 px-3 py-1 rounded-full">
-                <Text className="text-green-800 text-xs font-semibold">Completed</Text>
-              </View>
-            )}
+            {/* Action Icons */}
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              {!isCompleted && (
+                <>
+                  {/* View Details Icon */}
+                  <TouchableOpacity
+                    onPress={() => setShowViewModal(true)}
+                    className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
+                  >
+                    <Eye size={16} color="#6B7280" />
+                  </TouchableOpacity>
+
+                  {/* Edit Icon */}
+                  <TouchableOpacity
+                    onPress={() => setShowEditModal(true)}
+                    className="w-8 h-8 bg-blue-50 rounded-full items-center justify-center"
+                  >
+                    <Edit3 size={16} color="#3B82F6" />
+                  </TouchableOpacity>
+
+                  {/* Mark Done Icon */}
+                  <TouchableOpacity
+                    onPress={handleMarkDone}
+                    disabled={createExerciseEntry.isPending}
+                    className={`w-8 h-8 rounded-full items-center justify-center ${
+                      createExerciseEntry.isPending ? 'bg-gray-400' : 'bg-purple-500'
+                    }`}
+                  >
+                    <CheckCircle size={16} color="white" />
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {isCompleted && (
+                <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center">
+                  <CheckCircle size={16} color="#10B981" />
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Stats Row */}
@@ -766,54 +799,6 @@ function PlannedExerciseItem({
                 <Text className="text-gray-700 text-sm font-medium ml-1">
                   {exercise.calories_estimate} cal
                 </Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View className="px-4 pb-4">
-          <View className="flex-row items-center" style={{ gap: 12 }}>
-            {!isCompleted && (
-              <>
-                {/* View Details Button */}
-                <TouchableOpacity
-                  onPress={() => setShowViewModal(true)}
-                  className="flex-1 bg-gray-100 py-3 rounded-xl flex-row items-center justify-center"
-                >
-                  <Eye size={16} color="#6B7280" />
-                  <Text className="text-gray-700 font-medium ml-2">View</Text>
-                </TouchableOpacity>
-
-                {/* Edit Button */}
-                <TouchableOpacity
-                  onPress={() => setShowEditModal(true)}
-                  className="flex-1 bg-blue-50 py-3 rounded-xl flex-row items-center justify-center"
-                >
-                  <Edit3 size={16} color="#3B82F6" />
-                  <Text className="text-blue-600 font-medium ml-2">Edit</Text>
-                </TouchableOpacity>
-
-                {/* Mark Done Button */}
-                <TouchableOpacity
-                  onPress={handleMarkDone}
-                  disabled={createExerciseEntry.isPending}
-                  className={`flex-1 py-3 rounded-xl flex-row items-center justify-center ${
-                    createExerciseEntry.isPending ? 'bg-gray-400' : 'bg-purple-500'
-                  }`}
-                >
-                  <CheckCircle size={16} color="white" />
-                  <Text className="text-white font-medium ml-2">
-                    {createExerciseEntry.isPending ? 'Logging...' : 'Done'}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {isCompleted && (
-              <View className="flex-1 bg-green-100 py-3 rounded-xl flex-row items-center justify-center">
-                <CheckCircle size={16} color="#10B981" />
-                <Text className="text-green-700 font-medium ml-2">Completed</Text>
               </View>
             )}
           </View>

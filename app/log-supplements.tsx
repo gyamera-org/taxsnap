@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import SubPageLayout from '@/components/layouts/sub-page';
 import { Pill, Plus, X, CheckCircle } from 'lucide-react-native';
+import { useAppNavigation } from '@/lib/hooks/use-navigation';
 
 // Import real data hooks
 import {
@@ -25,6 +26,7 @@ export default function LogSupplementsScreen() {
   const { data: todaysSupplements = [] } = useTodaysSupplements();
   const logSupplement = useLogSupplement();
   const addSupplement = useAddSupplement();
+  const { goBack } = useAppNavigation();
 
   const addCustomSupplement = () => {
     if (newSupplementName.trim() && newSupplementDose.trim()) {
@@ -63,7 +65,7 @@ export default function LogSupplementsScreen() {
       }
     });
 
-    router.back();
+    goBack();
   };
 
   const isFormValid = Object.values(selectedSupplements).some((taken) => taken);

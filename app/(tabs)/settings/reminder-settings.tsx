@@ -61,7 +61,7 @@ export default function ReminderSettingsScreen() {
 
   if (isLoading) {
     return (
-      <SubPageLayout title="Reminder Settings" >
+      <SubPageLayout title="Reminder Settings">
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <ReminderSettingsSkeleton />
         </ScrollView>
@@ -71,7 +71,7 @@ export default function ReminderSettingsScreen() {
 
   if (error) {
     return (
-      <SubPageLayout title="Reminder Settings" >
+      <SubPageLayout title="Reminder Settings">
         <View className="flex-1 items-center justify-center px-4">
           <Text className="text-red-500 text-center">
             Failed to load reminder settings. Please try again.
@@ -82,7 +82,7 @@ export default function ReminderSettingsScreen() {
   }
 
   return (
-    <SubPageLayout title="Reminder Settings" >
+    <SubPageLayout title="Reminder Settings">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="px-4 py-6">

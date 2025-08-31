@@ -223,3 +223,12 @@ export function useDeletePeriodLog() {
     },
   });
 }
+
+// Helper hook to get today's existing period log data
+export function useTodaysPeriodLog() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data: periodLogs = [] } = usePeriodLogs(today, today);
+
+  // Return today's log if it exists
+  return periodLogs.find((log: PeriodLog) => log.date === today) || null;
+}

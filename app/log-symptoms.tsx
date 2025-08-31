@@ -1,12 +1,14 @@
 import { View, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SubPageLayout from '@/components/layouts/sub-page';
 import { AlertCircle, Sparkles } from 'lucide-react-native';
-import { useLogPeriodData, usePeriodLogs } from '@/lib/hooks/use-cycle-data';
+import { useLogPeriodData, usePeriodLogs, useTodaysPeriodLog } from '@/lib/hooks/use-cycle-data';
+import { useAppNavigation } from '@/lib/hooks/use-navigation';
 
 export default function LogSymptomsScreen() {
+  const { goBack } = useAppNavigation();
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedSeverity, setSelectedSeverity] = useState<'mild' | 'moderate' | 'severe' | ''>('');
   const [notes, setNotes] = useState('');
@@ -14,6 +16,31 @@ export default function LogSymptomsScreen() {
 
   const logPeriodData = useLogPeriodData();
   const { data: periodLogs = [] } = usePeriodLogs();
+  const todaysLog = useTodaysPeriodLog();
+
+  // Set initial state from existing data
+  useEffect(() => {
+    if (todaysLog) {
+      if (todaysLog.symptoms && todaysLog.symptoms.length > 0) {
+        setSelectedSymptoms(todaysLog.symptoms);
+      }
+
+      // Extract severity from notes if it exists
+      if (todaysLog.notes) {
+        const severityMatch = todaysLog.notes.match(/Severity: (mild|moderate|severe)/);
+        if (severityMatch) {
+          setSelectedSeverity(severityMatch[1] as 'mild' | 'moderate' | 'severe');
+          // Remove severity note from notes and set the remaining text
+          const notesWithoutSeverity = todaysLog.notes
+            .replace(/Severity: (mild|moderate|severe)\s*/, '')
+            .trim();
+          setNotes(notesWithoutSeverity);
+        } else {
+          setNotes(todaysLog.notes);
+        }
+      }
+    }
+  }, [todaysLog]);
 
   const symptomOptions = [
     { value: 'cramps', label: 'Cramps', emoji: '🤕', color: '#EF4444' },
@@ -90,7 +117,7 @@ export default function LogSymptomsScreen() {
       {
         onSuccess: () => {
           setIsLoading(false);
-          router.back();
+          goBack();
         },
         onError: (error) => {
           console.error('Error saving symptom log:', error);

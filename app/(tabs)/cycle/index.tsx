@@ -18,6 +18,7 @@ import { MonthlyCalendar } from '@/components/cycle/MonthlyCalendar';
 import { TodaysMood } from '@/components/cycle/TodaysMood';
 import { TodaysSupplements } from '@/components/cycle/TodaysSupplements';
 import { TodaysSymptoms } from '@/components/cycle/TodaysSymptoms';
+import { TodaysBeautyScans } from '@/components/cycle/TodaysBeautyScans';
 import { FertilityWindow } from '@/components/cycle/FertilityWindow';
 import { SimpleCycleHistory } from '@/components/cycle/SimpleCycleHistory';
 import { PeriodModal } from '@/components/cycle/PeriodModal';
@@ -738,6 +739,9 @@ export default function CycleScreen() {
           supplementData={todaysSupplements}
           isLoading={supplementsLoading}
         />
+
+        {/* Beauty Scans Section */}
+        {/* <TodaysBeautyScans selectedDate={selectedDate} isLoading={false} /> */}
 
         {/* Period History Section - Commented out for now */}
         {/*
