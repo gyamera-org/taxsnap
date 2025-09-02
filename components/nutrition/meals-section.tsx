@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Alert } from 'react-native';
+import { View, TouchableOpacity, Alert, Image } from 'react-native';
 import { Text } from '@/components/ui/text';
 import {
   Utensils,
@@ -11,8 +11,13 @@ import {
   Sparkles,
   Check,
   X,
+  Upload,
+  Brain,
+  Cpu,
+  Zap,
 } from 'lucide-react-native';
 import { toast } from 'sonner-native';
+import { ModernAnalyzingCard } from '../food/modern-analyzing-card';
 
 interface MealData {
   id: string;
@@ -23,10 +28,15 @@ interface MealData {
   carbs: number;
   fat: number;
   time: string;
-  // Pending food properties
+  image_url?: string; // Added for AI food scanning
+  // Analysis status properties
+  analysis_status?: 'analyzing' | 'completed' | 'failed';
+  analysis_progress?: number; // 0-100
+  analysis_stage?: 'uploading' | 'analyzing' | 'processing' | 'finalizing';
+  confidence?: number;
+  // Legacy properties for backwards compatibility
   isPending?: boolean;
   isAnalyzing?: boolean;
-  confidence?: number;
 }
 
 interface MealsSectionProps {
@@ -68,6 +78,36 @@ const getMealTypeColor = (type: string) => {
   }
 };
 
+const getAnalysisStageIcon = (stage?: string) => {
+  switch (stage) {
+    case 'uploading':
+      return Upload;
+    case 'analyzing':
+      return Brain;
+    case 'processing':
+      return Cpu;
+    case 'finalizing':
+      return Zap;
+    default:
+      return Timer;
+  }
+};
+
+const getAnalysisStageText = (stage?: string) => {
+  switch (stage) {
+    case 'uploading':
+      return 'Uploading image...';
+    case 'analyzing':
+      return 'AI analyzing food...';
+    case 'processing':
+      return 'Processing nutrition data...';
+    case 'finalizing':
+      return 'Finalizing meal entry...';
+    default:
+      return 'Analyzing...';
+  }
+};
+
 const MealCard = ({
   meal,
   onPress,
@@ -82,6 +122,16 @@ const MealCard = ({
   const IconComponent = getMealIcon(meal.type);
   const color = getMealTypeColor(meal.type);
 
+  // Determine analysis state (prioritize new analysis_status over legacy properties)
+  const isAnalyzing =
+    meal.analysis_status === 'analyzing' ||
+    (meal.isAnalyzing && meal.analysis_status !== 'completed');
+  const isPending = meal.analysis_status === 'completed' && meal.isPending; // Legacy pending state
+  const isFailed = meal.analysis_status === 'failed';
+
+  const AnalysisStageIcon = getAnalysisStageIcon(meal.analysis_stage);
+  const analysisStageText = getAnalysisStageText(meal.analysis_stage);
+
   const handleDiscardPending = () => {
     Alert.alert('Discard Food', `Are you sure you want to discard "${meal.name}"?`, [
       { text: 'Cancel', style: 'cancel' },
@@ -95,28 +145,50 @@ const MealCard = ({
     ]);
   };
 
+  // If meal is being analyzed, use the modern analyzing card
+  if (isAnalyzing) {
+    return (
+      <ModernAnalyzingCard
+        imageUrl={meal.image_url}
+        progress={meal.analysis_progress}
+        stage={meal.analysis_stage}
+        mealType={meal.type}
+        time={meal.time}
+      />
+    );
+  }
+
   return (
     <TouchableOpacity
       className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-gray-50"
-      onPress={() => !meal.isPending && onPress?.(meal)}
-      disabled={meal.isAnalyzing}
+      onPress={() => !isPending && onPress?.(meal)}
+      disabled={false}
     >
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center flex-1">
-          <View
-            style={{ backgroundColor: `${color}20` }}
-            className="w-12 h-12 rounded-xl items-center justify-center mr-3"
-          >
-            {meal.isPending && meal.isAnalyzing ? (
-              <View className="animate-spin">
-                <Timer size={20} color={color} />
-              </View>
-            ) : meal.isPending ? (
-              <Sparkles size={20} color={color} />
-            ) : (
-              <IconComponent size={20} color={color} />
-            )}
-          </View>
+          {meal.image_url ? (
+            <View className="w-16 h-16 rounded-xl mr-3 overflow-hidden">
+              <Image
+                source={{ uri: meal.image_url }}
+                style={{ width: 64, height: 64 }}
+                className="rounded-xl"
+                resizeMode="cover"
+              />
+            </View>
+          ) : (
+            <View
+              style={{ backgroundColor: `${color}20` }}
+              className="w-16 h-16 rounded-xl items-center justify-center mr-3"
+            >
+              {isPending ? (
+                <Sparkles size={20} color={color} />
+              ) : isFailed ? (
+                <X size={20} color="#EF4444" />
+              ) : (
+                <IconComponent size={20} color={color} />
+              )}
+            </View>
+          )}
 
           <View className="flex-1">
             <View className="flex-row items-center justify-between mb-1">
@@ -125,49 +197,46 @@ const MealCard = ({
             </View>
             <View className="flex-row items-center">
               <Text className="text-base font-semibold text-gray-900 mb-1">{meal.name}</Text>
-              {meal.isAnalyzing && (
-                <View className="ml-2 animate-spin">
-                  <Timer size={14} color="#3B82F6" />
-                </View>
-              )}
             </View>
             <View className="flex-row items-center">
               <Text className="text-sm text-gray-600">
-                {meal.isAnalyzing ? '...' : `${meal.calories} cal`}
+                {isFailed ? 'Analysis failed' : `${meal.calories} cal`}
               </Text>
-              {meal.isPending && !meal.isAnalyzing && meal.confidence && (
+              {isPending && meal.confidence && (
                 <Text className="text-xs text-blue-600 ml-2">• {meal.confidence}% confidence</Text>
               )}
-              {meal.isAnalyzing && (
-                <Text className="text-xs text-blue-600 ml-2">• AI analyzing...</Text>
+              {isFailed && (
+                <Text className="text-xs text-red-600 ml-2">• Please try scanning again</Text>
               )}
             </View>
           </View>
         </View>
 
-        {!meal.isPending && <ChevronRight size={16} color="#D1D5DB" />}
+        {!isPending && <ChevronRight size={16} color="#D1D5DB" />}
       </View>
 
-      {/* Nutrition breakdown or pending actions */}
-      {meal.isPending && meal.isAnalyzing ? (
+      {/* Nutrition breakdown or analysis status */}
+      {isFailed ? (
         <View className="mt-3 pt-3 border-t border-gray-50">
-          <View className="bg-blue-50 rounded-xl p-3 mb-3">
+          <View className="bg-red-50 rounded-xl p-3 mb-3">
             <View className="flex-row items-center justify-center mb-2">
-              <Timer size={16} color="#3B82F6" />
-              <Text className="text-blue-600 font-medium ml-2">AI analyzing food...</Text>
+              <X size={16} color="#EF4444" />
+              <Text className="text-red-600 font-medium ml-2">Analysis Failed</Text>
             </View>
+            <Text className="text-red-500 text-sm text-center">
+              Unable to analyze your food. Please try scanning again.
+            </Text>
           </View>
 
-          {/* Cancel option for stuck analysis */}
           <TouchableOpacity
             onPress={() => onDiscardPending?.(meal)}
-            className="bg-gray-100 py-2 rounded-xl flex-row items-center justify-center"
+            className="bg-red-100 py-2 rounded-xl flex-row items-center justify-center"
           >
-            <X size={14} color="#6B7280" />
-            <Text className="text-gray-700 font-medium ml-1 text-sm">Cancel Analysis</Text>
+            <X size={14} color="#EF4444" />
+            <Text className="text-red-700 font-medium ml-1 text-sm">Remove Failed Entry</Text>
           </TouchableOpacity>
         </View>
-      ) : meal.isPending ? (
+      ) : isPending ? (
         <View className="mt-3 pt-3 border-t border-gray-50">
           <View className="flex-row justify-between mb-3">
             <View className="items-center flex-1">
@@ -242,12 +311,21 @@ export default function MealsSection({
   onSavePendingFood,
   onDiscardPendingFood,
 }: MealsSectionProps) {
-  // Sort meals - analyzing first, then pending, then saved
+  // Sort meals - analyzing first, then failed, then pending, then saved
   const sortedMeals = meals.sort((a, b) => {
-    if (a.isAnalyzing && !b.isAnalyzing) return -1;
-    if (!a.isAnalyzing && b.isAnalyzing) return 1;
-    if (a.isPending && !b.isPending) return -1;
-    if (!a.isPending && b.isPending) return 1;
+    const aAnalyzing = a.analysis_status === 'analyzing' || a.isAnalyzing;
+    const bAnalyzing = b.analysis_status === 'analyzing' || b.isAnalyzing;
+    const aFailed = a.analysis_status === 'failed';
+    const bFailed = b.analysis_status === 'failed';
+    const aPending = (a.analysis_status === 'completed' && a.isPending) || a.isPending;
+    const bPending = (b.analysis_status === 'completed' && b.isPending) || b.isPending;
+
+    if (aAnalyzing && !bAnalyzing) return -1;
+    if (!aAnalyzing && bAnalyzing) return 1;
+    if (aFailed && !bFailed) return -1;
+    if (!aFailed && bFailed) return 1;
+    if (aPending && !bPending) return -1;
+    if (!aPending && bPending) return 1;
     return 0;
   });
 

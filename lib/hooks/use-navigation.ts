@@ -4,15 +4,37 @@ export function useAppNavigation() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const goBack = () => {
-    // Always use the fallback route approach since router.canGoBack() is unreliable
-    const fallbackRoute = getFallbackRoute(pathname);
-
+  // Simplified back navigation - prefer native router.back()
+  const goBackWithFallback = () => {
     try {
+      if (router.canGoBack()) {
+        router.back();
+        return;
+      }
+
+      // Fallback to intelligent routing if no back history
+      const fallbackRoute = getFallbackRoute(pathname);
       router.replace(fallbackRoute as any);
     } catch (error) {
       console.warn('Navigation error, using default fallback:', error);
-      router.replace('/(tabs)/nutrition' as any);
+      const fallbackRoute = getFallbackRoute(pathname);
+      router.replace(fallbackRoute as any);
+    }
+  };
+
+  const safeNavigate = (route: string) => {
+    try {
+      router.push(route as any);
+    } catch (error) {
+      console.warn('Navigation error:', error);
+      // Try replace as fallback
+      try {
+        router.replace(route as any);
+      } catch (replaceError) {
+        console.error('Replace navigation failed:', replaceError);
+        // Go to safe default
+        router.replace('/(tabs)/nutrition' as any);
+      }
     }
   };
 
@@ -60,7 +82,8 @@ export function useAppNavigation() {
   };
 
   return {
-    goBack,
+    goBackWithFallback,
+    safeNavigate,
     router,
     pathname,
   };

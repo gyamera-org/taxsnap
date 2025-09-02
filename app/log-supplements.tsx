@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { router } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import SubPageLayout from '@/components/layouts/sub-page';
+import { useAppNavigation } from '@/lib/hooks/use-navigation';
 import { Plus, X, Check } from 'lucide-react-native';
 
 // Import real data hooks
@@ -29,6 +30,9 @@ export default function LogSupplementsScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newSupplementName, setNewSupplementName] = useState('');
   const [newSupplementDose, setNewSupplementDose] = useState('');
+
+  // Use enhanced navigation hook
+  const { safeNavigate } = useAppNavigation();
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -95,7 +99,7 @@ export default function LogSupplementsScreen() {
     });
 
     // Navigate back to the cycle screen
-    router.push('/(tabs)/cycle');
+    safeNavigate('/(tabs)/cycle');
   };
 
   const isFormValid = Object.values(selectedSupplements).some((taken) => taken);
@@ -104,7 +108,7 @@ export default function LogSupplementsScreen() {
     <View className="flex-1" style={{ backgroundColor: '#F5F1E8' }}>
       <SubPageLayout
         title="Supplements"
-        onBack={() => router.push('/(tabs)/cycle')}
+        onBack={() => router.back()}
         rightElement={
           <Button
             title="Log"

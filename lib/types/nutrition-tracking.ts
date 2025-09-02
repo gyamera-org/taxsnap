@@ -35,6 +35,11 @@ export interface MealEntry {
   notes?: string;
   logged_date: string; // YYYY-MM-DD format
   logged_time: string; // HH:mm:ss format
+  image_url?: string; // Added for AI food scanning
+  analysis_status?: 'analyzing' | 'completed' | 'failed'; // Added for AI food scanning
+  analysis_progress?: number; // Progress percentage (0-100)
+  analysis_stage?: 'uploading' | 'analyzing' | 'processing' | 'finalizing'; // Current analysis stage
+  analysis_confidence?: number; // Added for AI food scanning
   created_at: string;
   updated_at: string;
 }
@@ -58,6 +63,10 @@ export interface CreateMealEntryData {
   logged_date?: string;
   logged_time?: string;
   share_with_community?: boolean;
+  // Analysis fields for AI food scanning
+  analysis_status?: 'analyzing' | 'completed' | 'failed';
+  analysis_progress?: number;
+  analysis_stage?: 'uploading' | 'analyzing' | 'processing' | 'finalizing';
 }
 
 export interface CreateWaterEntryData {

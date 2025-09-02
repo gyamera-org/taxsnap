@@ -95,22 +95,30 @@ export function useCreateMealEntry() {
       // Calculate nutrition totals
       const totals = calculateNutritionTotals(data.food_items);
 
+      const insertData: any = {
+        user_id: user.user.id,
+        meal_type: data.meal_type,
+        food_items: data.food_items,
+        total_calories: totals.calories,
+        total_protein: totals.protein,
+        total_carbs: totals.carbs,
+        total_fat: totals.fat,
+        total_fiber: totals.fiber,
+        total_sugar: totals.sugar,
+        notes: data.notes,
+        logged_date: data.logged_date || new Date().toISOString().split('T')[0],
+        logged_time: data.logged_time || new Date().toTimeString().split(' ')[0],
+      };
+
+      // Add analysis fields if provided
+      if (data.analysis_status) insertData.analysis_status = data.analysis_status;
+      if (data.analysis_progress !== undefined)
+        insertData.analysis_progress = data.analysis_progress;
+      if (data.analysis_stage) insertData.analysis_stage = data.analysis_stage;
+
       const { data: result, error } = await supabase
         .from('meal_entries')
-        .insert({
-          user_id: user.user.id,
-          meal_type: data.meal_type,
-          food_items: data.food_items,
-          total_calories: totals.calories,
-          total_protein: totals.protein,
-          total_carbs: totals.carbs,
-          total_fat: totals.fat,
-          total_fiber: totals.fiber,
-          total_sugar: totals.sugar,
-          notes: data.notes,
-          logged_date: data.logged_date || new Date().toISOString().split('T')[0],
-          logged_time: data.logged_time || new Date().toTimeString().split(' ')[0],
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -304,12 +312,14 @@ export function useMealEntriesRealtime(onMealEntryChange?: () => void) {
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*', // Listen to all events: INSERT, UPDATE, DELETE
             schema: 'public',
             table: 'meal_entries',
             filter: `user_id=eq.${user.id}`,
           },
           (payload) => {
+            console.log('🔄 Meal entry real-time event:', payload.eventType, payload);
+
             queryClient.invalidateQueries({
               queryKey: [...queryKeys.logs.mealEntries],
             });

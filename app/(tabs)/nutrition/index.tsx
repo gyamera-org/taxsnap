@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import PageLayout from '@/components/layouts/page-layout';
 import { router } from 'expo-router';
@@ -10,17 +10,17 @@ import { useBodyMeasurements } from '@/lib/hooks/use-weight-tracking';
 import { useWaterProgress, useQuickAddWater } from '@/lib/hooks/use-simple-water-tracking';
 import { useNutritionStreak } from '@/lib/hooks/use-nutrition-streak';
 import { useLoggedDates } from '@/lib/hooks/use-logged-dates';
-import { useUpdateMealNutrition } from '@/lib/hooks/use-meal-editing';
-import {
-  useDeleteMealEntry,
-  useCreateMealEntry,
-  useMealEntriesRealtime,
-} from '@/lib/hooks/use-meal-tracking';
+import { useMealEntriesRealtime } from '@/lib/hooks/use-meal-tracking';
 
-import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
+import { CalendarModal } from '@/components/ui/CalendarModal';
+import { getLocalDateString } from '@/lib/utils/date-helpers';
 
-// Import new components
-import WeeklyCalendar from '@/components/nutrition/weekly-calendar';
+import { useMealProcessing } from '@/lib/hooks/use-meal-processing';
+import { useDateRange } from '@/lib/hooks/use-date-range';
+import { useMealActions } from '@/lib/hooks/use-meal-actions';
+import { useMealCleanup } from '@/lib/hooks/use-meal-cleanup';
+import { useMacroData } from '@/lib/hooks/use-macro-data';
+
 import CaloriesSummaryCard from '@/components/nutrition/calories-summary-card';
 import MacroBreakdown from '@/components/nutrition/macro-breakdown';
 import WaterIntakeCard from '@/components/nutrition/water-intake-card';
@@ -32,51 +32,31 @@ import {
 } from '@/components/nutrition/nutrition-skeleton';
 import MealEditModal from '@/components/nutrition/meal-edit-modal';
 import { EmptyGoalsState } from '@/components/nutrition/empty-goals-state';
+import { AnalyzedFoodModal } from '@/components/food/analyzed-food-modal';
 
 export default function NutritionScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
-  const [editingMeal, setEditingMeal] = useState<any>(null);
-  const [forceUpdateKey, setForceUpdateKey] = useState(0);
 
-  const updateMealNutrition = useUpdateMealNutrition();
-  const deleteMealEntry = useDeleteMealEntry();
+  const { startDate, endDate } = useDateRange();
+  const {
+    editingMeal,
+    viewingAnalyzedFood,
+    forceUpdateKey,
+    handleMealEdit,
+    handleMealSave,
+    handleMealDelete,
+    handleSavePendingFood,
+    handleDiscardPendingFood,
+    setEditingMeal,
+    setViewingAnalyzedFood,
+    forceUpdate,
+  } = useMealActions();
+  const { cleanupStuckAnalyzingMeals } = useMealCleanup();
 
-  useMealEntriesRealtime(() => {
-    setForceUpdateKey((prev) => {
-      const newKey = prev + 1;
-      return newKey;
-    });
-  });
+  useMealEntriesRealtime(forceUpdate);
 
-  const dateString =
-    selectedDate.getFullYear() +
-    '-' +
-    String(selectedDate.getMonth() + 1).padStart(2, '0') +
-    '-' +
-    String(selectedDate.getDate()).padStart(2, '0');
-
-  const getWeekRange = () => {
-    const today = new Date();
-    const start = new Date(today);
-    start.setDate(today.getDate() - 5);
-    const end = new Date(today);
-    end.setDate(today.getDate() + 1);
-
-    const formatDate = (date: Date) =>
-      date.getFullYear() +
-      '-' +
-      String(date.getMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(date.getDate()).padStart(2, '0');
-
-    return {
-      startDate: formatDate(start),
-      endDate: formatDate(end),
-    };
-  };
-
-  const { startDate, endDate } = getWeekRange();
+  const dateString = getLocalDateString(selectedDate);
 
   const { data: dailySummary, isLoading: summaryLoading } = useDailyNutritionSummary(dateString);
   const { data: progress, isLoading: progressLoading } = useNutritionProgress(dateString);
@@ -89,50 +69,9 @@ export default function NutritionScreen() {
   const waterProgress = useWaterProgress(dateString, nutritionGoals?.water_ml || 2000);
   const quickAddWater = useQuickAddWater();
 
-  const macroData = progress
-    ? {
-        calories: {
-          consumed: Math.round(progress.calories.consumed),
-          target: Math.round(progress.calories.goal),
-        },
-        protein: {
-          consumed: Math.round(progress.protein.consumed),
-          target: Math.round(progress.protein.goal),
-        },
-        carbs: {
-          consumed: Math.round(progress.carbs.consumed),
-          target: Math.round(progress.carbs.goal),
-        },
-        fat: { consumed: Math.round(progress.fat.consumed), target: Math.round(progress.fat.goal) },
-      }
-    : {
-        calories: { consumed: 0, target: 0 },
-        protein: { consumed: 0, target: 0 },
-        carbs: { consumed: 0, target: 0 },
-        fat: { consumed: 0, target: 0 },
-      };
+  const macroData = useMacroData(progress);
+  const todaysMeals = useMealProcessing(dailySummary);
 
-  const todaysMeals = dailySummary
-    ? Object.values(dailySummary.meals_by_type)
-        .flat()
-        .map((meal) => ({
-          id: meal.id,
-          type: meal.meal_type,
-          name:
-            meal.food_items.length > 1
-              ? `${meal.food_items[0].food.name} + ${meal.food_items.length - 1} more`
-              : meal.food_items[0]?.food.name || 'Mixed meal',
-          calories: Math.round(meal.total_calories),
-          protein: Math.round(meal.total_protein),
-          carbs: Math.round(meal.total_carbs),
-          fat: Math.round(meal.total_fat),
-          time: meal.logged_time.slice(0, 5), // HH:mm format
-          fullTime: meal.logged_time, // Keep full time for sorting
-        }))
-        .sort((a, b) => b.fullTime.localeCompare(a.fullTime)) // Sort by time descending (latest first)
-    : [];
-
-  // Use simple water tracking data
   const waterData = {
     consumed: waterProgress.consumed,
     goal: waterProgress.goal,
@@ -141,16 +80,13 @@ export default function NutritionScreen() {
   };
 
   const isLoading = summaryLoading || progressLoading;
+
   const goalsDataLoading = goalsLoading || fitnessGoalsLoading || bodyMeasurementsLoading;
 
-  // Check if essential goals are missing
   const hasNutritionGoals = !!nutritionGoals;
   const hasFitnessGoals = !!fitnessGoals;
   const hasBodyMeasurements = !!bodyMeasurements;
 
-  // Debug logging removed for production
-
-  // Show empty goals state if at least nutrition goals are loaded and missing
   const shouldShowEmptyGoalsState = !goalsLoading && !hasNutritionGoals;
 
   const currentStreak = streakData?.currentStreak || 0;
@@ -161,38 +97,20 @@ export default function NutritionScreen() {
     }
 
     try {
-      setSelectedDate(date);
+      // Don't allow future dates - clamp to today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDay = new Date(date);
+      selectedDay.setHours(0, 0, 0, 0);
+
+      if (selectedDay > today) {
+        setSelectedDate(today);
+      } else {
+        setSelectedDate(date);
+      }
     } catch (error) {
       console.error('Error selecting date:', error);
     }
-  };
-
-  const generateCalendarDays = () => {
-    const year = selectedDate.getFullYear();
-    const month = selectedDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-    const days = [];
-    const endDate = new Date(lastDay);
-    endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
-
-    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-      days.push(new Date(date));
-    }
-
-    return days;
-  };
-
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  };
-
-  const isSameDay = (date1: Date, date2: Date) => {
-    return date1.toDateString() === date2.toDateString();
   };
 
   const hasLoggedFood = (date: Date) => {
@@ -200,25 +118,13 @@ export default function NutritionScreen() {
     return dayOfMonth % 3 === 0 || dayOfMonth % 7 === 0;
   };
 
-  const handleMealEdit = (meal: any) => {
-    setEditingMeal(meal);
-  };
-
-  const handleMealSave = async (mealId: string, updates: any) => {
-    await updateMealNutrition.mutateAsync({
-      mealId,
-      nutrition: updates,
-    });
-  };
-
-  const handleMealDelete = async (mealId: string) => {
-    await deleteMealEntry.mutateAsync(mealId);
-  };
-
   return (
     <PageLayout
       title="Nutrition"
       theme="nutrition"
+      selectedDate={selectedDate}
+      onDateSelect={handleDateSelect}
+      loggedDates={loggedDates}
       btn={
         streakLoading ? (
           <StreakDisplaySkeleton />
@@ -246,12 +152,6 @@ export default function NutritionScreen() {
           <NutritionPageSkeleton />
         ) : (
           <>
-            <WeeklyCalendar
-              selectedDate={selectedDate}
-              onDateSelect={handleDateSelect}
-              loggedDates={loggedDates}
-            />
-
             <CaloriesSummaryCard
               macroData={macroData}
               dailySummary={dailySummary}
@@ -266,150 +166,61 @@ export default function NutritionScreen() {
               onQuickAdd={() => quickAddWater.mutate({ date: dateString })}
             />
 
+            {/* Temporary debug button - remove after fixing */}
+            {__DEV__ && (
+              <TouchableOpacity
+                onPress={() => cleanupStuckAnalyzingMeals(dailySummary)}
+                className="mx-4 mb-4 bg-red-500 py-3 rounded-xl"
+              >
+                <Text className="text-white text-center font-medium">
+                  🧹 Clean Up Stuck Analyzing Meals
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <MealsSection
               key={`meals-${forceUpdateKey}`}
               meals={todaysMeals}
               onAddMealPress={() => router.push('/log-meal')}
               onMealPress={handleMealEdit}
+              onSavePendingFood={handleSavePendingFood}
+              onDiscardPendingFood={handleDiscardPendingFood}
             />
           </>
         )}
       </ScrollView>
 
-      {/* Calendar Modal */}
-      <Modal visible={showCalendar} animationType="slide" transparent>
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
-            {/* Header */}
-            <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-xl font-bold text-gray-900">Select Date</Text>
-              <TouchableOpacity onPress={() => setShowCalendar(false)}>
-                <X size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
+      <CalendarModal
+        visible={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        selectedDate={selectedDate}
+        onDateSelect={setSelectedDate}
+        hasLoggedData={hasLoggedFood}
+        title="Select Date"
+      />
 
-            {/* Month Navigation */}
-            <View className="flex-row items-center justify-between mb-4">
-              <TouchableOpacity
-                onPress={() => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setMonth(newDate.getMonth() - 1);
-                  setSelectedDate(newDate);
-                }}
-                className="p-2"
-              >
-                <ChevronLeft size={20} color="#6B7280" />
-              </TouchableOpacity>
-
-              <Text className="text-lg font-semibold text-gray-900">
-                {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </Text>
-
-              <TouchableOpacity
-                onPress={() => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setMonth(newDate.getMonth() + 1);
-                  setSelectedDate(newDate);
-                }}
-                className="p-2"
-              >
-                <ChevronRight size={20} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Days of Week */}
-            <View className="flex-row mb-2">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                <View key={index} className="flex-1 items-center">
-                  <Text className="text-gray-500 text-sm font-medium">{day}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Calendar Grid */}
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View className="flex-row flex-wrap">
-                {generateCalendarDays().map((date, index) => {
-                  const isCurrentMonth = date.getMonth() === selectedDate.getMonth();
-                  const isSelected = isSameDay(date, selectedDate);
-                  const isTodayDate = isToday(date);
-                  const hasLogs = hasLoggedFood(date);
-
-                  return (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => {
-                        setSelectedDate(date);
-                        setShowCalendar(false);
-                      }}
-                      className="w-[14.28%] aspect-square items-center justify-center relative"
-                    >
-                      <View
-                        className={`w-10 h-10 rounded-full items-center justify-center ${
-                          isSelected
-                            ? 'bg-green-500'
-                            : isTodayDate
-                              ? 'bg-green-100'
-                              : hasLogs && isCurrentMonth
-                                ? 'bg-orange-100'
-                                : ''
-                        }`}
-                      >
-                        <Text
-                          className={`text-sm ${
-                            isCurrentMonth
-                              ? isSelected
-                                ? 'text-white font-bold'
-                                : isTodayDate
-                                  ? 'text-green-700 font-bold'
-                                  : hasLogs
-                                    ? 'text-orange-700 font-medium'
-                                    : 'text-gray-900'
-                              : 'text-gray-300'
-                          }`}
-                        >
-                          {date.getDate()}
-                        </Text>
-                      </View>
-
-                      {/* Streak indicator */}
-                      {hasLogs && isCurrentMonth && (
-                        <View className="absolute bottom-1">
-                          <View className="w-1 h-1 bg-green-500 rounded-full" />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </ScrollView>
-
-            {/* Legend */}
-            <View className="flex-row justify-center mt-4 gap-4">
-              <View className="flex-row items-center">
-                <View className="w-3 h-3 bg-green-500 rounded-full mr-1" />
-                <Text className="text-xs text-gray-600">Selected</Text>
-              </View>
-              <View className="flex-row items-center">
-                <View className="w-3 h-3 bg-green-100 rounded-full mr-1" />
-                <Text className="text-xs text-gray-600">Today</Text>
-              </View>
-              <View className="flex-row items-center">
-                <View className="w-3 h-3 bg-orange-100 rounded-full mr-1" />
-                <Text className="text-xs text-gray-600">Logged</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Meal Edit Modal */}
       <MealEditModal
         isVisible={!!editingMeal}
         meal={editingMeal}
         onClose={() => setEditingMeal(null)}
         onSave={handleMealSave}
         onDelete={handleMealDelete}
+      />
+
+      <AnalyzedFoodModal
+        visible={!!viewingAnalyzedFood}
+        meal={viewingAnalyzedFood}
+        onClose={() => setViewingAnalyzedFood(null)}
+        onEdit={(meal) => {
+          setViewingAnalyzedFood(null);
+          setEditingMeal(meal);
+        }}
+        onDelete={handleMealDelete}
+        onSave={(updatedMeal) => {
+          handleMealSave(updatedMeal.id, {
+            food_items: updatedMeal.food_items,
+          });
+        }}
       />
     </PageLayout>
   );

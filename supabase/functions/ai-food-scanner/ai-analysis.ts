@@ -31,13 +31,15 @@ export async function analyzeImageWithOpenAI(
     imageUrl = `data:image/jpeg;base64,${imageBase64}`;
   }
   const prompt = `
-You are a nutrition vision expert. Analyze the image and detect 1–5 distinct food/beverage items.
+You are a nutrition vision expert. Analyze the image and detect 1–5 distinct food/beverage items with DETAILED ingredient breakdown.
 
-If only the FRONT OF PACKAGE is visible (no nutrition panel), still:
-- OCR brand/product and flavor (e.g., "Fanta Zero Orange").
-- Set is_packaged=true.
-- Estimate category (likely "beverage") and a realistic serving_size (e.g., 330 ml can, 500 ml bottle).
-- Keep nutrition empty/zero if unsure. We'll try to enrich later.
+For each food item, identify ALL visible ingredients and components, providing detailed nutritional breakdown:
+
+ANALYSIS REQUIREMENTS:
+1. Main food identification (name, brand, category)
+2. DETAILED ingredient breakdown with individual portions and calories
+3. Accurate nutrition per serving with realistic values
+4. High confidence scoring based on visual clarity
 
 Output JSON only in this schema:
 
@@ -45,7 +47,7 @@ Output JSON only in this schema:
   "items": [
     {
       "food_name": "string",
-      "brand": "string|null",
+      "brand": "string|null", 
       "category": "string",
       "serving_size": "string",
       "units": { "mass_g": number|null, "volume_ml": number|null, "count": number|null },
@@ -58,6 +60,18 @@ Output JSON only in this schema:
         "sugar": number,
         "sodium_mg": number
       },
+      "detailed_ingredients": [
+        {
+          "name": "string",
+          "portion": "string",
+          "calories": number,
+          "nutrition": {
+            "protein": number,
+            "carbs": number,
+            "fat": number
+          }
+        }
+      ],
       "confidence": number,
       "is_packaged": boolean,
       "notes": "string",
@@ -68,7 +82,12 @@ Output JSON only in this schema:
   "description": "short overview"
 }
 
-Be conservative. Keep calories consistent with macros (cal≈4c+4p+9f within ~25%).
+INGREDIENT ANALYSIS EXAMPLES:
+- Fried Chicken Sandwich: ["Chicken (Breaded and Fried) • 309 cal • 6½ pieces", "Bread • 250 cal • 3½ regular slice", "Bacon • 122 cal • 4½ thin slice", "Cheddar Cheese • 75 cal • ⅔ slice", "Avocados • 53 cal • 33½g", "Tomatoes • 9 cal • 50g", "Lettuce • 5 cal • ⅝ cup", "Red Onions • 5 cal • 12½g"]
+- Pizza: ["Pizza Dough • 200 cal • 1 slice base", "Tomato Sauce • 15 cal • 2 tbsp", "Mozzarella • 80 cal • ¼ cup", "Pepperoni • 140 cal • 10 slices"]
+
+Be conservative with nutrition values. Keep calories consistent with macros (cal≈4c+4p+9f within ~25%).
+
 ${context ? `Context: ${context}` : ''}
 ${barcode ? `Barcode hint: ${barcode}` : ''}
 ${text_hint ? `User text hint: ${text_hint}` : ''}
@@ -77,7 +96,7 @@ ${text_hint ? `User text hint: ${text_hint}` : ''}
   const resp = await openai.chat.completions.create({
     model: 'gpt-4o',
     temperature: 0.2,
-    max_tokens: 1200,
+    max_tokens: 2000, // Increased for detailed ingredient analysis
     messages: [
       {
         role: 'user',

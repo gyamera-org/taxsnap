@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Modal, TextInput, Alert, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
 // import { router } from 'expo-router';
@@ -13,7 +13,6 @@ import {
   RotateCcw,
   Zap,
   TreePine,
-  Eye,
   CheckCircle,
   Clock,
   Flame,
@@ -23,6 +22,7 @@ import {
   useUpdateExerciseEntry,
   useCreateExerciseEntry,
 } from '@/lib/hooks/use-exercise-tracking';
+import { getLocalDateString, getLocalTimeString } from '@/lib/utils/date-helpers';
 import { Button } from '../ui';
 
 // Exercise type icons mapping
@@ -88,7 +88,7 @@ const getExerciseColor = (exerciseType: string) => {
   }
 };
 
-interface LoggedWorkoutsSectionProps {
+interface WorkoutsSectionProps {
   exerciseEntries?: any[];
   currentWeeklyPlan?: any;
   isLoading: boolean;
@@ -96,13 +96,13 @@ interface LoggedWorkoutsSectionProps {
   onNavigateToLogExercise?: () => void;
 }
 
-export function LoggedWorkoutsSection({
+export function WorkoutsSection({
   exerciseEntries,
   currentWeeklyPlan,
   isLoading,
   selectedDate,
   onNavigateToLogExercise,
-}: LoggedWorkoutsSectionProps) {
+}: WorkoutsSectionProps) {
   const [editingExercise, setEditingExercise] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -144,39 +144,94 @@ export function LoggedWorkoutsSection({
       calories_burned: exercise.calories_estimate || 0,
       intensity: 'moderate' as const,
       notes: `Completed from weekly plan: ${exercise.instructions}`,
-      logged_date:
-        selectedDate.getFullYear() +
-        '-' +
-        String(selectedDate.getMonth() + 1).padStart(2, '0') +
-        '-' +
-        String(selectedDate.getDate()).padStart(2, '0'),
-      logged_time: new Date().toTimeString().split(' ')[0],
+      logged_date: getLocalDateString(selectedDate),
+      logged_time: getLocalTimeString(),
     };
 
-    createExerciseEntry.mutate(exerciseData);
+    createExerciseEntry.mutate(exerciseData, {
+      onSuccess: () => {
+        // Mark exercise as completed locally to prevent duplication
+        exercise.completed = true;
+      },
+      onError: (error) => {
+        console.error('Failed to log exercise:', error);
+        Alert.alert('Error', 'Failed to log exercise. Please try again.');
+      },
+    });
   };
 
   // Get planned workouts for selected date
   const getTodaysPlannedWorkout = () => {
     if (!currentWeeklyPlan?.plan_data?.days) return null;
 
-    const dateString =
-      selectedDate.getFullYear() +
-      '-' +
-      String(selectedDate.getMonth() + 1).padStart(2, '0') +
-      '-' +
-      String(selectedDate.getDate()).padStart(2, '0');
+    const dateString = getLocalDateString(selectedDate);
+    const selectedDayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-    const todaysWorkout = currentWeeklyPlan.plan_data.days.find(
+    console.log('🔍 Looking for date:', dateString);
+    console.log('🔍 Selected day of week:', selectedDayOfWeek);
+    console.log(
+      '🔍 Available days:',
+      currentWeeklyPlan.plan_data.days.map((d: any) => ({
+        date: d.date,
+        day_name: d.day_name,
+        is_rest_day: d.is_rest_day,
+      }))
+    );
+
+    // First try to match by exact date
+    let todaysWorkout = currentWeeklyPlan.plan_data.days.find(
       (day: any) => day.date === dateString
     );
 
+    // If no exact match, try to match by day of week
+    if (!todaysWorkout) {
+      const dayNames = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ];
+      const selectedDayName = dayNames[selectedDayOfWeek];
+
+      todaysWorkout = currentWeeklyPlan.plan_data.days.find(
+        (day: any) => day.day_name?.toLowerCase() === selectedDayName.toLowerCase()
+      );
+
+      console.log('🔍 Trying day name match:', selectedDayName);
+    }
+
+    console.log('🔍 Found workout for date:', todaysWorkout);
     return todaysWorkout;
   };
 
   const todaysPlannedWorkout = getTodaysPlannedWorkout();
   const plannedExercises = todaysPlannedWorkout?.exercises || [];
-  const allExercises = [...plannedExercises, ...(exerciseEntries || [])];
+
+  // Check if a planned exercise has been completed (logged) today
+  const isPlannedExerciseCompleted = (plannedExercise: any) => {
+    if (!exerciseEntries || exerciseEntries.length === 0) return false;
+
+    return exerciseEntries.some((loggedExercise: any) => {
+      // Check if the logged exercise matches the planned one
+      const nameMatch =
+        loggedExercise.exercise_name?.toLowerCase() === plannedExercise.name?.toLowerCase();
+      const typeMatch =
+        loggedExercise.exercise_type?.toLowerCase() === plannedExercise.category?.toLowerCase();
+
+      return nameMatch && typeMatch;
+    });
+  };
+
+  // Filter out planned exercises that have already been logged to prevent duplication
+  const unloggedPlannedExercises = plannedExercises.filter(
+    (exercise: any) => !exercise.completed && !isPlannedExerciseCompleted(exercise)
+  );
+
+  // Show both logged entries AND unlogged planned exercises
+  const allExercises = [...(exerciseEntries || []), ...unloggedPlannedExercises];
 
   if (isLoading) {
     return (
@@ -224,7 +279,11 @@ export function LoggedWorkoutsSection({
         </TouchableOpacity>
       </View> */}
 
-      <Text className="text-xl font-bold text-gray-900 mb-4">Today's Workouts</Text>
+      <Text className="text-xl font-bold text-gray-900 mb-4">
+        {selectedDate.toDateString() === new Date().toDateString()
+          ? "Today's Workouts"
+          : `Workouts for ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+      </Text>
 
       {allExercises.length > 0 ? (
         <View className="gap-3">
@@ -250,25 +309,21 @@ export function LoggedWorkoutsSection({
                     </View>
 
                     <View className="flex-1">
-                      <Text
-                        className={`text-base font-semibold ${
-                          !isPlanned ? 'text-gray-400 line-through' : 'text-gray-900'
-                        }`}
-                      >
-                        {exerciseName}
-                      </Text>
+                      <View className="flex-row items-center gap-2">
+                        <Text className="text-base font-semibold text-gray-900">
+                          {exerciseName}
+                        </Text>
+                        {!isPlanned && (
+                          <View className="bg-green-100 px-2 py-1 rounded-full">
+                            <Text className="text-green-700 text-xs font-medium">Completed</Text>
+                          </View>
+                        )}
+                      </View>
                       <Text className="text-sm text-gray-500 capitalize">{exerciseType}</Text>
                     </View>
                   </View>
 
                   <View className="flex-row items-center gap-2">
-                    <TouchableOpacity
-                      onPress={() => handleEditExercise(exercise)}
-                      className="w-8 h-8 bg-gray-100 rounded-full items-center justify-center"
-                    >
-                      <Edit3 size={16} color="#6B7280" />
-                    </TouchableOpacity>
-
                     {isPlanned ? (
                       <TouchableOpacity
                         onPress={() => handleMarkDone(exercise)}
@@ -278,10 +333,10 @@ export function LoggedWorkoutsSection({
                       </TouchableOpacity>
                     ) : (
                       <TouchableOpacity
-                        onPress={() => handleDeleteExercise(exercise.id)}
-                        className="w-8 h-8 bg-red-100 rounded-full items-center justify-center"
+                        onPress={() => handleEditExercise(exercise)}
+                        className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center"
                       >
-                        <X size={16} color="#DC2626" />
+                        <Edit3 size={16} color="#3B82F6" />
                       </TouchableOpacity>
                     )}
                   </View>

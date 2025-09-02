@@ -1,6 +1,7 @@
 import { View, Image, ColorValue } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { LinearGradient } from 'expo-linear-gradient';
+import WeeklyCalendar from '@/components/nutrition/weekly-calendar';
 
 interface Props {
   children: React.ReactNode;
@@ -9,9 +10,23 @@ interface Props {
   image?: string;
   btn?: React.ReactNode;
   theme?: 'nutrition' | 'cycle' | 'exercise' | 'settings';
+  // Calendar props - only required when theme is not 'settings'
+  selectedDate?: Date;
+  onDateSelect?: (date: Date) => void;
+  loggedDates?: string[];
 }
 
-const PageLayout = ({ children, title, extraSubtitle, image, btn, theme = 'settings' }: Props) => {
+const PageLayout = ({
+  children,
+  title,
+  extraSubtitle,
+  image,
+  btn,
+  theme = 'settings',
+  selectedDate,
+  onDateSelect,
+  loggedDates,
+}: Props) => {
   const getGradientColors = () => {
     switch (theme) {
       case 'nutrition':
@@ -55,6 +70,17 @@ const PageLayout = ({ children, title, extraSubtitle, image, btn, theme = 'setti
         )}
         {btn}
       </View>
+
+      {/* Only show WeeklyCalendar for non-settings themes */}
+      {theme !== 'settings' && selectedDate && onDateSelect && (
+        <WeeklyCalendar
+          selectedDate={selectedDate}
+          onDateSelect={onDateSelect}
+          loggedDates={loggedDates || []}
+          theme={theme}
+        />
+      )}
+
       {children}
     </View>
   );

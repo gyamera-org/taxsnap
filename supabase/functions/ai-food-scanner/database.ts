@@ -10,7 +10,8 @@ const supabase = createClient(
 export async function upsertMealEntry(
   analysis: FoodAnalysis,
   { user_id, meal_type, logged_date_iso }: UpsertOptions,
-  note?: string
+  note?: string,
+  imageUrl?: string | null
 ) {
   const { data: existing, error: findErr } = await supabase
     .from('meal_entries')
@@ -47,6 +48,8 @@ export async function upsertMealEntry(
       confidence: i.confidence,
       isPackaged: i.is_packaged,
       sourceLabel: i.sources?.label_text ?? null,
+      detailed_ingredients: (i as any).detailed_ingredients || null, // Store detailed ingredients
+      image_url: imageUrl, // Store image URL with food item
     },
     quantity: 1,
   }));
@@ -65,6 +68,9 @@ export async function upsertMealEntry(
     logged_date: logged_date_iso,
     logged_time: now.toTimeString().split(' ')[0],
     notes: [existing?.[0]?.notes, note].filter(Boolean).join(' | '),
+    image_url: imageUrl, // Store image URL at meal entry level
+    analysis_status: 'completed', // Mark as completed analysis
+    analysis_confidence: analysis.overall_confidence, // Store overall confidence
   };
 
   if (existing && existing.length) {

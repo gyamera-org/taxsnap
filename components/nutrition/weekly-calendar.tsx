@@ -59,7 +59,7 @@ export default function WeeklyCalendar({
 
   const isToday = (date: Date) => startOfDay(date).getTime() === today.getTime();
   const isSameDay = (a: Date, b: Date) => startOfDay(a).getTime() === startOfDay(b).getTime();
-  const isAfterTomorrow = (date: Date) => startOfDay(date).getTime() > tomorrow.getTime();
+  const isAfterToday = (date: Date) => startOfDay(date).getTime() > today.getTime();
   const isBeforeSignup = (date: Date) =>
     signupDate ? startOfDay(date).getTime() < signupDate.getTime() : false;
 
@@ -77,11 +77,11 @@ export default function WeeklyCalendar({
   };
 
   // ---- Generate week window ----
-  // Clamp center to [signupDate .. tomorrow]
+  // Clamp center to [signupDate .. today]
   const rawCenter = startOfDay(selectedDate);
   const lowerBound = signupDate ?? rawCenter; // if no account yet, don't restrict past
   const boundedCenter = maxDate(rawCenter, lowerBound);
-  const effectiveCenter = minDate(boundedCenter, tomorrow);
+  const effectiveCenter = minDate(boundedCenter, today);
 
   // Window: 5 days before center ... 1 day after center (total 7)
   const generateWeekDays = (centerDate: Date) => {
@@ -98,7 +98,7 @@ export default function WeeklyCalendar({
       <View className="bg-white rounded-2xl px-5 py-4 shadow-sm border border-gray-50">
         <View className="flex-row justify-between">
           {weekDays.map((date, index) => {
-            const disabled = isAfterTomorrow(date) || isBeforeSignup(date);
+            const disabled = isAfterToday(date) || isBeforeSignup(date);
             const isSelected = isSameDay(date, selectedDate);
             const isTodayDate = isToday(date);
             const hasLogs = hasLoggedEntry(date);

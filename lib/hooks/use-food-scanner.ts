@@ -12,13 +12,25 @@ interface NutritionInfo {
   sugar?: number;
 }
 
-interface FoodAnalysis {
+interface FoodItemAnalysis {
   food_name: string;
   brand?: string;
   category: string;
   serving_size: string;
   nutrition: NutritionInfo;
   confidence: number;
+  description: string;
+  detailed_ingredients?: Array<{
+    name: string;
+    portion: string;
+    calories: number;
+    nutrition: NutritionInfo;
+  }>;
+}
+
+interface FoodAnalysis {
+  items: FoodItemAnalysis[];
+  overall_confidence: number;
   description: string;
 }
 
@@ -28,6 +40,7 @@ interface ScanFoodRequest {
   context?: string;
   meal_type?: string;
   auto_save?: boolean;
+  meal_entry_id?: string; // For realtime progress updates
 }
 
 interface ScanFoodResponse {
@@ -35,13 +48,14 @@ interface ScanFoodResponse {
   analysis: FoodAnalysis;
   meal_entry_id?: string;
   auto_saved?: boolean;
+  image_url?: string;
 }
 
 export function useScanFood() {
   const queryClient = useQueryClient();
 
   return useMutation<ScanFoodResponse, Error, ScanFoodRequest>({
-    mutationFn: async ({ image_base64, barcode, context, meal_type, auto_save }) => {
+    mutationFn: async ({ image_base64, barcode, context, meal_type, auto_save, meal_entry_id }) => {
       // Get current user for auto-save functionality
       const {
         data: { user },
@@ -55,6 +69,7 @@ export function useScanFood() {
           meal_type,
           user_id: user?.id,
           auto_save,
+          meal_entry_id,
         },
       });
 

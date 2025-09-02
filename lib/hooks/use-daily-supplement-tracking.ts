@@ -124,10 +124,13 @@ export function useDailySupplementStatus(date: string = getTodayDateString()) {
           // Find the daily entry for this supplement
           const entry = dailyEntries.find((e) => e.supplement_id === supplement.id);
 
+          // Handle boolean properly - entry.taken can be false (not falsy)
+          const taken = entry?.taken ?? false;
+
           return {
             supplement,
             entry,
-            taken: entry?.taken || false,
+            taken,
             scheduled,
           };
         })
@@ -193,25 +196,113 @@ export function useToggleSupplementTaken() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
-      // Invalidate relevant queries
+    // Optimistic updates for instant UI feedback
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({
+        queryKey: dailySupplementQueryKeys.dailyStatus(variables.date),
+      });
+      await queryClient.cancelQueries({
+        queryKey: dailySupplementQueryKeys.dailyEntries(variables.date),
+      });
+
+      // Snapshot the previous values
+      const previousStatus = queryClient.getQueryData(
+        dailySupplementQueryKeys.dailyStatus(variables.date)
+      ) as DailySupplementStatus[] | undefined;
+
+      const previousEntries = queryClient.getQueryData(
+        dailySupplementQueryKeys.dailyEntries(variables.date)
+      ) as DailySupplementEntry[] | undefined;
+
+      // Update daily entries cache first
+      queryClient.setQueryData(
+        dailySupplementQueryKeys.dailyEntries(variables.date),
+        (old: DailySupplementEntry[] | undefined) => {
+          if (!old) return old;
+
+          const existingEntryIndex = old.findIndex(
+            (e) => e.supplement_id === variables.supplementId
+          );
+          const updatedEntry: DailySupplementEntry = {
+            supplement_id: variables.supplementId,
+            supplement_name: variables.supplementName,
+            date: variables.date,
+            taken: variables.taken,
+            time_taken: variables.taken ? new Date().toTimeString().slice(0, 8) : undefined,
+            dosage_taken: variables.dosage,
+            notes: variables.notes,
+            user_id: '', // Will be filled by server
+          };
+
+          if (existingEntryIndex >= 0) {
+            // Update existing entry
+            const newEntries = [...old];
+            newEntries[existingEntryIndex] = { ...old[existingEntryIndex], ...updatedEntry };
+            return newEntries;
+          } else {
+            // Add new entry
+            return [...old, updatedEntry];
+          }
+        }
+      );
+
+      // Optimistically update the UI
+      queryClient.setQueryData(
+        dailySupplementQueryKeys.dailyStatus(variables.date),
+        (old: DailySupplementStatus[] | undefined) => {
+          if (!old) return old;
+
+          const updated = old.map((status) => {
+            if (status.supplement.id === variables.supplementId) {
+              const newStatus = {
+                ...status,
+                taken: variables.taken,
+                entry: {
+                  ...status.entry,
+                  supplement_id: variables.supplementId,
+                  supplement_name: variables.supplementName,
+                  date: variables.date,
+                  taken: variables.taken,
+                  time_taken: variables.taken ? new Date().toTimeString().slice(0, 8) : undefined,
+                  dosage_taken: variables.dosage,
+                  notes: variables.notes,
+                } as DailySupplementEntry,
+              };
+              return newStatus;
+            }
+            return status;
+          });
+
+          return updated;
+        }
+      );
+
+      // Return a context object with the snapshotted values
+      return { previousStatus, previousEntries };
+    },
+    onError: (error: Error, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(
+        dailySupplementQueryKeys.dailyStatus(variables.date),
+        context?.previousStatus
+      );
+      queryClient.setQueryData(
+        dailySupplementQueryKeys.dailyEntries(variables.date),
+        context?.previousEntries
+      );
+
+      toast.error('Failed to update supplement', {
+        description: error.message,
+      });
+    },
+    onSettled: (data, error, variables) => {
+      // Always refetch after error or success to ensure we have the latest data
       queryClient.invalidateQueries({
         queryKey: dailySupplementQueryKeys.dailyEntries(variables.date),
       });
       queryClient.invalidateQueries({
         queryKey: dailySupplementQueryKeys.dailyStatus(variables.date),
-      });
-
-      // Show feedback
-      toast.success(
-        variables.taken
-          ? `✅ ${variables.supplementName} marked as taken`
-          : `⭕ ${variables.supplementName} marked as not taken`
-      );
-    },
-    onError: (error: Error) => {
-      toast.error('Failed to update supplement', {
-        description: error.message,
       });
     },
   });
@@ -244,7 +335,6 @@ export function useAddUserSupplement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dailySupplementQueryKeys.userSupplements() });
-      toast.success('Supplement added successfully');
     },
     onError: (error: Error) => {
       toast.error('Failed to add supplement', {
@@ -275,7 +365,6 @@ export function useRemoveUserSupplement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: dailySupplementQueryKeys.userSupplements() });
-      toast.success('Supplement removed');
     },
     onError: (error: Error) => {
       toast.error('Failed to remove supplement', {

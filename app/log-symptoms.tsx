@@ -148,7 +148,7 @@ export default function LogSymptomsScreen() {
     <View className="flex-1" style={{ backgroundColor: '#F5F1E8' }}>
       <SubPageLayout
         title="Log Symptoms"
-        onBack={() => router.push('/(tabs)/cycle')}
+        onBack={() => router.back()}
         rightElement={
           <Button
             title="Log"

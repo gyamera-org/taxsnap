@@ -33,24 +33,6 @@ export function TodaysSymptoms({ selectedDate, symptomData, isLoading }: TodaysS
   const isToday = selectedDate.toDateString() === new Date().toDateString();
   const isFuture = selectedDate > new Date() && !isToday;
 
-  const getSymptomColor = (symptom: string) => {
-    const severityColors = {
-      Cramps: '#EF4444',
-      Headache: '#F59E0B',
-      'Mood swings': '#8B5CF6',
-      Bloating: '#06B6D4',
-      Fatigue: '#6B7280',
-      'Breast tenderness': '#EC4899',
-      'Back pain': '#DC2626',
-      Nausea: '#10B981',
-      Acne: '#F97316',
-      'Food cravings': '#84CC16',
-      Insomnia: '#3B82F6',
-      Anxiety: '#F59E0B',
-    };
-    return severityColors[symptom as keyof typeof severityColors] || '#6B7280';
-  };
-
   const getSymptomIcon = (symptom: string) => {
     const iconMap: { [key: string]: React.ReactNode } = {
       cramps: <CrampsIcon size={28} />,
@@ -120,7 +102,9 @@ export function TodaysSymptoms({ selectedDate, symptomData, isLoading }: TodaysS
           </View>
           {!isFuture && (
             <TouchableOpacity
-              onPress={() => router.push('/log-symptoms')}
+              onPress={() => {
+                router.push('/log-symptoms');
+              }}
               className="w-8 h-8 rounded-full bg-red-50 items-center justify-center"
             >
               <Plus size={16} color="#DC2626" />
@@ -175,23 +159,6 @@ export function TodaysSymptoms({ selectedDate, symptomData, isLoading }: TodaysS
                   </View>
                 ))}
               </View>
-              {/* View Notes Button */}
-              {/* {(symptomData.notes || symptomData.severity) && (
-                <View>
-                  <TouchableOpacity
-                    onPress={() => setIsNotesModalVisible(true)}
-                    className="flex-row items-center justify-center py-3 px-4 rounded-xl"
-                    style={{
-                      backgroundColor: '#FEE2E2',
-                      borderWidth: 1,
-                      borderColor: '#FECACA',
-                    }}
-                  >
-                    <Eye size={16} color="#DC2626" />
-                    <Text className="text-red-900 font-medium ml-2">View Notes</Text>
-                  </TouchableOpacity>
-                </View>
-              )} */}
             </View>
           </>
         ) : (

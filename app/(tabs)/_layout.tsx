@@ -39,7 +39,6 @@ const HIDDEN_ROUTES = [
 
 export default function TabLayout() {
   const pathname = usePathname();
-  const router = useRouter();
   const shouldHideTabBar = HIDDEN_ROUTES.includes(pathname);
   const tabBarAnimation = useRef(new Animated.Value(1)).current;
   const [showLoggerModal, setShowLoggerModal] = useState(false);
