@@ -7,16 +7,23 @@ export function useAppNavigation() {
   // Simplified back navigation - prefer native router.back()
   const goBackWithFallback = () => {
     try {
-      if (router.canGoBack()) {
-        router.back();
+      // Special handling for nested settings pages
+      if (pathname.includes('settings') && 
+          (pathname.includes('/fitness-goals') || 
+           pathname.includes('/weight') || 
+           pathname.includes('/nutrition-goals') || 
+           pathname.includes('/personal-details') ||
+           pathname.includes('/reminder-settings') ||
+           pathname.includes('/supplements'))) {
+        // For nested settings pages, explicitly navigate to settings index
+        router.push('/(tabs)/settings' as any);
         return;
       }
 
-      // Fallback to intelligent routing if no back history
-      const fallbackRoute = getFallbackRoute(pathname);
-      router.replace(fallbackRoute as any);
+      // For other pages, try router.back() first
+      router.back();
     } catch (error) {
-      console.warn('Navigation error, using default fallback:', error);
+      console.warn('Navigation failed, using fallback route:', error);
       const fallbackRoute = getFallbackRoute(pathname);
       router.replace(fallbackRoute as any);
     }
@@ -57,8 +64,18 @@ export function useAppNavigation() {
       return '/(tabs)/cycle';
     }
 
-    // Settings screens
+    // Settings screens - handle nested pages properly
     if (currentPath.includes('settings')) {
+      // If we're on a nested settings page, go back to settings index
+      if (
+        currentPath.includes('/fitness-goals') ||
+        currentPath.includes('/weight') ||
+        currentPath.includes('/nutrition-goals') ||
+        currentPath.includes('/personal-details')
+      ) {
+        return '/(tabs)/settings';
+      }
+      // If we're already on settings index, stay there
       return '/(tabs)/settings';
     }
 

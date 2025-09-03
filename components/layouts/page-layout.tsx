@@ -64,7 +64,7 @@ const PageLayout = ({
       />
       <View className="flex-row items-center justify-between pb-4 pt-12 px-4">
         <View className="flex-row items-center flex-1">
-          {shouldShowCalendar && (
+          {theme !== 'settings' && (
             <NavigationErrorBoundary size={48}>
               <NavigableAvatar size={48} />
             </NavigationErrorBoundary>
