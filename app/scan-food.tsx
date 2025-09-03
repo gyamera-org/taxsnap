@@ -22,19 +22,12 @@ export default function ScanFoodScreen() {
   const { updateAnalysisProgress, markAnalysisComplete, markAnalysisFailed } =
     useFoodAnalysisRealtime({
       onAnalysisComplete: (mealEntry) => {
-        console.log('✅ Food analysis completed:', mealEntry.id);
         // Additional handling if needed
       },
       onAnalysisFailed: (mealEntry) => {
-        console.log('❌ Food analysis failed:', mealEntry.id);
         // Additional handling if needed
       },
       onAnalysisProgress: (mealEntry) => {
-        console.log(
-          '📊 Food analysis progress:',
-          mealEntry.analysis_progress,
-          mealEntry.analysis_stage
-        );
         // Additional handling if needed
       },
     });
@@ -128,7 +121,6 @@ export default function ScanFoodScreen() {
 
       createMealEntry.mutate(analyzingMealEntry, {
         onSuccess: async (analyzingMeal) => {
-          console.log('🔍 Created analyzing meal entry:', analyzingMeal.id);
           const returnTo = (params.returnTo as string) || '/(tabs)/nutrition';
           router.push(returnTo as any);
           await updateAnalysisProgress(analyzingMeal.id, 10, 'uploading');
@@ -145,9 +137,7 @@ export default function ScanFoodScreen() {
                 meal_entry_id: analyzingMeal.id,
               },
               {
-                onSuccess: async (response) => {
-                  console.log('✅ Scan response received:', response);
-                },
+                onSuccess: async (response) => {},
                 onError: async (error) => {
                   console.error('❌ Food analysis error:', error);
                   await markAnalysisFailed(analyzingMeal.id);

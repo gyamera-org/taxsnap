@@ -319,7 +319,6 @@ export function useMealEntriesRealtime(onMealEntryChange?: () => void) {
             filter: `user_id=eq.${user.id}`,
           },
           (payload) => {
-            console.log('🔄 Meal entry real-time event:', payload.eventType, payload);
 
             queryClient.invalidateQueries({
               queryKey: [...queryKeys.logs.mealEntries],

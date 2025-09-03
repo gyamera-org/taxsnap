@@ -10,7 +10,6 @@ import { getTodayDateString } from './date-helpers';
  * Clear all supplement caches - useful for debugging
  */
 export function clearSupplementCaches(queryClient: QueryClient) {
-  console.log('[DEBUG] Clearing all supplement caches...');
 
   // Clear ALL queries (nuclear option)
   queryClient.clear();
@@ -23,7 +22,6 @@ export function clearSupplementCaches(queryClient: QueryClient) {
   const today = getTodayDateString();
   queryClient.removeQueries({ queryKey: [...supplementQueryKeys.today(), today] });
 
-  console.log(`[DEBUG] Cleared ALL caches including supplements for date: ${today}`);
 }
 
 /**
@@ -33,13 +31,7 @@ export function logSupplementCacheState(queryClient: QueryClient) {
   const today = getTodayDateString();
   const todayCache = queryClient.getQueryData([...supplementQueryKeys.today(), today]);
 
-  console.log('[DEBUG] Current supplement cache state:');
-  console.log(`Date: ${today}`);
-  console.log(`Today's supplements:`, todayCache);
 
   // Log timezone info
   const now = new Date();
-  console.log(`Local time: ${now.toLocaleString()}`);
-  console.log(`UTC time: ${now.toISOString()}`);
-  console.log(`Timezone offset: ${now.getTimezoneOffset()} minutes`);
 }

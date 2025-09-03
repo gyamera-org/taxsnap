@@ -57,7 +57,6 @@ export function WeeklyPlanSection({
     }
 
     // Start the generation process (non-blocking)
-    console.log('Plan generation data:', planGenerationData);
     generateWeeklyPlan.mutate(
       {
         plan_data: planGenerationData,

@@ -69,7 +69,6 @@ export function useExerciseEntries(date: string) {
   return useQuery({
     queryKey: [...queryKeys.logs.exerciseEntries, date],
     queryFn: async () => {
-      console.log('🔍 Fetching exercise entries for date:', date);
 
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
@@ -77,7 +76,6 @@ export function useExerciseEntries(date: string) {
         throw new Error('User not authenticated');
       }
 
-      console.log('👤 User ID for exercise entries:', user.user.id);
 
       const { data, error } = await supabase
         .from('exercise_entries')
@@ -91,7 +89,6 @@ export function useExerciseEntries(date: string) {
         throw error;
       }
 
-      console.log(`📋 Found ${data?.length || 0} exercise entries for ${date}:`, data);
       return data as ExerciseEntry[];
     },
     staleTime: getStaleTimeForDate(date),
@@ -134,7 +131,6 @@ export function useCreateExerciseEntry() {
 
   return useMutation({
     mutationFn: async (data: CreateExerciseEntryData) => {
-      console.log('🔄 Creating exercise entry with data:', data);
 
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) {
@@ -142,7 +138,6 @@ export function useCreateExerciseEntry() {
         throw new Error('User not authenticated');
       }
 
-      console.log('👤 User authenticated:', user.user.id);
 
       const insertData = {
         user_id: user.user.id,
@@ -156,7 +151,6 @@ export function useCreateExerciseEntry() {
         logged_time: data.logged_time || getLocalTimeString(),
       };
 
-      console.log('📝 Inserting to exercise_entries table:', insertData);
 
       const { data: result, error } = await supabase
         .from('exercise_entries')
@@ -169,7 +163,6 @@ export function useCreateExerciseEntry() {
         throw error;
       }
 
-      console.log('✅ Exercise entry created:', result);
 
       // If user wants to share with community, invoke AI moderation
       if (data.share_with_community) {

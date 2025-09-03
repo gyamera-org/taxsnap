@@ -14,12 +14,9 @@ export async function debugSupplementLogs(date?: string) {
   try {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      console.log('[DEBUG] No authenticated user');
       return;
     }
 
-    console.log(`[DEBUG] Querying supplement logs for date: ${targetDate}`);
-    console.log(`[DEBUG] User ID: ${user.user.id}`);
 
     // Get all supplement logs for the user
     const { data: allLogs, error: allLogsError } = await supabase
@@ -34,7 +31,6 @@ export async function debugSupplementLogs(date?: string) {
       return;
     }
 
-    console.log('[DEBUG] Recent supplement logs:', allLogs);
 
     // Get logs for the specific date
     const { data: dateLogs, error: dateLogsError } = await supabase
@@ -48,7 +44,6 @@ export async function debugSupplementLogs(date?: string) {
       return;
     }
 
-    console.log(`[DEBUG] Logs for ${targetDate}:`, dateLogs);
 
     // Get user's supplements
     const { data: supplements, error: supplementsError } = await supabase
@@ -62,7 +57,6 @@ export async function debugSupplementLogs(date?: string) {
       return;
     }
 
-    console.log('[DEBUG] User supplements:', supplements);
 
     return {
       allLogs,
@@ -85,11 +79,9 @@ export async function clearSupplementLog(supplementName: string, date?: string) 
   try {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      console.log('[DEBUG] No authenticated user');
       return;
     }
 
-    console.log(`[DEBUG] Clearing supplement log for ${supplementName} on ${targetDate}`);
 
     const { data, error } = await supabase
       .from('supplement_logs')
@@ -103,7 +95,6 @@ export async function clearSupplementLog(supplementName: string, date?: string) 
       return;
     }
 
-    console.log(`[DEBUG] Successfully cleared supplement log for ${supplementName}`);
     return data;
   } catch (error) {
     console.error('[DEBUG] Error in clearSupplementLog:', error);

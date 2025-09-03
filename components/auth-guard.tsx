@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
 import { useAuth } from '@/context/auth-provider';
 import { router } from 'expo-router';
+import { DefaultLoader } from '@/components/ui/default-loader';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -18,12 +19,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }, [user, loading]);
 
   if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="mt-4 text-gray-600">Loading...</Text>
-      </View>
-    );
+    return <DefaultLoader />;
   }
 
   if (!user) {

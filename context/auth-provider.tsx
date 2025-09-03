@@ -303,7 +303,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         nonce: hashedNonce,
       });
 
-      // console.log('appleCredential', appleCredential); // Removed for security
 
       // Add user metadata if we have the name from Apple
       const options: any = {};

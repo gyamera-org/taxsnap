@@ -65,7 +65,6 @@ export function useGenerateWeeklyExercisePlan() {
 
   return useMutation<any, Error, GenerateWeeklyPlanData>({
     mutationFn: async (data) => {
-      console.log('🤖 Generating weekly exercise plan with data:', data);
 
       const {
         data: { session },
@@ -76,7 +75,6 @@ export function useGenerateWeeklyExercisePlan() {
         throw new Error('Not authenticated');
       }
 
-      console.log('👤 User ID for plan generation:', session.user.id);
 
       const requestBody = {
         user_id: session.user.id,
@@ -84,7 +82,6 @@ export function useGenerateWeeklyExercisePlan() {
         start_date: data.start_date || new Date().toISOString(),
       };
 
-      console.log('📤 Sending request to ai-weekly-exercise-planner:', requestBody);
 
       const response = await supabase.functions.invoke('ai-weekly-exercise-planner', {
         body: requestBody,
@@ -95,11 +92,9 @@ export function useGenerateWeeklyExercisePlan() {
         throw new Error(response.error.message || 'Failed to generate weekly plan');
       }
 
-      console.log('✅ Weekly plan generated successfully:', response.data);
       return response.data;
     },
     onSuccess: async () => {
-      console.log('🔄 Invalidating and refreshing weekly plan queries...');
 
       // Invalidate all weekly plan queries to ensure fresh data
       await queryClient.invalidateQueries({ queryKey: queryKeys.logs.weeklyExercisePlans });
@@ -112,7 +107,6 @@ export function useGenerateWeeklyExercisePlan() {
         queryKey: [...queryKeys.logs.weeklyExercisePlans, 'current'],
       });
 
-      console.log('✅ Weekly plan queries refreshed');
     },
   });
 }
@@ -146,7 +140,6 @@ export function useLatestWeeklyPlan() {
   return useQuery<WeeklyExercisePlan | null, Error>({
     queryKey: [...queryKeys.logs.weeklyExercisePlans, 'latest'],
     queryFn: async () => {
-      console.log('🔍 Fetching latest weekly plan');
 
       const {
         data: { session },
@@ -156,7 +149,6 @@ export function useLatestWeeklyPlan() {
         throw new Error('Not authenticated');
       }
 
-      console.log('👤 User ID for latest weekly plan:', session.user.id);
 
       const { data, error } = await supabase
         .from('weekly_exercise_plans')
@@ -171,7 +163,6 @@ export function useLatestWeeklyPlan() {
         throw error;
       }
 
-      console.log('📋 Latest weekly plan result:', data);
       return data || null;
     },
     staleTime: 1 * 60 * 1000, // 1 minute (short stale time for fresh data)
@@ -186,7 +177,6 @@ export function useCurrentWeeklyPlan() {
   return useQuery<WeeklyExercisePlan | null, Error>({
     queryKey: [...queryKeys.logs.weeklyExercisePlans, 'current', today],
     queryFn: async () => {
-      console.log('🔍 Fetching current weekly plan for date:', today);
 
       const {
         data: { session },
@@ -196,7 +186,6 @@ export function useCurrentWeeklyPlan() {
         throw new Error('Not authenticated');
       }
 
-      console.log('👤 User ID for weekly plan:', session.user.id);
 
       // First try to get active plan for today's date range
       let { data, error } = await supabase
@@ -212,7 +201,6 @@ export function useCurrentWeeklyPlan() {
 
       // If no active plan found for current date, get the most recent active plan
       if (!data && (!error || error.code === 'PGRST116')) {
-        console.log('🔍 No plan for current date, fetching most recent active plan');
         const { data: recentData, error: recentError } = await supabase
           .from('weekly_exercise_plans')
           .select('*')
@@ -231,7 +219,6 @@ export function useCurrentWeeklyPlan() {
         throw error;
       }
 
-      console.log('📋 Current weekly plan result:', data);
       return data || null;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

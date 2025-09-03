@@ -12,40 +12,23 @@ export function useMealActions() {
 
   const handleMealEdit = useCallback((meal: any) => {
     // Always show the same unified modal regardless of meal type
-    console.log('handleMealEdit: Setting meal details for meal ID:', meal?.id, meal?.name);
     setViewingMealDetails(meal);
   }, []);
 
   const handleMealSave = useCallback(
     async (mealId: string, updates: any) => {
       try {
-        console.log(
-          '🚀 handleMealSave: Starting update for meal ID:',
-          mealId,
-          'with updates:',
-          updates
-        );
-        console.log('🚀 handleMealSave: Current forceUpdateKey before save:', forceUpdateKey);
-
         await updateMealNutrition.mutateAsync({
           mealId,
           nutrition: updates,
         });
 
-        console.log('✅ handleMealSave: Successfully updated meal ID:', mealId);
-
         // Close the modal first
         setViewingMealDetails(null);
-        console.log('🔄 handleMealSave: Closed modal');
 
         // Force update the UI immediately since we're doing immediate invalidation in the mutation
         const newKey = forceUpdateKey + 1;
-        console.log(
-          '🔄 handleMealSave: Forcing UI update - changing key from',
-          forceUpdateKey,
-          'to',
-          newKey
-        );
+
         setForceUpdateKey(newKey);
       } catch (error) {
         console.error('🔴 handleMealSave: Failed to update meal:', error);
@@ -95,7 +78,6 @@ export function useMealActions() {
 
   const handleMealDone = useCallback(() => {
     // Trigger force update when user presses Done (for cases without changes)
-    console.log('handleMealDone: Forcing UI update for data refresh');
     setForceUpdateKey((prev) => prev + 1);
   }, []);
 

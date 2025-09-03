@@ -5,7 +5,7 @@ import { Beef, Wheat, ChartArea } from 'lucide-react-native';
 import { OliveOilIcon } from '@/components/icons/olive-oil-icon';
 
 const colorMap: Record<string, string> = {
-  protein: '#fda5d5', // Red
+  protein: '#ffa2a2', // Red
   carbs: '#fee685', // Orange
   fat: '#b8e6fe', // Blue
   calories: '#000000', // Black

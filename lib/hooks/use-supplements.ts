@@ -106,12 +106,8 @@ export function useTodaysSupplements() {
   return useQuery({
     queryKey: [...supplementQueryKeys.today(), todayString],
     queryFn: async () => {
-      console.log(`[useTodaysSupplements] Fetching for date: ${todayString}`);
-      console.log(`[useTodaysSupplements] Local time: ${new Date().toLocaleString()}`);
-      console.log(`[useTodaysSupplements] UTC time: ${new Date().toISOString()}`);
 
       const result = await callSupplementFunction(`today?date=${todayString}`);
-      console.log(`[useTodaysSupplements] Received ${result?.length || 0} supplements:`, result);
 
       return result;
     },

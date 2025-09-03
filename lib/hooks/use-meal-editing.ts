@@ -28,8 +28,6 @@ export function useUpdateMealNutrition() {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('User not authenticated');
 
-      console.log('useUpdateMealNutrition: Updating meal_entries table for meal ID:', mealId, 'with nutrition:', nutrition);
-
       const { data: result, error } = await supabase
         .from('meal_entries')
         .update({
@@ -44,71 +42,40 @@ export function useUpdateMealNutrition() {
         .select()
         .single();
 
-      console.log('useUpdateMealNutrition: Database update result:', result, 'error:', error);
-
       if (error) throw error;
       return result;
     },
     onSuccess: (result) => {
-      console.log('🟢 useUpdateMealNutrition: Update successful, result:', result);
-      
-      // Log all active queries before invalidation
-      const allQueries = queryClient.getQueryCache().getAll();
-      console.log('🔍 All active queries before invalidation:', allQueries.map(q => ({
-        queryKey: q.queryKey,
-        state: q.state.status,
-        data: q.state.data ? 'has data' : 'no data'
-      })));
-      
       // Immediately invalidate the core queries to ensure instant UI update
       try {
-        console.log('🔄 Starting query invalidation...');
-        
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.logs.mealEntries],
         });
-        console.log('✅ Invalidated mealEntries');
-        
+
         // Also force refetch to bypass any caching issues
         queryClient.refetchQueries({
           queryKey: [...queryKeys.logs.mealEntries],
         });
-        console.log('🔄 Refetching mealEntries');
-        
+
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.logs.dailyNutrition],
         });
-        console.log('✅ Invalidated dailyNutrition');
-        
+
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.logs.nutritionProgress],
         });
-        console.log('✅ Invalidated nutritionProgress');
-        
+
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.settings.nutritionGoals],
         });
-        console.log('✅ Invalidated nutritionGoals');
-        
+
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.logs.nutritionStreak],
         });
-        console.log('✅ Invalidated nutritionStreak');
-        
+
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.logs.loggedDates],
         });
-        console.log('✅ Invalidated loggedDates');
-        
-        // Log queries after invalidation
-        const queriesAfter = queryClient.getQueryCache().getAll();
-        console.log('🔍 All queries after invalidation:', queriesAfter.map(q => ({
-          queryKey: q.queryKey,
-          state: q.state.status,
-          isInvalidated: q.state.isInvalidated
-        })));
-        
-        console.log('🟢 useUpdateMealNutrition: Completed immediate query invalidation');
       } catch (error) {
         console.error('🔴 useUpdateMealNutrition: Error during query invalidation:', error);
       }

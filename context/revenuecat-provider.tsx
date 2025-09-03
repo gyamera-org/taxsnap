@@ -81,12 +81,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
   const initializeRevenueCat = async () => {
     try {
       // Debug: Log environment info
-      console.log('Initializing RevenueCat...', {
-        platform: Platform.OS,
-        hasAPIKey: !!APIKeys.apple,
-        apiKeyLength: APIKeys.apple ? APIKeys.apple.length : 0,
-        isDev: __DEV__,
-      });
 
       // Configure RevenueCat for the platform
       if (Platform.OS === 'ios' && APIKeys.apple) {
@@ -95,7 +89,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
           appUserID: null, // Anonymous user initially
           userDefaultsSuiteName: undefined,
         });
-        console.log('RevenueCat configured successfully');
       } else {
         const errorMsg = !APIKeys.apple
           ? 'RevenueCat API key not found. Please set EXPO_PUBLIC_REVENUECAT_IOS_API_KEY environment variable.'
@@ -125,7 +118,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
       console.error('Error initializing RevenueCat:', error);
       setState((prev) => ({
         ...prev,
-        error: `Failed to initialize RevenueCat: ${error.message}`,
+        error: `Failed to initialize RevenueCat: ${error?.message}`,
       }));
     }
   };
@@ -153,12 +146,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
           if (offering.availablePackages) {
             allPackages.push(...offering.availablePackages);
           }
-        });
-
-        console.log('Successfully loaded offerings:', {
-          currentOffering: offerings.current?.identifier,
-          totalOfferings: Object.keys(offerings.all).length,
-          totalPackages: allPackages.length,
         });
 
         setState((prev) => ({

@@ -46,7 +46,6 @@ export const DropdownField: React.FC<DropdownFieldProps> = ({
       </Text>
       <TouchableOpacity
         onPress={() => {
-          console.log('Dropdown tapped, current visibility:', isVisible);
           setIsVisible(!isVisible);
         }}
         className="bg-gray-50 rounded-xl p-4 border border-gray-200 flex-row items-center justify-between"

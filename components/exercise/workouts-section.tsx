@@ -167,17 +167,6 @@ export function WorkoutsSection({
     const dateString = getLocalDateString(selectedDate);
     const selectedDayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-    console.log('🔍 Looking for date:', dateString);
-    console.log('🔍 Selected day of week:', selectedDayOfWeek);
-    console.log(
-      '🔍 Available days:',
-      currentWeeklyPlan.plan_data.days.map((d: any) => ({
-        date: d.date,
-        day_name: d.day_name,
-        is_rest_day: d.is_rest_day,
-      }))
-    );
-
     // First try to match by exact date
     let todaysWorkout = currentWeeklyPlan.plan_data.days.find(
       (day: any) => day.date === dateString
@@ -199,11 +188,8 @@ export function WorkoutsSection({
       todaysWorkout = currentWeeklyPlan.plan_data.days.find(
         (day: any) => day.day_name?.toLowerCase() === selectedDayName.toLowerCase()
       );
-
-      console.log('🔍 Trying day name match:', selectedDayName);
     }
 
-    console.log('🔍 Found workout for date:', todaysWorkout);
     return todaysWorkout;
   };
 
@@ -285,16 +271,14 @@ export function WorkoutsSection({
           : `Workouts for ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
       </Text>
 
-{todaysPlannedWorkout?.is_rest_day && allExercises.length === 0 ? (
+      {todaysPlannedWorkout?.is_rest_day && allExercises.length === 0 ? (
         /* Rest Day Display */
         <View className="bg-white rounded-2xl p-8 items-center shadow-sm border border-gray-50">
           <View className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4">
             <Heart size={24} color="#10B981" />
           </View>
           <Text className="text-green-700 text-lg font-semibold mb-2">Rest Day</Text>
-          <Text className="text-gray-600 text-center">
-            Take a break and let your body recover.
-          </Text>
+          <Text className="text-gray-600 text-center">Take a break and let your body recover.</Text>
         </View>
       ) : allExercises.length > 0 ? (
         <View>
@@ -307,78 +291,80 @@ export function WorkoutsSection({
                 </View>
                 <View className="flex-1">
                   <Text className="text-green-700 font-semibold">Rest Day</Text>
-                  <Text className="text-green-600 text-sm">You've logged optional exercises on your rest day!</Text>
+                  <Text className="text-green-600 text-sm">
+                    You've logged optional exercises on your rest day!
+                  </Text>
                 </View>
               </View>
             </View>
           )}
-          
+
           <View className="gap-3">
-          {allExercises.map((exercise: any, index: number) => {
-            const isPlanned = !exercise.id; // Logged exercises have IDs, planned don't
-            const exerciseType = exercise.exercise_type || exercise.category || 'general';
-            const exerciseName = exercise.exercise_name || exercise.name;
-            const ExerciseIcon = getExerciseIcon(exerciseType);
-            const exerciseColor = getExerciseColor(exerciseType);
+            {allExercises.map((exercise: any, index: number) => {
+              const isPlanned = !exercise.id; // Logged exercises have IDs, planned don't
+              const exerciseType = exercise.exercise_type || exercise.category || 'general';
+              const exerciseName = exercise.exercise_name || exercise.name;
+              const ExerciseIcon = getExerciseIcon(exerciseType);
+              const exerciseColor = getExerciseColor(exerciseType);
 
-            return (
-              <View
-                key={exercise.id || `planned-${index}`}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-50"
-              >
-                <View className="flex-row items-center justify-between mb-3">
-                  <View className="flex-row items-center flex-1">
-                    <View
-                      className="w-12 h-12 rounded-xl items-center justify-center mr-3"
-                      style={{ backgroundColor: `${exerciseColor}20` }}
-                    >
-                      <ExerciseIcon size={20} color={exerciseColor} />
-                    </View>
-
-                    <View className="flex-1">
-                      <View className="flex-row items-center gap-2">
-                        <Text className="text-base font-semibold text-gray-900">
-                          {exerciseName}
-                        </Text>
-                        {!isPlanned && (
-                          <View className="bg-green-100 px-2 py-1 rounded-full">
-                            <Text className="text-green-700 text-xs font-medium">Completed</Text>
-                          </View>
-                        )}
+              return (
+                <View
+                  key={exercise.id || `planned-${index}`}
+                  className="bg-white rounded-2xl p-4 shadow-sm border border-gray-50"
+                >
+                  <View className="flex-row items-center justify-between mb-3">
+                    <View className="flex-row items-center flex-1">
+                      <View
+                        className="w-12 h-12 rounded-xl items-center justify-center mr-3"
+                        style={{ backgroundColor: `${exerciseColor}20` }}
+                      >
+                        <ExerciseIcon size={20} color={exerciseColor} />
                       </View>
-                      <Text className="text-sm text-gray-500 capitalize">{exerciseType}</Text>
+
+                      <View className="flex-1">
+                        <View className="flex-row items-center gap-2">
+                          <Text className="text-base font-semibold text-gray-900">
+                            {exerciseName}
+                          </Text>
+                          {!isPlanned && (
+                            <View className="bg-green-100 px-2 py-1 rounded-full">
+                              <Text className="text-green-700 text-xs font-medium">Completed</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text className="text-sm text-gray-500 capitalize">{exerciseType}</Text>
+                      </View>
+                    </View>
+
+                    <View className="flex-row items-center gap-2">
+                      {isPlanned ? (
+                        <TouchableOpacity
+                          onPress={() => handleMarkDone(exercise)}
+                          className="w-8 h-8 bg-green-100 rounded-full items-center justify-center"
+                        >
+                          <CheckCircle size={16} color="#10B981" />
+                        </TouchableOpacity>
+                      ) : (
+                        <TouchableOpacity
+                          onPress={() => handleEditExercise(exercise)}
+                          className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center"
+                        >
+                          <Edit3 size={16} color="#3B82F6" />
+                        </TouchableOpacity>
+                      )}
                     </View>
                   </View>
 
-                  <View className="flex-row items-center gap-2">
-                    {isPlanned ? (
-                      <TouchableOpacity
-                        onPress={() => handleMarkDone(exercise)}
-                        className="w-8 h-8 bg-green-100 rounded-full items-center justify-center"
-                      >
-                        <CheckCircle size={16} color="#10B981" />
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        onPress={() => handleEditExercise(exercise)}
-                        className="w-8 h-8 bg-blue-100 rounded-full items-center justify-center"
-                      >
-                        <Edit3 size={16} color="#3B82F6" />
-                      </TouchableOpacity>
-                    )}
+                  {/* Bottom details */}
+                  <View className="pt-3 border-t border-gray-50">
+                    <Text className="text-sm text-gray-600">
+                      {exercise.calories_burned || exercise.calories_estimate || 0} cal •{' '}
+                      {exercise.duration_minutes} min
+                    </Text>
                   </View>
                 </View>
-
-                {/* Bottom details */}
-                <View className="pt-3 border-t border-gray-50">
-                  <Text className="text-sm text-gray-600">
-                    {exercise.calories_burned || exercise.calories_estimate || 0} cal •{' '}
-                    {exercise.duration_minutes} min
-                  </Text>
-                </View>
-              </View>
-            );
-          })}
+              );
+            })}
           </View>
         </View>
       ) : (

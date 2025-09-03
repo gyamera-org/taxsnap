@@ -26,7 +26,6 @@ export function PaywallProvider({ children }: { children: ReactNode }) {
       customerInfo?.entitlements.active &&
       Object.keys(customerInfo.entitlements.active).length > 0
     ) {
-      console.log('User is already subscribed, not showing paywall');
       return;
     }
 

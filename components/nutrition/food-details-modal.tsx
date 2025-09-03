@@ -70,7 +70,6 @@ export function FoodDetailsModal({
   // Reset all state when meal changes to prevent stale data
   React.useEffect(() => {
     if (meal) {
-      console.log('FoodDetailsModal: Modal opened for meal:', meal.id, meal.name);
 
       // Calculate the correct quantity based on current vs original nutrition values
       // This ensures the serving size matches the saved nutrition totals
@@ -88,7 +87,6 @@ export function FoodDetailsModal({
         }
       }
 
-      console.log('FoodDetailsModal: Calculated quantity based on nutrition:', calculatedQuantity);
 
       setQuantity(calculatedQuantity);
       setOriginalQuantity(calculatedQuantity); // Store original for change detection
@@ -180,14 +178,6 @@ export function FoodDetailsModal({
     return null;
   }
 
-  console.log('FoodDetailsModal: Rendering modal for meal:', {
-    id: meal.id,
-    name: meal.name,
-    calories: meal.calories,
-    protein: meal.protein,
-    carbs: meal.carbs,
-    fat: meal.fat,
-  });
 
   // Handle both structured food items and direct meal nutrition data
   let food: any = {};
@@ -222,13 +212,6 @@ export function FoodDetailsModal({
     };
   }
 
-  console.log('FoodDetailsModal: Using baseNutrition values:', baseNutrition);
-  console.log(
-    'FoodDetailsModal: Current quantity:',
-    quantity,
-    'editableCalories:',
-    editableCalories
-  );
 
   // Calculate nutrition based on quantity with safe defaults, allowing individual edits
   const nutrition = {
@@ -240,13 +223,6 @@ export function FoodDetailsModal({
     sugar: Math.round((baseNutrition.sugar || 0) * quantity * 10) / 10,
   };
 
-  console.log('FoodDetailsModal: Calculated nutrition values:', nutrition);
-  console.log('FoodDetailsModal: Should match current meal values:', {
-    calories: meal.calories,
-    protein: meal.protein,
-    carbs: meal.carbs,
-    fat: meal.fat,
-  });
 
   const handleDelete = () => {
     Alert.alert(
@@ -276,12 +252,6 @@ export function FoodDetailsModal({
       editableFat !== null;
 
     if (hasChanges && onSave && meal) {
-      console.log('FoodDetailsModal: Saving meal with ID:', meal.id, 'Updates:', {
-        calories: nutrition.calories,
-        protein: nutrition.protein,
-        carbs: nutrition.carbs,
-        fat: nutrition.fat,
-      });
 
       // Call onSave with meal ID and nutrition updates in the expected format
       onSave(meal.id, {
@@ -293,7 +263,6 @@ export function FoodDetailsModal({
       // onSave handler will close modal and refresh data
     } else {
       // No changes made, just refresh data and close modal
-      console.log('FoodDetailsModal: No changes made, just refreshing data and closing');
 
       if (onDone) {
         onDone(); // Trigger data refresh

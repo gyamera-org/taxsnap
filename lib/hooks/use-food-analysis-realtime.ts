@@ -41,16 +41,6 @@ export function useFoodAnalysisRealtime({
         const stageChanged = oldMealEntry.analysis_stage !== mealEntry.analysis_stage;
 
         if (statusChanged || progressChanged || stageChanged) {
-          console.log('🔄 Food analysis update:', {
-            id: mealEntry.id,
-            status_from: oldMealEntry.analysis_status,
-            status_to: mealEntry.analysis_status,
-            progress_from: oldMealEntry.analysis_progress,
-            progress_to: mealEntry.analysis_progress,
-            stage_from: oldMealEntry.analysis_stage,
-            stage_to: mealEntry.analysis_stage,
-          });
-
           // Invalidate queries to refresh UI
           queryClient.invalidateQueries({
             queryKey: [...queryKeys.logs.mealEntries],
@@ -80,13 +70,6 @@ export function useFoodAnalysisRealtime({
 
         // Also handle progress updates regardless of status change
         if (progressChanged || stageChanged) {
-          console.log('📊 Analysis progress updated:', {
-            id: mealEntry.id,
-            progress: mealEntry.analysis_progress,
-            stage: mealEntry.analysis_stage,
-            status: mealEntry.analysis_status,
-          });
-
           onAnalysisProgress?.(mealEntry);
 
           // Immediately update the query data to show progress
@@ -121,7 +104,6 @@ export function useFoodAnalysisRealtime({
       // Handle new analyzing entries
       else if (eventType === 'INSERT' && newRecord?.analysis_status === 'analyzing') {
         const mealEntry = newRecord as MealEntry;
-        console.log('🆕 New food analysis started:', mealEntry.id);
 
         onAnalysisProgress?.(mealEntry);
 
@@ -143,7 +125,6 @@ export function useFoodAnalysisRealtime({
       if (!user) return;
 
       const channelName = `food_analysis_user_${user.id}`;
-      console.log('🔄 Setting up realtime subscription for user:', user.id);
 
       const subscription = supabase
         .channel(channelName)
@@ -156,7 +137,6 @@ export function useFoodAnalysisRealtime({
             filter: `user_id=eq.${user.id}`,
           },
           (payload) => {
-            console.log('🔄 Meal entry real-time event:', payload.eventType, payload);
             handleRealtimeEvent(payload);
           }
         )
@@ -167,7 +147,6 @@ export function useFoodAnalysisRealtime({
 
           switch (status) {
             case 'SUBSCRIBED':
-              console.log('✅ Food analysis realtime subscription active');
               break;
             case 'CHANNEL_ERROR':
               console.error('🔴 Food analysis channel error');
@@ -176,7 +155,6 @@ export function useFoodAnalysisRealtime({
               console.error('🔴 Food analysis subscription timed out');
               break;
             case 'CLOSED':
-              console.log('📴 Food analysis subscription closed');
               break;
           }
         });
@@ -211,8 +189,6 @@ export function useFoodAnalysisRealtime({
         }
 
         if (analyzingMeals && analyzingMeals.length > 0) {
-          console.log('📊 Polling found analyzing meals:', analyzingMeals.length);
-
           // Force refresh the meal entries query
           queryClient.invalidateQueries({
             queryKey: [...queryKeys.logs.mealEntries, today],
@@ -222,7 +198,6 @@ export function useFoodAnalysisRealtime({
           pollIntervalRef.current = setTimeout(pollAnalyzingMeals, 2000);
         } else {
           // No more analyzing meals, stop polling
-          console.log('✅ No more analyzing meals, stopping poll');
         }
       } catch (error) {
         console.error('Error polling analyzing meals:', error);

@@ -9,6 +9,7 @@ import { useRevenueCat } from '@/context/revenuecat-provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import { toast } from 'sonner-native';
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
+import { DefaultLoader } from '@/components/ui/default-loader';
 
 const features = [
   {
@@ -147,16 +148,7 @@ export default function PaywallScreen() {
 
   // Show loading state while RevenueCat initializes
   if (loading) {
-    return (
-      <View className="flex-1 bg-white items-center justify-center">
-        <SafeAreaView style={{ flex: 1 }}>
-          <View className="flex-1 items-center justify-center px-6">
-            <ActivityIndicator size="large" color="#FF69B4" />
-            <Text className="text-slate-600 mt-4 text-center">Loading subscription plans...</Text>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
+    return <DefaultLoader />;
   }
 
   // Show error state if RevenueCat failed to load

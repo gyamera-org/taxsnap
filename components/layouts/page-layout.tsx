@@ -3,6 +3,7 @@ import { Text } from '@/components/ui/text';
 import { LinearGradient } from 'expo-linear-gradient';
 import WeeklyCalendar from '@/components/nutrition/weekly-calendar';
 import { NavigableAvatar } from '@/components/ui/avatar';
+import { NavigationErrorBoundary } from '@/components/ui/navigation-error-boundary';
 
 interface Props {
   children: React.ReactNode;
@@ -63,7 +64,11 @@ const PageLayout = ({
       />
       <View className="flex-row items-center justify-between pb-4 pt-12 px-4">
         <View className="flex-row items-center flex-1">
-          {theme !== 'settings' && <NavigableAvatar size={48} />}
+          {theme !== 'settings' && (
+            <NavigationErrorBoundary size={48}>
+              <NavigableAvatar size={48} />
+            </NavigationErrorBoundary>
+          )}
           <View className={theme !== 'settings' ? 'ml-3 flex-1' : 'flex-1'}>
             <Text className="text-3xl font-bold text-black">{title}</Text>
             {extraSubtitle && <Text className="text-sm text-gray-600 mt-1">{extraSubtitle}</Text>}

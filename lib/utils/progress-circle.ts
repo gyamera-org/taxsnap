@@ -132,8 +132,6 @@ export function getAccurateCircularProgressStyles(
     borderColor: '#E5E7EB',
   };
 
-  console.log(`Progress calculation: ${consumed}/${target} = ${progress.toFixed(1)}%`);
-  console.log(`Progress thresholds: top=${progress > 0}, right=${progress > 25}, bottom=${progress > 50}, left=${progress > 75}`);
 
   if (progress <= 0) {
     return {
@@ -203,7 +201,6 @@ export function getSimpleCircularProgressStyles(
     borderColor: '#E5E7EB',
   };
 
-  console.log(`Granular progress: ${consumed}/${target} = ${progress.toFixed(1)}%`);
 
   if (progress <= 0) {
     return {

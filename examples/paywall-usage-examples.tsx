@@ -34,7 +34,6 @@ export function PremiumFeatureExample() {
   const handleAdvancedScan = () => {
     if (requirePremium()) {
       // User has access, proceed with feature
-      console.log('Starting advanced scan...');
     }
     // If user doesn't have access, paywall is automatically shown
   };
@@ -103,7 +102,6 @@ export function FlexibleFeatureExample() {
     }
 
     // Proceed with export
-    console.log(`Exporting in ${format} format`);
   };
 
   return (

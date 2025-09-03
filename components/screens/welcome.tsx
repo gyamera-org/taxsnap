@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-provider';
 import Animated, { FadeIn, SlideInUp } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
+import { DefaultLoader } from '@/components/ui/default-loader';
 
 export function WelcomeScreen() {
   const { user, loading } = useAuth();
@@ -22,21 +23,7 @@ export function WelcomeScreen() {
   }, []);
 
   if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center">
-        <Animated.View className="items-center" entering={FadeIn.duration(800)}>
-          <Animated.View entering={SlideInUp.delay(200).duration(600)}>
-            <ActivityIndicator size="large" color="#FF69B4" />
-          </Animated.View>
-          <Animated.Text
-            className="mt-4 text-gray-700 text-lg font-medium"
-            entering={FadeIn.delay(400).duration(600)}
-          >
-            Loading...
-          </Animated.Text>
-        </Animated.View>
-      </SafeAreaView>
-    );
+    return <DefaultLoader />;
   }
 
   if (user) {

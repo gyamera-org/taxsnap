@@ -24,7 +24,7 @@ import { ExerciseList } from '@/components/exercise/exercise-list';
 export default function LogExerciseScreen() {
   const { date } = useLocalSearchParams<{ date?: string }>();
   const selectedDate = date || getLocalDateString(new Date());
-  
+
   const { goBack } = useAppNavigation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
@@ -62,7 +62,6 @@ export default function LogExerciseScreen() {
     intensity?: string;
     notes?: string;
   }) => {
-    console.log('🏃‍♀️ Attempting to log exercise:', data);
     try {
       const result = await createExerciseEntry.mutateAsync({
         ...data,
@@ -71,7 +70,6 @@ export default function LogExerciseScreen() {
         logged_date: selectedDate,
         logged_time: getLocalTimeString(),
       });
-      console.log('✅ Exercise logged successfully:', result);
       goBack();
     } catch (error) {
       console.error('❌ Error logging exercise:', error);

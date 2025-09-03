@@ -135,8 +135,6 @@ export function CyclePhase({
     cycleSettings: cycleSettings || null,
   });
   const phaseData = getPhaseData(cycleDay);
-  console.log('cycle day:', cycleDay);
-  console.log('phase data:', phaseData);
 
   // Calculate progress percentage (assuming 28-day cycle)
   const progressPercentage = (cycleDay / 28) * 100;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import PageLayout from '@/components/layouts/page-layout';
@@ -68,37 +68,6 @@ export default function NutritionScreen() {
 
   const macroData = useMacroData(progress);
   const todaysMeals = useMealProcessing(dailySummary);
-
-  // Debug logging to track data changes
-  React.useEffect(() => {
-    console.log('🍎 NutritionScreen: Data updated', {
-      forceUpdateKey,
-      macroData: macroData
-        ? {
-            calories: macroData.calories,
-            protein: macroData.protein,
-            carbs: macroData.carbs,
-            fat: macroData.fat,
-          }
-        : 'null',
-      progress: progress
-        ? {
-            calories: progress.calories,
-            protein: progress.protein,
-            carbs: progress.carbs,
-            fat: progress.fat,
-          }
-        : 'null',
-      dailySummary: dailySummary
-        ? {
-            total_calories: dailySummary.total_calories,
-            total_protein: dailySummary.total_protein,
-            meal_count: dailySummary.meal_count,
-          }
-        : 'null',
-      todaysMealsCount: todaysMeals?.length || 0,
-    });
-  }, [forceUpdateKey, macroData, progress, dailySummary, todaysMeals]);
 
   const waterData = {
     consumed: waterProgress.consumed,
