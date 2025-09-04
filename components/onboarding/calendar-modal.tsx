@@ -11,6 +11,7 @@ interface CalendarModalProps {
   selectedDate: Date;
   onDateChange: (event: any, selectedDate?: Date) => void;
   onClose: () => void;
+  onConfirm?: () => void;
 }
 
 export const CalendarModal = ({
@@ -20,6 +21,7 @@ export const CalendarModal = ({
   selectedDate,
   onDateChange,
   onClose,
+  onConfirm,
 }: CalendarModalProps) => {
   const getMaximumDate = () => {
     if (calendarType === 'birthday') {
@@ -52,7 +54,7 @@ export const CalendarModal = ({
                 <Text className="text-lg font-semibold text-black">
                   {calendarType === 'birthday' ? 'Select Birthday' : 'Select Date'}
                 </Text>
-                <TouchableOpacity onPress={onClose}>
+                <TouchableOpacity onPress={onConfirm || onClose}>
                   <Text className="font-medium" style={{ color: currentStepData.color }}>
                     Done
                   </Text>

@@ -29,7 +29,6 @@ export function WelcomeScreen() {
         }}
         contentFit="contain"
         contentPosition="top"
-        onError={() => console.log('Background image failed to load')}
       />
 
       {/* Light overlay for better image visibility */}

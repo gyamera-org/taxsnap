@@ -1,4 +1,12 @@
-import { View, ScrollView, Image as RNImage, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
+import {
+  View,
+  ScrollView,
+  Image as RNImage,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+  Alert,
+} from 'react-native';
 import { Text } from '@/components/ui/text';
 import { X, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
@@ -28,21 +36,17 @@ export function PhotoGrid({ photos, onDeletePhoto }: PhotoGridProps) {
   );
 
   const handleDeletePhoto = (photoId: string) => {
-    Alert.alert(
-      'Delete Photo',
-      'Are you sure you want to delete this progress picture?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            onDeletePhoto?.(photoId);
-            setSelectedPhoto(null);
-          },
+    Alert.alert('Delete Photo', 'Are you sure you want to delete this progress picture?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => {
+          onDeletePhoto?.(photoId);
+          setSelectedPhoto(null);
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -59,9 +63,6 @@ export function PhotoGrid({ photos, onDeletePhoto }: PhotoGridProps) {
                 source={{ uri: photo.uri }}
                 style={{ width: 128, height: 128, borderRadius: 12, backgroundColor: '#E5E7EB' }}
                 resizeMode="cover"
-                onLoad={() => console.log('RN Image loaded successfully:', photo.id)}
-                onError={(error) => console.log('RN Image load error:', error, 'URI:', photo.uri)}
-                onLoadStart={() => console.log('RN Image load started:', photo.id)}
               />
             </TouchableOpacity>
             <Text className="text-gray-600 text-sm mt-2">{photo.date}</Text>
@@ -71,8 +72,13 @@ export function PhotoGrid({ photos, onDeletePhoto }: PhotoGridProps) {
 
       {/* Modal for enlarged view */}
       <Modal visible={selectedPhoto !== null} transparent animationType="fade">
-        <Pressable 
-          style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.9)', justifyContent: 'center', alignItems: 'center' }}
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
           onPress={() => setSelectedPhoto(null)}
         >
           <View style={{ position: 'relative' }}>
@@ -84,19 +90,32 @@ export function PhotoGrid({ photos, onDeletePhoto }: PhotoGridProps) {
                 resizeMode="cover"
               />
             )}
-            
+
             {/* Top action buttons - inside image */}
-            <View style={{ position: 'absolute', top: 12, left: 12, right: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View
+              style={{
+                position: 'absolute',
+                top: 12,
+                left: 12,
+                right: 12,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}
+            >
               {/* Delete button */}
               {onDeletePhoto && selectedPhoto && (
                 <TouchableOpacity
-                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.9)', borderRadius: 20, padding: 8 }}
+                  style={{
+                    backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                    borderRadius: 20,
+                    padding: 8,
+                  }}
                   onPress={() => handleDeletePhoto(selectedPhoto.id)}
                 >
                   <Trash2 size={20} color="#ffffff" />
                 </TouchableOpacity>
               )}
-              
+
               {/* Close button */}
               <TouchableOpacity
                 style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', borderRadius: 20, padding: 8 }}
@@ -105,11 +124,21 @@ export function PhotoGrid({ photos, onDeletePhoto }: PhotoGridProps) {
                 <X size={20} color="#ffffff" />
               </TouchableOpacity>
             </View>
-            
+
             {/* Date inside image - bottom */}
             {selectedPhoto && (
               <View style={{ position: 'absolute', bottom: 12, left: 12, right: 12 }}>
-                <Text style={{ color: '#ffffff', fontSize: 16, textAlign: 'center', backgroundColor: 'rgba(0, 0, 0, 0.6)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
+                <Text
+                  style={{
+                    color: '#ffffff',
+                    fontSize: 16,
+                    textAlign: 'center',
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                  }}
+                >
                   {selectedPhoto.date}
                 </Text>
               </View>

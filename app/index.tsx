@@ -4,47 +4,49 @@ import { router } from 'expo-router';
 
 import * as SplashScreen from 'expo-splash-screen';
 import { WelcomeScreen } from '@/components/screens';
-import { useAppInitialization } from '@/lib/hooks/use-app-initialization';
 import { DefaultLoader } from '@/components/ui/default-loader';
+import { useAuth } from '@/context/auth-provider';
+import { useRevenueCat } from '@/context/revenuecat-provider';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function Index() {
-  const { isLoading, navigationTarget, paywallParams } = useAppInitialization();
+  const { user, loading: authLoading } = useAuth();
+  const {
+    shouldShowPaywall,
+    loading: revenueCatLoading,
+    isSubscribed,
+    isInGracePeriod,
+  } = useRevenueCat();
 
-  // Navigate when initialization is complete
   useEffect(() => {
-    if (isLoading) return;
-
     const navigate = async () => {
       await SplashScreen.hideAsync();
 
-      switch (navigationTarget) {
-        case 'welcome':
-          // Show welcome screen - don't navigate
-          break;
-        case 'onboarding':
-          router.replace('/onboarding');
-          break;
-        case 'paywall':
-          router.replace(`/paywall?${paywallParams}` as any);
-          break;
-        case 'main':
+      if (user) {
+        // if user exists but no active subscription, show paywall
+        if (shouldShowPaywall) {
+          router.replace('/paywall');
+        } else {
+          // if active subscription, go to nutrition page
           router.replace('/(tabs)/nutrition');
-          break;
+        }
       }
     };
 
-    navigate();
-  }, [isLoading, navigationTarget, paywallParams]);
+    // Only navigate when not loading
+    if (!authLoading && !revenueCatLoading) {
+      navigate();
+    }
+  }, [user, authLoading, shouldShowPaywall, revenueCatLoading, isSubscribed, isInGracePeriod]);
 
-  // Show loading state while doing background checks
-  if (isLoading) {
+  // if loading, show loading state
+  if (authLoading || revenueCatLoading) {
     return <DefaultLoader />;
   }
 
-  // Show welcome screen for users without sessions
-  if (navigationTarget === 'welcome') {
+  // if no user, show welcome page
+  if (!user) {
     return (
       <View style={{ flex: 1 }}>
         <WelcomeScreen />
@@ -52,6 +54,6 @@ export default function Index() {
     );
   }
 
-  // Show loader while navigating to other destinations
+  // if user exists, show loader while determining route
   return <DefaultLoader />;
 }

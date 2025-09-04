@@ -148,8 +148,6 @@ export function useAddWeightEntry() {
           note: note,
         };
 
-        console.log('Inserting weight entry data:', insertData);
-
         const { data, error } = await supabase
           .from('weight_history')
           .insert(insertData)
@@ -163,24 +161,24 @@ export function useAddWeightEntry() {
             details: error.details,
             hint: error.hint,
             code: error.code,
-            insertData: insertData
+            insertData: insertData,
           });
-          
+
           // Provide user-friendly error messages
           let userMessage = 'Something went wrong while saving your weight. Please try again.';
-          
+
           if (error.code === '23514' && error.message.includes('units_check')) {
             userMessage = 'There was an issue with the weight units. Please try again.';
           } else if (error.code === '23505') {
-            userMessage = 'A weight entry for this time already exists. Please try a different time.';
+            userMessage =
+              'A weight entry for this time already exists. Please try a different time.';
           } else if (error.code === '23502') {
             userMessage = 'Some required information is missing. Please fill out all fields.';
           }
-          
+
           throw new Error(userMessage);
         }
 
-        console.log('✅ Weight entry saved successfully:', data);
         return data;
       } catch (error) {
         console.error('❌ Weight entry creation error:', error);

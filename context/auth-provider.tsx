@@ -23,13 +23,6 @@ interface AuthContextType {
     plan?: string,
     onboardingData?: any
   ) => Promise<void>;
-  signUpWithEmailFree: (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-    onboardingData?: any
-  ) => Promise<void>;
   signInWithApple: (plan?: string, onboardingData?: any) => Promise<void>;
   signUpWithOnboarding: (
     email: string,
@@ -92,11 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event: AuthChangeEvent, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-
-        // Only handle explicit sign out events
-        if (event === 'SIGNED_OUT') {
-          router.replace('/');
-        }
 
         setLoading(false);
       }
@@ -167,10 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               p_units: onboardingData.units,
             };
 
-            const { error: rpcError } = await supabase.rpc(
-              'process_onboarding_data',
-              rpcParams
-            );
+            const { error: rpcError } = await supabase.rpc('process_onboarding_data', rpcParams);
 
             if (rpcError) {
               console.error('❌ Onboarding processing failed:', rpcError);
@@ -198,66 +183,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUpWithEmailFree = async (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-    onboardingData?: any
-  ) => {
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          onboarding_data: onboardingData ? JSON.stringify(onboardingData) : null,
-        },
-      },
-    });
-    if (data.user && data.session) {
-      // Process onboarding data if provided
-      if (onboardingData) {
-        try {
-          const { error } = await supabase.rpc('process_onboarding_data', {
-            p_user_id: data.user.id,
-            p_name: onboardingData.name,
-            p_date_of_birth: onboardingData.dateOfBirth,
-            p_fitness_goal: onboardingData.fitnessGoal,
-            p_fitness_frequency: onboardingData.fitnessFrequency,
-            p_fitness_experience: onboardingData.fitnessExperience,
-            p_nutrition_goal: onboardingData.nutritionGoal,
-            p_activity_level: onboardingData.activityLevel,
-            p_nutrition_experience: onboardingData.nutritionExperience,
-            p_height: onboardingData.height,
-            p_weight: onboardingData.weight,
-            p_weight_goal: onboardingData.weightGoal,
-            p_units: onboardingData.units,
-          });
-
-          if (error) {
-            console.error('Onboarding processing failed:', error.message);
-            toast.error(
-              'Account created but settings could not be saved. Please update them in Settings.'
-            );
-          }
-        } catch (error) {
-          console.error('Error processing onboarding data:', error);
-          toast.error(
-            'Account created but settings could not be saved. Please update them in Settings.'
-          );
-        }
-      }
-
-      // Free signup - check onboarding status
-      await handlePostAuth(data.user.id);
-    }
-    setLoading(false);
-    if (error) throw error;
-  };
-
   const signInWithApple = async (plan?: string, onboardingData?: any) => {
     setLoading(true);
     try {
@@ -274,7 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ],
         nonce: hashedNonce,
       });
-
 
       // Add user metadata if we have the name from Apple
       const options: any = {};
@@ -365,7 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await OnboardingStorage.clear();
     setLoading(false);
     if (error) throw error;
-    router.replace('/auth?mode=signin');
+    // Navigation handled by onAuthStateChange listener
   };
 
   // New transactional signup with onboarding via Edge Function
@@ -399,10 +323,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       if (!data.success) throw new Error(data.error || 'Signup failed');
 
+      // Set the session from the edge function response
+      if (data.session) {
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+
+        if (sessionError) {
+          console.error('❌ Error setting session:', sessionError);
+          throw sessionError;
+        }
+      }
+
       // Clear onboarding data after successful signup
       await OnboardingStorage.clear();
 
-      // Navigation handled by useAppInitialization hook
+      // Navigation handled by index page after auth state updates
     } catch (error: any) {
       console.error('Signup with onboarding failed:', error);
       throw error;
@@ -452,16 +389,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       if (!data.success) throw new Error(data.error || 'Apple signup failed');
 
+      // Set the session from the edge function response
+      if (data.session) {
+        const { data: _sessionData, error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+
+        if (sessionError) {
+          console.error('❌ Error setting session:', sessionError);
+          throw sessionError;
+        }
+      }
+
       // Clear onboarding data after successful signup
       await OnboardingStorage.clear();
 
-      // Navigation handled by useAppInitialization hook
+      // Navigation handled by index page after auth state updates
     } catch (error: any) {
       if (error.code === 'ERR_REQUEST_CANCELED') {
         // User canceled the sign-in flow
         return;
       }
-      console.error('Apple signup with onboarding failed:', error);
+      console.error('❌ Apple signup with onboarding failed:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -474,7 +424,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signInWithEmail,
     signUpWithEmail,
-    signUpWithEmailFree,
     signInWithApple,
     signUpWithOnboarding,
     signUpWithAppleOnboarding,

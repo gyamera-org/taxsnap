@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { 
-  PeriodType, 
-  WeekType, 
+import {
+  PeriodType,
+  WeekType,
   calculateDateRange,
   isValidWeekPeriodCombination,
-  getSafeDefaultWeek
+  getSafeDefaultWeek,
 } from '@/lib/utils/progress-date-utils';
 import { useMealEntriesRange } from '@/lib/hooks/use-meal-tracking';
 import { useWeightHistoryRange, useBodyMeasurements } from '@/lib/hooks/use-weight-tracking';
@@ -41,7 +41,6 @@ export function useProgressState() {
       try {
         // Check if the current week selection makes sense for the period
         if (!isValidWeekPeriodCombination(selectedWeek, selectedPeriod)) {
-          console.log('Invalid period/week combination detected, resetting to safe default');
           setSelectedWeek(getSafeDefaultWeek(selectedPeriod));
         }
       } catch (error) {
@@ -61,20 +60,21 @@ export function useProgressState() {
   }, [selectedWeek, selectedPeriod]);
 
   // Data fetching
-  const shouldFetchData = !isPeriodChanging && !isWeekChanging && Boolean(dateRange.startDate && dateRange.endDate);
-  
+  const shouldFetchData =
+    !isPeriodChanging && !isWeekChanging && Boolean(dateRange.startDate && dateRange.endDate);
+
   const { data: mealEntries = [], isLoading } = useMealEntriesRange(
-    dateRange.startDate, 
-    dateRange.endDate, 
+    dateRange.startDate,
+    dateRange.endDate,
     { enabled: shouldFetchData }
   );
-  
+
   const { data: weightEntries = [] } = useWeightHistoryRange(
-    dateRange.startDate, 
-    dateRange.endDate, 
+    dateRange.startDate,
+    dateRange.endDate,
     { enabled: shouldFetchData }
   );
-  
+
   const { data: bodyMeasurements } = useBodyMeasurements();
 
   // Process meal entries to get daily totals
@@ -127,7 +127,6 @@ export function useProgressState() {
 
     debounceTimeout.current = setTimeout(() => {
       try {
-        console.log('Debounce week', week);
         setSelectedWeek(week);
       } catch (error) {
         console.error('Error setting week:', error);
@@ -182,7 +181,7 @@ export function useProgressState() {
     showPeriodModal,
     isPeriodChanging,
     isWeekChanging,
-    
+
     // Data
     nutrientData,
     weeklyTotals,
@@ -190,7 +189,7 @@ export function useProgressState() {
     bodyMeasurements,
     isLoading,
     dateRange,
-    
+
     // Handlers
     handleWeekChange,
     handlePeriodChange,

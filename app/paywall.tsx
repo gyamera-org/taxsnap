@@ -53,27 +53,17 @@ export default function PaywallScreen() {
     isInGracePeriod,
     shouldShowPaywall
   } = useRevenueCat();
-  const params = useLocalSearchParams();
-
-  // Get params for customization
-  const source = (params.source as string) || 'manual';
-  const feature = params.feature as string;
-  const customTitle = params.title as string;
-  const customSubtitle = params.subtitle as string;
-  const dismissible = params.dismissible !== 'false'; // Default to true unless explicitly false
-  const successRoute = (params.successRoute as string) || '/(tabs)/nutrition';
-
   // Auto-redirect if user is already subscribed or in grace period
   useEffect(() => {
     if (!loading && !shouldShowPaywall) {
-      if (isSubscribed || (isInGracePeriod && dismissible)) {
+      if (isSubscribed || isInGracePeriod) {
         // Add a small delay to ensure subscription status is properly synced
         setTimeout(() => {
-          router.replace(successRoute as any);
+          router.replace('/(tabs)/nutrition');
         }, 100);
       }
     }
-  }, [loading, shouldShowPaywall, isSubscribed, isInGracePeriod, successRoute, dismissible]);
+  }, [loading, shouldShowPaywall, isSubscribed, isInGracePeriod]);
 
   const handlePurchase = async (planType: 'monthly' | 'yearly') => {
     if (!offerings?.current) {
@@ -98,11 +88,7 @@ export default function PaywallScreen() {
       if (result.success) {
         // Add a small delay to ensure subscription status is updated
         setTimeout(() => {
-          if (successRoute) {
-            router.replace(successRoute as any);
-          } else {
-            router.back();
-          }
+          router.replace('/(tabs)/nutrition');
         }, 500);
       }
     } catch (error: any) {
@@ -115,50 +101,12 @@ export default function PaywallScreen() {
     }
   };
 
-  const handleClose = () => {
-    if (dismissible) {
-      router.back();
-    }
-  };
-
   const handleRetry = () => {
     // Go back and come back to trigger re-initialization
     router.back();
     setTimeout(() => {
-      router.push(`/paywall?${new URLSearchParams(params as any).toString()}`);
+      router.push('/paywall');
     }, 100);
-  };
-
-  const getDisplayTitle = () => {
-    if (customTitle) return customTitle;
-
-    switch (source) {
-      case 'grace_period':
-        return 'Your Free Trial is Ending';
-      case 'feature_gate':
-        return 'Unlock Premium Features';
-      case 'onboarding':
-        return 'Choose Your Plan';
-      default:
-        return 'Upgrade to Premium';
-    }
-  };
-
-  const getDisplaySubtitle = () => {
-    if (customSubtitle) return customSubtitle;
-
-    switch (source) {
-      case 'grace_period':
-        return 'Continue your wellness journey with unlimited access to all features';
-      case 'feature_gate':
-        return feature
-          ? `Unlock ${feature} and more with a premium subscription`
-          : 'Unlock this feature and more with a premium subscription';
-      case 'onboarding':
-        return 'Get started with personalized health and wellness tracking';
-      default:
-        return 'Join thousands of women taking control of their health';
-    }
   };
 
   const handleRestorePurchases = async () => {
@@ -233,11 +181,6 @@ export default function PaywallScreen() {
               size="large"
               className="bg-pink-500 text-white"
             />
-            {dismissible && (
-              <TouchableOpacity onPress={handleClose} className="mt-4">
-                <Text className="text-slate-500 text-center underline">Skip for now</Text>
-              </TouchableOpacity>
-            )}
           </View>
         </SafeAreaView>
       </View>
@@ -251,10 +194,10 @@ export default function PaywallScreen() {
           {/* Title Section */}
           <View className="px-6 py-8 mb-8">
             <Text className="text-2xl font-bold text-slate-900 text-center mb-4">
-              {getDisplayTitle()}
+              Upgrade to Premium
             </Text>
             <Text className="text-base text-slate-600 text-center leading-6">
-              {getDisplaySubtitle()}
+              Join thousands of women taking control of their health
             </Text>
           </View>
 

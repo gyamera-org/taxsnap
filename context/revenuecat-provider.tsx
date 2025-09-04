@@ -54,7 +54,16 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
   // Load subscription when user changes
   useEffect(() => {
     if (user) {
-      loadSubscriptionStatus();
+      // Identify user with RevenueCat
+      Purchases.logIn(user.id)
+        .then(() => {
+          return loadSubscriptionStatus();
+        })
+        .catch((error) => {
+          console.error('❌ Error setting RevenueCat user ID:', error);
+          // Still try to load subscription status
+          loadSubscriptionStatus();
+        });
     } else {
       setState((prev) => ({
         ...prev,
@@ -135,7 +144,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
       const customerInfo = await Purchases.getCustomerInfo();
       const hasActiveSubscription = Object.keys(customerInfo.entitlements.active).length > 0;
 
-      // Grace period logic
+      // Grace period logic - ONLY for new users without subscriptions
       const GRACE_PERIOD_DAYS = 7;
       let isInGracePeriod = false;
       let daysRemainingInGrace = 0;
@@ -158,6 +167,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // PayWall decision: Show paywall ONLY if no active subscription AND not in grace period
       const shouldShowPaywall = !hasActiveSubscription && !isInGracePeriod;
 
       setState((prev) => ({
@@ -171,6 +181,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         error: null,
       }));
     } catch (error: any) {
+      console.error('❌ Failed to load subscription status:', error);
       setState((prev) => ({
         ...prev,
         loading: false,

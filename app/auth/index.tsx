@@ -14,18 +14,15 @@ export default function AuthScreen() {
   const {
     signInWithEmail,
     signUpWithEmail,
-    signUpWithEmailFree,
     signInWithApple,
     signUpWithOnboarding,
     signUpWithAppleOnboarding,
   } = useAuth();
 
-  const { mode, free, plan, onboardingData } = useLocalSearchParams<{
+  const { mode } = useLocalSearchParams<{
     mode?: 'signin' | 'signup';
-    free?: string;
-    plan?: 'yearly' | 'monthly';
-    onboardingData?: string;
   }>();
+
   const [isSignUp, setIsSignUp] = useState(mode === 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,27 +33,13 @@ export default function AuthScreen() {
   const [hasOnboardingData, setHasOnboardingData] = useState(false);
 
   const canSignUp = mode === 'signup';
-  const isFreeSignup = free === 'true';
-  const selectedPlan = plan || 'monthly';
-
-  // Parse onboarding data
-  const parsedOnboardingData = onboardingData
-    ? JSON.parse(decodeURIComponent(onboardingData))
-    : null;
 
   // Check for onboarding data and pre-fill name
   useEffect(() => {
     const checkOnboardingData = async () => {
-      // Check local storage for onboarding data first
       const storedData = await OnboardingStorage.load();
       if (storedData?.name) {
         const nameParts = storedData.name.split(' ');
-        setFirstName(nameParts[0] || '');
-        setLastName(nameParts.slice(1).join(' ') || '');
-        setHasOnboardingData(true);
-      } else if (parsedOnboardingData?.name) {
-        // Fallback to URL params
-        const nameParts = parsedOnboardingData.name.split(' ');
         setFirstName(nameParts[0] || '');
         setLastName(nameParts.slice(1).join(' ') || '');
         setHasOnboardingData(true);
@@ -66,7 +49,7 @@ export default function AuthScreen() {
     };
 
     checkOnboardingData();
-  }, [parsedOnboardingData]);
+  }, []);
 
   const handleEmailAuth = async () => {
     if (!email || !password) {
@@ -87,35 +70,10 @@ export default function AuthScreen() {
     setIsSubmitting(true);
     try {
       if (isSignUp) {
-        // Use new transactional signup if we have onboarding data
         if (hasOnboardingData) {
-          await signUpWithOnboarding(
-            email,
-            password,
-            firstName.trim(),
-            lastName.trim(),
-            isFreeSignup ? 'free' : selectedPlan
-          );
+          await signUpWithOnboarding(email, password, firstName.trim(), lastName.trim());
         } else {
-          // Fallback to old methods for cases without onboarding
-          if (isFreeSignup) {
-            await signUpWithEmailFree(
-              email,
-              password,
-              firstName.trim(),
-              lastName.trim(),
-              parsedOnboardingData
-            );
-          } else {
-            await signUpWithEmail(
-              email,
-              password,
-              firstName.trim(),
-              lastName.trim(),
-              selectedPlan,
-              parsedOnboardingData
-            );
-          }
+          await signUpWithEmail(email, password, firstName.trim(), lastName.trim());
         }
       } else {
         await signInWithEmail(email, password);
@@ -131,20 +89,27 @@ export default function AuthScreen() {
     setIsSubmitting(true);
     try {
       if (isSignUp) {
-        // Use new transactional Apple signup if we have onboarding data
         if (hasOnboardingData) {
-          await signUpWithAppleOnboarding(isFreeSignup ? 'free' : selectedPlan);
+          try {
+            await signUpWithAppleOnboarding();
+          } catch (signupError: any) {
+            await signInWithApple();
+          }
         } else {
-          // Fallback to old method for cases without onboarding
-          await signInWithApple(isFreeSignup ? undefined : selectedPlan, parsedOnboardingData);
+          await signInWithApple();
         }
       } else {
         await signInWithApple();
       }
+
+      // After successful authentication, let index page handle navigation
     } catch (error: any) {
-      toast.error(
-        error.message || `Failed to ${isSignUp ? 'create account' : 'sign in'} with Apple`
-      );
+      // Check if this is a user cancellation - don't show error for that
+      if (!error.message?.includes('cancelled') && !error.message?.includes('canceled')) {
+        toast.error(
+          error.message || `Failed to ${isSignUp ? 'create account' : 'sign in'} with Apple`
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -183,12 +148,10 @@ export default function AuthScreen() {
         {/* Header */}
         <View className="mb-12">
           <Text className="text-3xl font-bold text-black text-center mb-3">
-            {parsedOnboardingData
+            {hasOnboardingData
               ? 'Complete Your Setup'
               : isSignUp
-                ? isFreeSignup
-                  ? 'Get Started for Free'
-                  : 'Create your account'
+                ? 'Create your account'
                 : 'Welcome back'}
           </Text>
         </View>
@@ -247,7 +210,7 @@ export default function AuthScreen() {
           </View>
 
           <Button
-            title={isSignUp ? (isFreeSignup ? 'Start Free Account' : 'Create Account') : 'Sign In'}
+            title={isSignUp ? 'Create Account' : 'Sign In'}
             onPress={handleEmailAuth}
             disabled={isSubmitting}
             variant="primary"

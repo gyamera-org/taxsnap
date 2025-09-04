@@ -43,7 +43,6 @@ export function useProgressPhotosLogsRange(startDate: string, endDate: string) {
         week: new Date(photo.created_at).toLocaleDateString(), // Use date instead of week
       })) as ProgressPhoto[];
 
-      console.log('Mapped progress photos:', mappedPhotos);
       return mappedPhotos;
     },
   });

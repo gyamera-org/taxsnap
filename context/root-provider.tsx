@@ -7,8 +7,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Toaster } from 'sonner-native';
 import { AuthProvider } from './auth-provider';
 import { RevenueCatProvider } from './revenuecat-provider';
-import { RootSubscriptionGuard } from '@/components/security/root-subscription-guard';
-// PaywallProvider removed - hard paywall app doesn't need manual triggers
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,14 +25,12 @@ export const RootProvider = ({ children }: PropsWithChildren) => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <RevenueCatProvider>
-          <RootSubscriptionGuard>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <BottomSheetModalProvider>
-                {children}
-                <Toaster />
-              </BottomSheetModalProvider>
-            </GestureHandlerRootView>
-          </RootSubscriptionGuard>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              {children}
+              <Toaster />
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
         </RevenueCatProvider>
       </AuthProvider>
     </QueryClientProvider>

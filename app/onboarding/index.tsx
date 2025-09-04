@@ -92,19 +92,30 @@ export default function OnboardingScreen() {
   };
 
   const handleDateChange = (event: any, date?: Date) => {
+    // On Android, the picker closes automatically, so we handle the date selection
     if (Platform.OS === 'android') {
       setShowCalendar(false);
-    }
-
-    if (date && calendarType === 'birthday') {
-      const dateString = date.toISOString().split('T')[0];
-      updateData('dateOfBirth', dateString);
-      setSelectedDate(date);
-
-      if (Platform.OS === 'ios') {
-        setShowCalendar(false);
+      if (date && calendarType === 'birthday') {
+        const dateString = date.toISOString().split('T')[0];
+        updateData('dateOfBirth', dateString);
+        setSelectedDate(date);
+      }
+    } else {
+      // On iOS, just update the selected date without closing the modal
+      // The modal will close when user taps "Done" button
+      if (date && calendarType === 'birthday') {
+        setSelectedDate(date);
       }
     }
+  };
+
+  const handleDateConfirm = () => {
+    // This handles the iOS "Done" button press
+    if (calendarType === 'birthday') {
+      const dateString = selectedDate.toISOString().split('T')[0];
+      updateData('dateOfBirth', dateString);
+    }
+    setShowCalendar(false);
   };
 
   const openCalendar = (type: 'birthday') => {
@@ -237,6 +248,7 @@ export default function OnboardingScreen() {
         selectedDate={selectedDate}
         onDateChange={handleDateChange}
         onClose={() => setShowCalendar(false)}
+        onConfirm={handleDateConfirm}
       />
     </SafeAreaView>
   );
