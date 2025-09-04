@@ -277,7 +277,7 @@ export default function ReportScreen() {
               <Button
                 title="Done"
                 onPress={() => setShowReportTypeModal(false)}
-                className="w-full bg-blue-500"
+                className="w-full bg-pink-500"
               />
             </View>
           </View>
