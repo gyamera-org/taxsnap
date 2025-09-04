@@ -64,8 +64,9 @@ export function useUploadProgressPhoto() {
 
       // Use common upload utility with progress photo settings
       const { publicUrl } = await uploadImage(asset.uri, 'progress-photos', fileName, {
-        maxSize: 1000, // Larger than avatar for better progress photo quality
+        maxSize: 1200, // Larger size for better progress photo quality
         quality: 0.8,
+        forceSquare: false, // Preserve aspect ratio for progress pictures
         upsert: false,
       });
 

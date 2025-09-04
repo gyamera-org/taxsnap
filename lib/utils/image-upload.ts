@@ -14,6 +14,8 @@ export interface ImageUploadOptions {
   quality?: number;
   /** Output format. Default: JPEG */
   format?: ImageManipulator.SaveFormat;
+  /** Whether to force square aspect ratio. Default: true for backwards compatibility */
+  forceSquare?: boolean;
 }
 
 export interface ProcessedImage {
@@ -37,13 +39,25 @@ export const processImageForUpload = async (
     maxSize = 800,
     quality = 0.7,
     format = ImageManipulator.SaveFormat.JPEG,
+    forceSquare = true,
   } = options;
 
   try {
+    // Determine resize strategy based on forceSquare setting
+    let resizeAction: ImageManipulator.Action[];
+    
+    if (forceSquare) {
+      // Force square: set both width and height to maxSize
+      resizeAction = [{ resize: { width: maxSize, height: maxSize } }];
+    } else {
+      // Preserve aspect ratio: set max width or height
+      resizeAction = [{ resize: { width: maxSize } }];
+    }
+
     // Resize and compress image
     const manipulatedImage = await ImageManipulator.manipulateAsync(
       imageUri,
-      [{ resize: { width: maxSize, height: maxSize } }],
+      resizeAction,
       {
         compress: quality,
         format,

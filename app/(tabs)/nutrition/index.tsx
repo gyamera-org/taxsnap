@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ScrollView, TouchableOpacity } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { Sparkles } from 'lucide-react-native';
 import PageLayout from '@/components/layouts/page-layout';
 import { router } from 'expo-router';
 import { useDailyNutritionSummary, useNutritionProgress } from '@/lib/hooks/use-nutrition-summary';
@@ -31,6 +32,7 @@ import {
   StreakDisplaySkeleton,
 } from '@/components/nutrition/nutrition-skeleton';
 import { EmptyGoalsState } from '@/components/nutrition/empty-goals-state';
+import { GenerateMacrosButton } from '@/components/nutrition/generate-macros-button';
 import { FoodDetailsModal } from '@/components/nutrition/food-details-modal';
 
 export default function NutritionScreen() {
@@ -86,6 +88,7 @@ export default function NutritionScreen() {
   const hasBodyMeasurements = !!bodyMeasurements;
 
   const shouldShowEmptyGoalsState = !goalsLoading && !hasNutritionGoals;
+  const shouldShowGenerateMacrosButton = !goalsLoading && hasNutritionGoals && !nutritionGoals?.calories;
 
   const currentStreak = streakData?.currentStreak || 0;
 
@@ -146,6 +149,29 @@ export default function NutritionScreen() {
             hasFitnessGoals={hasFitnessGoals}
             hasBodyMeasurements={hasBodyMeasurements}
           />
+        ) : shouldShowGenerateMacrosButton ? (
+          <View className="px-4 py-8">
+            <View className="bg-white rounded-2xl p-8 items-center shadow-sm border border-gray-100">
+              <View
+                className="w-16 h-16 rounded-full items-center justify-center mb-6"
+                style={{ backgroundColor: '#fdf2f8' }}
+              >
+                <Sparkles size={32} color="#ec4899" />
+              </View>
+              <Text className="text-gray-900 font-semibold text-xl mb-3">Generate Your Macros</Text>
+              <Text className="text-gray-500 text-center mb-8 px-4">
+                You've completed your profile! Now let's calculate your personalized macro goals to start tracking your nutrition.
+              </Text>
+              
+              <GenerateMacrosButton 
+                variant="primary" 
+                onGenerationComplete={() => {
+                  // Force refresh of nutrition goals
+                  forceUpdate();
+                }}
+              />
+            </View>
+          </View>
         ) : isLoading || goalsDataLoading ? (
           <NutritionPageSkeleton />
         ) : (

@@ -24,6 +24,7 @@ import { useBodyMeasurements } from '@/lib/hooks/use-weight-tracking';
 import { nutritionQuestionnaireSteps, formatGoal } from '@/constants/nutrition-questionnaire';
 import { NutritionGoalsSkeleton } from '@/components/nutrition/nutrition-goals-skeleton';
 import { NutritionGoalsEmptyState } from '@/components/nutrition/nutrition-goals-empty-state';
+import { GenerateMacrosButton } from '@/components/nutrition/generate-macros-button';
 
 export default function NutritionGoalsScreen() {
   const router = useRouter();
@@ -527,38 +528,12 @@ export default function NutritionGoalsScreen() {
 
         {/* Goals Button */}
         <View className="px-4 mb-8">
-          {hasOnboardingData && !hasCalculatedGoals ? (
-            // User has onboarding data but no calculated goals - show direct generate button
-            <View className="flex flex-col gap-3">
-              <Button
-                title="Generate from Your Profile"
-                preIcon={<Sparkles size={20} color="#ec4899" />}
-                variant="primary"
-                className="w-full"
-                onPress={generateFromOnboarding}
-                disabled={isGenerating}
-                loading={isGenerating}
-              />
-              <Button
-                title="Update Preferences"
-                preIcon={<Edit3 size={20} color="#6b7280" />}
-                variant="secondary"
-                className="w-full"
-                onPress={() => setShowQuestionnaire(true)}
-                disabled={isGenerating}
-              />
-            </View>
-          ) : (
-            // Normal flow - show questionnaire button
-            <Button
-              title={hasCalculatedGoals ? 'Recalculate Goals' : 'Calculate Goals'}
-              preIcon={<Sparkles size={20} color="#ec4899" />}
-              variant="secondary"
-              className="w-full"
-              onPress={() => setShowQuestionnaire(true)}
-              disabled={isGenerating}
-            />
-          )}
+          <GenerateMacrosButton 
+            variant="secondary"
+            onGenerationComplete={() => {
+              // Goals will be automatically refreshed by the hook
+            }}
+          />
         </View>
       </ScrollView>
 

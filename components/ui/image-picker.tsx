@@ -7,9 +7,10 @@ type ImagePickerProps = {
   images: string[];
   onImagesChange: (images: string[]) => void;
   maxImages?: number;
+  aspectRatio?: [number, number];
 };
 
-export function ImagePicker({ images, onImagesChange, maxImages = 4 }: ImagePickerProps) {
+export function ImagePicker({ images, onImagesChange, maxImages = 4, aspectRatio = [1, 1] }: ImagePickerProps) {
   const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
@@ -20,7 +21,7 @@ export function ImagePicker({ images, onImagesChange, maxImages = 4 }: ImagePick
       const result = await ImagePickerExpo.launchImageLibraryAsync({
         mediaTypes: ImagePickerExpo.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [1, 1],
+        aspect: aspectRatio,
         quality: 0.8,
       });
 

@@ -57,11 +57,11 @@ export function PhotoGrid({ photos, onDeletePhoto }: PhotoGridProps) {
         contentContainerStyle={{ gap: 16 }}
       >
         {sortedPhotos.map((photo) => (
-          <View key={photo.id} style={{ width: 128 }}>
+          <View key={photo.id} style={{ width: 96 }}>
             <TouchableOpacity onPress={() => setSelectedPhoto(photo)}>
               <RNImage
                 source={{ uri: photo.uri }}
-                style={{ width: 128, height: 128, borderRadius: 12, backgroundColor: '#E5E7EB' }}
+                style={{ width: 96, height: 128, borderRadius: 12, backgroundColor: '#E5E7EB' }}
                 resizeMode="cover"
               />
             </TouchableOpacity>
@@ -86,8 +86,8 @@ export function PhotoGrid({ photos, onDeletePhoto }: PhotoGridProps) {
             {selectedPhoto && (
               <RNImage
                 source={{ uri: selectedPhoto.uri }}
-                style={{ width: 350, height: 500, borderRadius: 12 }}
-                resizeMode="cover"
+                style={{ width: 300, height: 400, borderRadius: 12 }}
+                resizeMode="contain"
               />
             )}
 

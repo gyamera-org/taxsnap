@@ -31,7 +31,7 @@ export function ProgressPicturesSection({ startDate, endDate }: ProgressPictures
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [3, 4], // Portrait aspect ratio for progress pictures
       quality: 0.8,
     });
 
@@ -56,7 +56,7 @@ export function ProgressPicturesSection({ startDate, endDate }: ProgressPictures
 
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [3, 4], // Portrait aspect ratio for progress pictures
       quality: 0.8,
     });
 
