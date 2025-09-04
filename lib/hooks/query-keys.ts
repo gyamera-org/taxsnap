@@ -64,4 +64,8 @@ export const queryKeys = {
     byEquipment: ['exercise', 'by-equipment'] as const,
     popular: ['exercise', 'popular'] as const,
   },
+  progress: {
+    all: ['progress'] as const,
+    photos: (startDate: string, endDate: string) => [...queryKeys.progress.all, 'photos', startDate, endDate] as const,
+  },
 } as const;

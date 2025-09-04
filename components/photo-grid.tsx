@@ -1,38 +1,122 @@
-import { View, Image, Pressable, ScrollView } from 'react-native';
+import { View, ScrollView, Image as RNImage, TouchableOpacity, Modal, Pressable, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
-
-const MOCK_IMAGES = [
-  require('@/assets/images/porosity-test.png'),
-  require('@/assets/images/scan_barcode_example.png'),
-  require('@/assets/images/scan_label_example.png'),
-  require('@/assets/images/splash-icon.png'),
-];
+import { X, Trash2 } from 'lucide-react-native';
+import { useState } from 'react';
 
 type Photo = {
-  uri?: string;
+  id: string;
+  uri: string;
   date: string;
+  createdAt: string;
 };
 
 type PhotoGridProps = {
   photos: Photo[];
-  timeRange: string;
+  onDeletePhoto?: (photoId: string) => void;
 };
 
-export function PhotoGrid({ photos, timeRange }: PhotoGridProps) {
+export function PhotoGrid({ photos, onDeletePhoto }: PhotoGridProps) {
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+
+  if (photos.length === 0) {
+    return null;
+  }
+
+  // Sort photos by creation date (newest first)
+  const sortedPhotos = [...photos].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const handleDeletePhoto = (photoId: string) => {
+    Alert.alert(
+      'Delete Photo',
+      'Are you sure you want to delete this progress picture?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            onDeletePhoto?.(photoId);
+            setSelectedPhoto(null);
+          },
+        },
+      ]
+    );
+  };
+
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <View className="flex-row gap-4">
-        {photos.map((photo, index) => (
-          <View key={index} className="w-32">
-            <Image
-              source={MOCK_IMAGES[index % MOCK_IMAGES.length]}
-              className="w-32 h-32 rounded-xl"
-              resizeMode="cover"
-            />
+    <>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 16 }}
+      >
+        {sortedPhotos.map((photo) => (
+          <View key={photo.id} style={{ width: 128 }}>
+            <TouchableOpacity onPress={() => setSelectedPhoto(photo)}>
+              <RNImage
+                source={{ uri: photo.uri }}
+                style={{ width: 128, height: 128, borderRadius: 12, backgroundColor: '#E5E7EB' }}
+                resizeMode="cover"
+                onLoad={() => console.log('RN Image loaded successfully:', photo.id)}
+                onError={(error) => console.log('RN Image load error:', error, 'URI:', photo.uri)}
+                onLoadStart={() => console.log('RN Image load started:', photo.id)}
+              />
+            </TouchableOpacity>
             <Text className="text-gray-600 text-sm mt-2">{photo.date}</Text>
           </View>
         ))}
-      </View>
-    </ScrollView>
+      </ScrollView>
+
+      {/* Modal for enlarged view */}
+      <Modal visible={selectedPhoto !== null} transparent animationType="fade">
+        <Pressable 
+          style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.9)', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => setSelectedPhoto(null)}
+        >
+          <View style={{ position: 'relative' }}>
+            {/* Image */}
+            {selectedPhoto && (
+              <RNImage
+                source={{ uri: selectedPhoto.uri }}
+                style={{ width: 350, height: 500, borderRadius: 12 }}
+                resizeMode="cover"
+              />
+            )}
+            
+            {/* Top action buttons - inside image */}
+            <View style={{ position: 'absolute', top: 12, left: 12, right: 12, flexDirection: 'row', justifyContent: 'space-between' }}>
+              {/* Delete button */}
+              {onDeletePhoto && selectedPhoto && (
+                <TouchableOpacity
+                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.9)', borderRadius: 20, padding: 8 }}
+                  onPress={() => handleDeletePhoto(selectedPhoto.id)}
+                >
+                  <Trash2 size={20} color="#ffffff" />
+                </TouchableOpacity>
+              )}
+              
+              {/* Close button */}
+              <TouchableOpacity
+                style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)', borderRadius: 20, padding: 8 }}
+                onPress={() => setSelectedPhoto(null)}
+              >
+                <X size={20} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+            
+            {/* Date inside image - bottom */}
+            {selectedPhoto && (
+              <View style={{ position: 'absolute', bottom: 12, left: 12, right: 12 }}>
+                <Text style={{ color: '#ffffff', fontSize: 16, textAlign: 'center', backgroundColor: 'rgba(0, 0, 0, 0.6)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
+                  {selectedPhoto.date}
+                </Text>
+              </View>
+            )}
+          </View>
+        </Pressable>
+      </Modal>
+    </>
   );
 }

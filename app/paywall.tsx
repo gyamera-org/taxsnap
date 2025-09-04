@@ -61,7 +61,10 @@ export default function PaywallScreen() {
   useEffect(() => {
     if (!subscriptionLoading && subscriptionStatus) {
       if (subscriptionStatus.isSubscribed || (subscriptionStatus.isInGracePeriod && dismissible)) {
-        router.replace(successRoute as any);
+        // Add a small delay to ensure subscription status is properly synced
+        setTimeout(() => {
+          router.replace(successRoute as any);
+        }, 100);
       }
     }
   }, [subscriptionStatus, subscriptionLoading, successRoute, dismissible]);
@@ -87,11 +90,14 @@ export default function PaywallScreen() {
       const result = await purchasePackage(packageToPurchase);
 
       if (result.success) {
-        if (successRoute) {
-          router.replace(successRoute as any);
-        } else {
-          router.back();
-        }
+        // Add a small delay to ensure subscription status is updated
+        setTimeout(() => {
+          if (successRoute) {
+            router.replace(successRoute as any);
+          } else {
+            router.back();
+          }
+        }, 500);
       }
     } catch (error: any) {
       if (error.code !== 'PURCHASES_CANCELLED_BY_USER') {
@@ -319,11 +325,14 @@ export default function PaywallScreen() {
                       customerInfo.entitlements.active &&
                       Object.keys(customerInfo.entitlements.active).length > 0
                     ) {
-                      if (successRoute) {
-                        router.replace(successRoute as any);
-                      } else {
-                        router.back();
-                      }
+                      // Add a small delay to ensure subscription status is updated
+                      setTimeout(() => {
+                        if (successRoute) {
+                          router.replace(successRoute as any);
+                        } else {
+                          router.back();
+                        }
+                      }, 500);
                     } else {
                       toast.info('No previous purchases found.');
                     }

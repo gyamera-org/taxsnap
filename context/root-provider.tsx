@@ -26,10 +26,19 @@ export const RootProvider = ({ children }: PropsWithChildren) => {
   useReactQueryDevTools(queryClient);
 
   useEffect(() => {
-    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+    try {
+      Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
-    if (Platform.OS === 'ios') {
-      Purchases.configure({ apiKey: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY! });
+      if (Platform.OS === 'ios') {
+        const apiKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
+        if (apiKey) {
+          Purchases.configure({ apiKey });
+        } else {
+          console.warn('RevenueCat API key not found');
+        }
+      }
+    } catch (error) {
+      console.error('RevenueCat configuration error:', error);
     }
   }, []);
 

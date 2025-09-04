@@ -189,6 +189,7 @@ export function useProgressState() {
     weightEntries,
     bodyMeasurements,
     isLoading,
+    dateRange,
     
     // Handlers
     handleWeekChange,

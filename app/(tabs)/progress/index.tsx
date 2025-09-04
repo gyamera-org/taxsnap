@@ -7,6 +7,7 @@ import { DailyBreakdownChart } from '@/components/progress/daily-calories-breakd
 import { WeightProgressChart } from '@/components/progress/weight-progress-chart';
 import { ProgressLoadingState } from '@/components/progress/progress-loading-state';
 import { WeekSelectionTabs } from '@/components/progress/week-selection-tabs';
+import { ProgressPicturesSection } from '@/components/progress/progress-pictures-section';
 import { useProgressState } from '@/lib/hooks/use-progress-state';
 
 function ProgressScreen() {
@@ -21,6 +22,7 @@ function ProgressScreen() {
     weightEntries,
     bodyMeasurements,
     isLoading,
+    dateRange,
     handleWeekChange,
     handlePeriodChange,
     handleModalClose,
@@ -72,6 +74,8 @@ function ProgressScreen() {
               goalWeight={bodyMeasurements?.goal_weight}
               isLoading={isLoading}
             />
+            {/* Progress Pictures Section */}
+            <ProgressPicturesSection startDate={dateRange.startDate} endDate={dateRange.endDate} />
           </>
         )}
       </ScrollView>

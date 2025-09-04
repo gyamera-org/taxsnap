@@ -1,5 +1,4 @@
-import { View, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { useCallback, useEffect } from 'react';
 import { Text } from '../ui/text';
@@ -25,15 +24,6 @@ export function WelcomeScreen() {
 
   if (loading) {
     return <DefaultLoader />;
-  }
-
-  if (user) {
-    return (
-      <SafeAreaView className="flex-1 bg-white justify-center items-center">
-        <ActivityIndicator size="large" color="#FF69B4" />
-        <Text className="mt-4 text-gray-700">Redirecting...</Text>
-      </SafeAreaView>
-    );
   }
 
   return (
