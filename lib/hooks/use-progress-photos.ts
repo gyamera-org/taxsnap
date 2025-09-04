@@ -157,10 +157,8 @@ export function useDeleteProgressPhoto() {
       return photoId;
     },
     onSuccess: (deletedPhotoId) => {
-      console.log('Photo deleted successfully:', deletedPhotoId);
       // Invalidate all progress photo queries to refresh data
       queryClient.invalidateQueries({ queryKey: queryKeys.progress.all });
-      toast.success('Progress picture deleted successfully!');
     },
     onError: (error: Error) => {
       toast.error(`Delete failed: ${error.message}`);

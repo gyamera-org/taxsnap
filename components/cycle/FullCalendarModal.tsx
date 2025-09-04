@@ -4,6 +4,7 @@ import { Text } from '@/components/ui/text';
 import { Calendar, X } from 'lucide-react-native';
 import { MonthlyCalendar } from '@/components/cycle/MonthlyCalendar';
 import { formatSelectedDate, type NextPeriodPrediction } from '@/lib/utils/cycle-utils';
+import type { CurrentCycleInfo } from '@/lib/hooks/use-cycle-flo-style';
 
 interface FullCalendarModalProps {
   visible: boolean;
@@ -16,8 +17,10 @@ interface FullCalendarModalProps {
   predictedDates: string[];
   nextPeriodPrediction: NextPeriodPrediction | null;
   onDatePress: (date: Date) => void;
-  onLogPeriodPress: () => void;
+  onStartPeriod: (date: Date) => void;
+  onEndPeriod: (date: Date) => void;
   hasOngoingPeriod?: boolean;
+  currentCycleInfo?: CurrentCycleInfo | null;
 }
 
 export function FullCalendarModal({
@@ -31,9 +34,31 @@ export function FullCalendarModal({
   predictedDates,
   nextPeriodPrediction,
   onDatePress,
-  onLogPeriodPress,
+  onStartPeriod,
+  onEndPeriod,
   hasOngoingPeriod,
+  currentCycleInfo,
 }: FullCalendarModalProps) {
+  // Check if End Period should be enabled
+  const canEndPeriod = () => {
+    if (!hasOngoingPeriod || !currentCycleInfo?.current_cycle) return false;
+
+    const startDate = new Date(currentCycleInfo.current_cycle.start_date);
+    const selectedDay = new Date(selectedDate);
+
+    // Normalize to avoid time issues
+    startDate.setHours(0, 0, 0, 0);
+    selectedDay.setHours(0, 0, 0, 0);
+
+    // Selected date must be >= start date
+    return selectedDay >= startDate;
+  };
+
+  // Check if Start Period should be enabled
+  const canStartPeriod = () => {
+    // Always allow starting a new period (this will replace existing ongoing period)
+    return true;
+  };
   return (
     <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
       <View className="flex-1 bg-black/30">
@@ -65,19 +90,35 @@ export function FullCalendarModal({
             />
           </View>
 
-          {/* Log Period Button */}
+          {/* Action Buttons */}
           <View className="px-6 pb-6 pt-4 border-t border-gray-100">
-            <TouchableOpacity
-              onPress={onLogPeriodPress}
-              className={`py-4 rounded-2xl flex-row items-center justify-center ${
-                hasOngoingPeriod ? 'bg-red-500' : 'bg-pink-500'
-              }`}
-            >
-              <Calendar size={20} color="#FFFFFF" />
-              <Text className="text-white font-semibold text-lg ml-2">
-                {hasOngoingPeriod ? 'End Period' : 'Start Period'}
-              </Text>
-            </TouchableOpacity>
+            <View className="flex flex-col gap-2">
+              {/* Start Period Button */}
+              <TouchableOpacity
+                onPress={() => onStartPeriod(selectedDate)}
+                disabled={!canStartPeriod()}
+                className={`py-4 rounded-2xl flex-row items-center justify-center ${
+                  canStartPeriod() ? 'bg-pink-500' : 'bg-gray-300'
+                }`}
+              >
+                <Calendar size={20} color="#FFFFFF" />
+                <Text className="text-white font-semibold text-lg ml-2">
+                  {hasOngoingPeriod ? 'Change Start Date' : 'Start Period'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* End Period Button */}
+              <TouchableOpacity
+                onPress={() => onEndPeriod(selectedDate)}
+                disabled={!canEndPeriod()}
+                className={`py-4 rounded-2xl flex-row items-center justify-center ${
+                  canEndPeriod() ? 'bg-red-500' : 'bg-gray-300'
+                }`}
+              >
+                <Calendar size={20} color="#FFFFFF" />
+                <Text className="text-white font-semibold text-lg ml-2">End Period</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
