@@ -1,0 +1,83 @@
+import React, { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
+import { useColorScheme } from 'react-native';
+import { getStoredTheme, saveTheme, getResolvedTheme, type Theme, type ResolvedTheme } from '@/lib/utils/theme-storage';
+
+interface ThemeContextType {
+  theme: Theme;
+  resolvedTheme: ResolvedTheme;
+  setTheme: (theme: Theme) => void;
+  isDark: boolean;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export function ThemeProvider({ children }: PropsWithChildren) {
+  const systemTheme = useColorScheme();
+  const [theme, setThemeState] = useState<Theme>('dark'); // Default to dark theme
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Calculate resolved theme
+  const resolvedTheme: ResolvedTheme = getResolvedTheme(theme, systemTheme);
+  const isDark = resolvedTheme === 'dark';
+
+  // Load theme preference from storage
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const storedTheme = await getStoredTheme();
+        
+        if (storedTheme === 'system') {
+          // First time user - default to dark theme
+          setThemeState('dark');
+          await saveTheme('dark');
+        } else {
+          setThemeState(storedTheme);
+        }
+      } catch (error) {
+        console.error('Error loading theme preference:', error);
+        // Fallback to dark theme as default
+        setThemeState('dark');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTheme();
+  }, [systemTheme]);
+
+  // Save theme preference to storage
+  const setTheme = async (newTheme: Theme) => {
+    try {
+      setThemeState(newTheme);
+      await saveTheme(newTheme);
+    } catch (error) {
+      console.error('Error saving theme preference:', error);
+    }
+  };
+
+  // Don't render children until theme is loaded
+  if (isLoading) {
+    return null;
+  }
+
+  const contextValue: ThemeContextType = {
+    theme,
+    resolvedTheme,
+    setTheme,
+    isDark,
+  };
+
+  return (
+    <ThemeContext.Provider value={contextValue}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+}

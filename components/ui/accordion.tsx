@@ -3,6 +3,7 @@ import { Text } from '@/components/ui/text';
 import { ChevronDown } from 'lucide-react-native';
 import { useState } from 'react';
 import Animated, { useAnimatedStyle, withTiming, useSharedValue } from 'react-native-reanimated';
+import { useThemedStyles, useThemedColors } from '@/lib/utils/theme';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -19,6 +20,8 @@ type AccordionProps = {
 export function Accordion({ title, children, defaultOpen = false }: AccordionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const rotation = useSharedValue(defaultOpen ? 180 : 0);
+  const themed = useThemedStyles();
+  const colors = useThemedColors();
 
   const toggleAccordion = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -33,11 +36,11 @@ export function Accordion({ title, children, defaultOpen = false }: AccordionPro
   });
 
   return (
-    <View className="border-b border-gray-100 last:border-b-0">
+    <View className={themed("border-b border-gray-100 last:border-b-0", "border-b border-gray-700 last:border-b-0")}>
       <Pressable onPress={toggleAccordion} className="flex-row justify-between items-center p-4">
         <Text className="text-base font-medium flex-1 mr-2">{title}</Text>
         <Animated.View style={iconStyle}>
-          <ChevronDown size={20} color="#000" />
+          <ChevronDown size={20} color={colors.foreground} />
         </Animated.View>
       </Pressable>
 

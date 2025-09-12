@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { isSameDay, isToday } from '@/lib/utils/date-helpers';
+import { useThemedStyles, useThemedColors } from '@/lib/utils/theme';
 
 interface CalendarModalProps {
   visible: boolean;
@@ -28,6 +29,8 @@ export function CalendarModal({
   loggedColor = 'bg-orange-100',
 }: CalendarModalProps) {
   const [currentViewDate, setCurrentViewDate] = React.useState(selectedDate);
+  const themed = useThemedStyles();
+  const colors = useThemedColors();
 
   // Generate calendar days for the current month
   const generateCalendarDays = () => {
@@ -72,27 +75,27 @@ export function CalendarModal({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View className="flex-1 bg-black/50 justify-end">
-        <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
+        <View className={themed("bg-white rounded-t-3xl p-6 max-h-[80%]", "bg-gray-800 rounded-t-3xl p-6 max-h-[80%]")}>
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-xl font-bold text-gray-900">{title}</Text>
+            <Text className={themed("text-xl font-bold text-gray-900", "text-xl font-bold text-white")}>{title}</Text>
             <TouchableOpacity onPress={onClose}>
-              <X size={24} color="#6B7280" />
+              <X size={24} color={colors.gray[500]} />
             </TouchableOpacity>
           </View>
 
           {/* Month Navigation */}
           <View className="flex-row items-center justify-between mb-4">
             <TouchableOpacity onPress={() => navigateMonth('prev')} className="p-2">
-              <ChevronLeft size={20} color="#6B7280" />
+              <ChevronLeft size={20} color={colors.gray[500]} />
             </TouchableOpacity>
 
-            <Text className="text-lg font-semibold text-gray-900">
+            <Text className={themed("text-lg font-semibold text-gray-900", "text-lg font-semibold text-white")}>
               {currentViewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </Text>
 
             <TouchableOpacity onPress={() => navigateMonth('next')} className="p-2">
-              <ChevronRight size={20} color="#6B7280" />
+              <ChevronRight size={20} color={colors.gray[500]} />
             </TouchableOpacity>
           </View>
 
@@ -100,7 +103,7 @@ export function CalendarModal({
           <View className="flex-row mb-2">
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
               <View key={index} className="flex-1 items-center">
-                <Text className="text-gray-500 text-sm font-medium">{day}</Text>
+                <Text className={themed("text-gray-500 text-sm font-medium", "text-gray-400 text-sm font-medium")}>{day}</Text>
               </View>
             ))}
           </View>
@@ -132,7 +135,7 @@ export function CalendarModal({
                       }`}
                     >
                       <Text
-                        className={`text-sm ${
+                        className={themed(`text-sm ${
                           isCurrentMonth
                             ? isSelected
                               ? 'text-white font-bold'
@@ -142,7 +145,17 @@ export function CalendarModal({
                               ? 'text-orange-700 font-medium'
                               : 'text-gray-900'
                             : 'text-gray-300'
-                        }`}
+                        }`, `text-sm ${
+                          isCurrentMonth
+                            ? isSelected
+                              ? 'text-white font-bold'
+                              : isTodayDate
+                              ? 'text-green-400 font-bold'
+                              : hasLogs
+                              ? 'text-orange-400 font-medium'
+                              : 'text-gray-100'
+                            : 'text-gray-600'
+                        }`)}
                       >
                         {date.getDate()}
                       </Text>
@@ -164,15 +177,15 @@ export function CalendarModal({
           <View className="flex-row justify-center mt-4 gap-4">
             <View className="flex-row items-center">
               <View className="w-3 h-3 bg-green-500 rounded-full mr-1" />
-              <Text className="text-xs text-gray-600">Selected</Text>
+              <Text className={themed("text-xs text-gray-600", "text-xs text-gray-400")}>Selected</Text>
             </View>
             <View className="flex-row items-center">
               <View className="w-3 h-3 bg-green-100 rounded-full mr-1" />
-              <Text className="text-xs text-gray-600">Today</Text>
+              <Text className={themed("text-xs text-gray-600", "text-xs text-gray-400")}>Today</Text>
             </View>
             <View className="flex-row items-center">
               <View className="w-3 h-3 bg-orange-100 rounded-full mr-1" />
-              <Text className="text-xs text-gray-600">Logged</Text>
+              <Text className={themed("text-xs text-gray-600", "text-xs text-gray-400")}>Logged</Text>
             </View>
           </View>
         </View>

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { View, Animated, ViewStyle } from 'react-native';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/theme-provider';
 
 interface SkeletonProps {
   width?: number;
@@ -18,6 +19,7 @@ export function Skeleton({
   style,
 }: SkeletonProps) {
   const animatedValue = useRef(new Animated.Value(0)).current;
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -41,7 +43,9 @@ export function Skeleton({
 
   const backgroundColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#f1f5f9', '#e2e8f0'],
+    outputRange: isDark 
+      ? ['#374151', '#4B5563'] // Dark mode colors
+      : ['#f1f5f9', '#e2e8f0'], // Light mode colors
   });
 
   return (
@@ -61,8 +65,10 @@ export function Skeleton({
 }
 
 export function ProductItemSkeleton() {
+  const { isDark } = useTheme();
+  
   return (
-    <View className="bg-white p-4 rounded-xl shadow-sm mb-3 mx-4">
+    <View className={`p-4 rounded-xl shadow-sm mb-3 mx-4 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
       <View className="flex-row items-center">
         <Skeleton width={60} height={60} borderRadius={8} className="mr-3" />
         <View className="flex-1">
@@ -80,8 +86,10 @@ export function ProductItemSkeleton() {
 }
 
 export function SettingsItemSkeleton() {
+  const { isDark } = useTheme();
+  
   return (
-    <View className="bg-white p-4 rounded-xl shadow-sm mb-3 mx-4">
+    <View className={`p-4 rounded-xl shadow-sm mb-3 mx-4 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center">
           <Skeleton width={20} height={20} className="mr-3" />
@@ -94,8 +102,10 @@ export function SettingsItemSkeleton() {
 }
 
 export function HairGoalsSkeleton() {
+  const { isDark } = useTheme();
+  
   return (
-    <View className="bg-white mx-4 p-4 rounded-2xl shadow">
+    <View className={`mx-4 p-4 rounded-2xl shadow ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
       <View className="gap-4">
         {Array.from({ length: 5 }).map((_, index) => (
           <View key={index} className="flex-row justify-between items-center py-2">
@@ -109,8 +119,10 @@ export function HairGoalsSkeleton() {
 }
 
 export function PersonalDetailsSkeleton() {
+  const { isDark } = useTheme();
+  
   return (
-    <View className="bg-white mx-4 p-4 rounded-2xl shadow">
+    <View className={`mx-4 p-4 rounded-2xl shadow ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
       <View className="gap-4">
         {Array.from({ length: 2 }).map((_, index) => (
           <View key={index} className="flex-row justify-between items-center py-3">

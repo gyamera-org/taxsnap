@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Camera, Search, Plus, Sparkles } from 'lucide-react-native';
+import { useTheme } from '@/context/theme-provider';
 
 interface QuickActionsProps {
   selectedMealType: string;
@@ -18,36 +19,37 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   onAddCustomFood,
   onAIScan,
 }) => {
+  const { isDark } = useTheme();
   return (
     <View className="px-4 mb-6">
-      <Text className="text-lg font-semibold text-gray-900 mb-3">Add Food</Text>
+      <Text className={`text-lg font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Add Food</Text>
       <View className="flex-row gap-3 mb-3">
         <TouchableOpacity
           onPress={onScanFood}
-          className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 items-center"
+          className={`flex-1 rounded-2xl p-4 items-center border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
         >
           <Camera size={24} color="#10B981" />
-          <Text className="text-gray-900 font-semibold mt-2">Scan Food</Text>
-          <Text className="text-gray-500 text-xs">AI nutrition analysis</Text>
+          <Text className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Scan Food</Text>
+          <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>AI nutrition analysis</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onSearch}
-          className="flex-1 bg-white border border-gray-200 rounded-2xl p-4 items-center"
+          className={`flex-1 rounded-2xl p-4 items-center border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
         >
           <Search size={24} color="#10B981" />
-          <Text className="text-gray-900 font-semibold mt-2">Search</Text>
-          <Text className="text-gray-500 text-xs">Find in database</Text>
+          <Text className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Search</Text>
+          <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Find in database</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity
         onPress={onAddCustomFood}
-        className="bg-white border border-gray-200 rounded-2xl p-4 items-center"
+        className={`rounded-2xl p-4 items-center border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
       >
         <Plus size={24} color="#3B82F6" />
-        <Text className="text-gray-900 font-semibold mt-2">Add Custom Food</Text>
-        <Text className="text-gray-500 text-xs">Create your own entry</Text>
+        <Text className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Add Custom Food</Text>
+        <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Create your own entry</Text>
       </TouchableOpacity>
 
       {/* Quick Scan Button */}

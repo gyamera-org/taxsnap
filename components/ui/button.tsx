@@ -1,4 +1,5 @@
 import { TouchableOpacity, Text, TouchableOpacityProps, View } from 'react-native';
+import { useThemedStyles } from '@/lib/utils/theme';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -20,6 +21,8 @@ export function Button({
   postIcon,
   ...props
 }: ButtonProps) {
+  const themed = useThemedStyles();
+
   const getButtonClasses = () => {
     let baseClasses = 'rounded-full items-center justify-center flex-row';
 
@@ -38,9 +41,9 @@ export function Button({
 
     // Variant classes
     if (variant === 'primary') {
-      baseClasses += ' bg-pink-500';
+      baseClasses += themed(' bg-pink-500', ' bg-pink-600');
     } else {
-      baseClasses += ' bg-white border border-pink-500';
+      baseClasses += themed(' bg-white border border-pink-500', ' bg-gray-800 border border-pink-600');
     }
 
     // Disabled/loading state
@@ -71,7 +74,7 @@ export function Button({
     if (variant === 'primary') {
       textClasses += ' text-white';
     } else {
-      textClasses += ' text-pink-500';
+      textClasses += themed(' text-pink-500', ' text-pink-400');
     }
 
     return textClasses;

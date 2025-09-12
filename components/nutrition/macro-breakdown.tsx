@@ -5,6 +5,7 @@ import {  Beef, Wheat } from 'lucide-react-native';
 import { OliveOilIcon } from '@/components/icons/olive-oil-icon';
 import { MacroBreakdownSkeleton } from './nutrition-skeleton';
 import { getAccurateCircularProgressStyles } from '@/lib/utils/progress-circle';
+import { useThemedStyles } from '@/lib/utils/theme';
 
 interface MacroBreakdownProps {
   macroData: {
@@ -31,19 +32,20 @@ const MacroCard = ({
   color: string;
   icon: React.ElementType;
 }) => {
+  const themed = useThemedStyles();
   const remaining = target - consumed;
   const progressStyles = getAccurateCircularProgressStyles(consumed, target, color);
 
   return (
-    <View className="bg-white rounded-2xl p-4 border border-gray-50 shadow-sm">
+    <View className={themed("bg-white rounded-2xl p-4 border border-gray-50 shadow-sm", "bg-gray-800 rounded-2xl p-4 border border-gray-700 shadow-sm")}>
       <View className="flex-row items-center justify-between">
         {/* Left side - Large number and text */}
         <View className="flex-1">
-          <Text className="text-4xl font-bold text-gray-900 mb-1">
+          <Text className={themed("text-4xl font-bold text-gray-900 mb-1", "text-4xl font-bold text-white mb-1")}>
             {remaining}
             {unit}
           </Text>
-          <Text className="text-gray-600 font-medium">{title} left</Text>
+          <Text className={themed("text-gray-600 font-medium", "text-gray-300 font-medium")}>{title} left</Text>
         </View>
 
         {/* Right side - Circular progress */}

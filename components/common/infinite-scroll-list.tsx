@@ -9,6 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Search, X } from 'lucide-react-native';
+import { useTheme } from '@/context/theme-provider';
 
 interface InfiniteScrollListProps<T> {
   data: T[];
@@ -162,6 +163,7 @@ interface SearchBarProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  isDark?: boolean;
 }
 
 export function SearchBar({
@@ -169,9 +171,13 @@ export function SearchBar({
   onChangeText,
   placeholder = 'Search...',
   autoFocus = false,
+  isDark,
 }: SearchBarProps) {
+  const theme = useTheme();
+  const isThemeDark = isDark !== undefined ? isDark : theme?.isDark;
+  
   return (
-    <View className="bg-white border border-gray-200 rounded-2xl mx-4 mb-4">
+    <View className={`border rounded-2xl mx-4 mb-4 ${isThemeDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}`}>
       <View className="flex-row items-center px-4 py-3">
         <View className="mr-3">
           <Search size={20} color="#9CA3AF" />
@@ -181,7 +187,7 @@ export function SearchBar({
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor="#9CA3AF"
-          className="flex-1 text-gray-900 text-base"
+          className={`flex-1 text-base ${isThemeDark ? 'text-white' : 'text-gray-900'}`}
           autoFocus={autoFocus}
           autoCorrect={false}
           autoCapitalize="none"

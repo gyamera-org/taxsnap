@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 // import { AuthGuard } from '@/components/auth-guard';
 import { LoggerModal } from '@/components/logger-modal';
+import { useTheme } from '@/context/theme-provider';
+import { ThemeWrapper } from '@/components/theme-wrapper';
 
 const HIDDEN_ROUTES = [
   '/settings/index',
@@ -38,6 +40,7 @@ export default function TabLayout() {
   const shouldHideTabBar = HIDDEN_ROUTES.includes(pathname);
   const tabBarAnimation = useRef(new Animated.Value(1)).current;
   const [showLoggerModal, setShowLoggerModal] = useState(false);
+  const { isDark } = useTheme();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -49,7 +52,8 @@ export default function TabLayout() {
   }, [shouldHideTabBar]);
 
   return (
-    <View className="flex-1 bg-white">
+    <ThemeWrapper className="flex-1">
+      <View className={`flex-1 ${isDark ? 'bg-background-dark' : 'bg-background-light'}`}>
       <Tabs
         backBehavior="initialRoute"
         screenOptions={{
@@ -71,7 +75,7 @@ export default function TabLayout() {
             height: 84,
             paddingBottom: 14,
             paddingTop: 8,
-            backgroundColor: 'white',
+            backgroundColor: isDark ? '#1F2937' : 'white',
             borderTopWidth: 0,
             elevation: Platform.OS === 'android' ? 10 : 0,
             shadowColor: '#000',
@@ -123,11 +127,11 @@ export default function TabLayout() {
                 className="flex-1 items-center justify-center"
                 style={{ marginTop: -20 }}
               >
-                <View className="w-14 h-14 rounded-full bg-black items-center justify-center shadow-lg">
+                <View className={`w-14 h-14 rounded-full items-center justify-center shadow-lg ${isDark ? 'bg-white' : 'bg-black'}`}>
                   {showLoggerModal ? (
-                    <X size={28} color="white" />
+                    <X size={28} color={isDark ? "black" : "white"} />
                   ) : (
-                    <Plus size={28} color="white" />
+                    <Plus size={28} color={isDark ? "black" : "white"} />
                   )}
                 </View>
               </Pressable>
@@ -183,9 +187,10 @@ export default function TabLayout() {
         <Tabs.Screen name="settings/medical-sources" options={{ href: null, headerShown: false }} />
       </Tabs>
 
-      {/* Logger Modal */}
-      <LoggerModal visible={showLoggerModal} onClose={() => setShowLoggerModal(false)} />
-    </View>
+        {/* Logger Modal */}
+        <LoggerModal visible={showLoggerModal} onClose={() => setShowLoggerModal(false)} />
+      </View>
+    </ThemeWrapper>
   );
 }
 
@@ -197,10 +202,22 @@ type TabButtonProps = {
 };
 
 function TabButton({ Icon, label, isActive, onPress, ...rest }: TabButtonProps) {
+  const { isDark } = useTheme();
+  
+  const activeColor = isDark ? 'white' : 'black';
+  const inactiveColor = isDark ? '#6B7280' : '#C1C1C1';
+  
   return (
     <Pressable onPress={onPress} className="flex-1 items-center justify-start pt-1" {...rest}>
-      <Icon size={24} color={isActive ? 'black' : '#C1C1C1'} />
-      <Text className={cn('text-sm mt-1', isActive ? 'text-black font-medium' : 'text-[#C1C1C1]')}>
+      <Icon size={24} color={isActive ? activeColor : inactiveColor} />
+      <Text 
+        className={cn(
+          'text-sm mt-1', 
+          isActive 
+            ? `font-medium ${isDark ? 'text-white' : 'text-black'}` 
+            : `${isDark ? 'text-gray-500' : 'text-[#C1C1C1]'}`
+        )}
+      >
         {label}
       </Text>
     </Pressable>

@@ -4,7 +4,7 @@ import { Text } from '@/components/ui/text';
 
 import PageLayout from '@/components/layouts/page-layout';
 import { router } from 'expo-router';
-import { Plus, Flame } from 'lucide-react-native';
+import { StreakDisplayWithChat } from '@/components/ui/streak-display-with-chat';
 import { getLocalDateString } from '@/lib/utils/date-helpers';
 
 import { ExerciseSummaryCard } from '@/components/exercise/exercise-summary-card';
@@ -126,23 +126,12 @@ export default function ExerciseScreen() {
       onDateSelect={handleDateSelect}
       loggedDates={getLoggedDates()}
       btn={
-        <View className="flex-row items-center">
-          {/* Streak Display */}
-          <View className="flex-row items-center mr-3">
-            <View className="w-8 h-8 rounded-full items-center justify-center bg-orange-100 mr-2">
-              <Flame size={16} color="#F59E0B" />
-            </View>
-            <Text className="text-gray-700 text-sm font-semibold">
-              {exerciseStreak?.currentStreak || 0}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push(`/log-exercise?date=${getLocalDateString(selectedDate)}`)}
-            className="bg-purple-500 w-10 h-10 rounded-full items-center justify-center"
-          >
-            <Plus size={20} color="white" />
-          </TouchableOpacity>
-        </View>
+        <StreakDisplayWithChat
+          currentStreak={exerciseStreak?.currentStreak || 0}
+          context="exercise"
+          streakColor="#F59E0B"
+          buttonColor="#8b5cf6"
+        />
       }
     >
       <ScrollView

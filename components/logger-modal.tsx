@@ -2,6 +2,7 @@ import { View, TouchableOpacity, Pressable, Animated, PanResponder, Modal } from
 import { Text } from '@/components/ui/text';
 import { router } from 'expo-router';
 import { useRef } from 'react';
+import { useTheme } from '@/context/theme-provider';
 import {
   Activity,
   Camera,
@@ -20,6 +21,7 @@ interface LoggerModalProps {
 }
 
 export function LoggerModal({ visible, onClose }: LoggerModalProps) {
+  const { isDark } = useTheme();
   const translateY = useRef(new Animated.Value(0)).current;
   const isClosing = useRef(false);
 
@@ -102,9 +104,9 @@ export function LoggerModal({ visible, onClose }: LoggerModalProps) {
           >
             <Pressable onPress={(e) => e.stopPropagation()}>
               {/* Logger Content */}
-              <View className="bg-white rounded-t-3xl px-4 pt-6 pb-8 mx-4 mb-4">
+              <View className={`rounded-t-3xl px-4 pt-6 pb-8 mx-4 mb-4 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
                 {/* Close Handle */}
-                <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-6" />
+                <View className={`w-12 h-1 rounded-full self-center mb-6 ${isDark ? 'bg-gray-600' : 'bg-gray-300'}`} />
 
                 {/* Quick Actions Grid - Responsive layout */}
                 <View className="gap-4">
@@ -115,6 +117,7 @@ export function LoggerModal({ visible, onClose }: LoggerModalProps) {
                       icon={Activity}
                       iconColor="#F59E0B"
                       bgColor="#FEF3E2"
+                      isDark={isDark}
                       onPress={() =>
                         handleAction(() => {
                           router.push('/log-exercise' as any);
@@ -127,6 +130,7 @@ export function LoggerModal({ visible, onClose }: LoggerModalProps) {
                       icon={Camera}
                       iconColor="#3B82F6"
                       bgColor="#EFF6FF"
+                      isDark={isDark}
                       onPress={() =>
                         handleAction(() => {
                           router.push(
@@ -156,6 +160,7 @@ export function LoggerModal({ visible, onClose }: LoggerModalProps) {
                       icon={Droplets}
                       iconColor="#06B6D4"
                       bgColor="#ECFEFF"
+                      isDark={isDark}
                       onPress={() =>
                         handleAction(() => {
                           router.push('/log-water' as any);
@@ -168,6 +173,7 @@ export function LoggerModal({ visible, onClose }: LoggerModalProps) {
                       icon={Smile}
                       iconColor="#8B5CF6"
                       bgColor="#F3F4F6"
+                      isDark={isDark}
                       onPress={() =>
                         handleAction(() => {
                           router.push('/log-mood' as any);
@@ -195,6 +201,7 @@ export function LoggerModal({ visible, onClose }: LoggerModalProps) {
                       icon={Moon}
                       iconColor="#EC4899"
                       bgColor="#FDF2F8"
+                      isDark={isDark}
                       onPress={() =>
                         handleAction(() => {
                           router.push('/log-period');
@@ -219,6 +226,7 @@ export function LoggerModal({ visible, onClose }: LoggerModalProps) {
                       icon={Apple}
                       iconColor="#10B981"
                       bgColor="#F0FDF4"
+                      isDark={isDark}
                       onPress={() =>
                         handleAction(() => {
                           router.push('/log-meal' as any);
@@ -241,17 +249,19 @@ function LoggerCard({
   icon: Icon,
   iconColor,
   bgColor,
+  isDark = false,
   onPress,
 }: {
   title: string;
   icon: any;
   iconColor: string;
   bgColor: string;
+  isDark?: boolean;
   onPress: () => void;
 }) {
   return (
     <TouchableOpacity onPress={onPress} className="flex-1 mx-1">
-      <View className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 min-h-[100px] items-center justify-center">
+      <View className={`rounded-2xl p-4 shadow-sm border min-h-[100px] items-center justify-center ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-100'}`}>
         <View
           className="w-12 h-12 rounded-xl items-center justify-center mb-2"
           style={{ backgroundColor: bgColor }}
@@ -259,7 +269,7 @@ function LoggerCard({
           <Icon size={20} color={iconColor} />
         </View>
         <Text
-          className="text-sm font-medium text-black text-center leading-tight"
+          className={`text-sm font-medium text-center leading-tight ${isDark ? 'text-white' : 'text-black'}`}
           numberOfLines={2}
         >
           {title}

@@ -15,6 +15,7 @@ import {
   useAddWeightEntry, 
   useUpdateBodyMeasurements 
 } from '@/lib/hooks/use-weight-tracking';
+import { useTheme } from '@/context/theme-provider';
 
 interface AddWeightModalProps {
   visible: boolean;
@@ -31,6 +32,7 @@ export function AddWeightModal({
 }: AddWeightModalProps) {
   const [newWeight, setNewWeight] = useState('');
   const [newNote, setNewNote] = useState('');
+  const { isDark } = useTheme();
   
   const addWeightEntry = useAddWeightEntry();
   const updateBodyMeasurements = useUpdateBodyMeasurements();
@@ -75,17 +77,17 @@ export function AddWeightModal({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1 justify-end bg-black/50"
       >
-        <SafeAreaView className="bg-white rounded-t-3xl">
+        <SafeAreaView className={`rounded-t-3xl ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
           <View className="p-6">
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-xl font-bold">Add Weight Entry</Text>
+              <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>Add Weight Entry</Text>
               <Pressable onPress={handleClose}>
-                <Text className="text-gray-500 font-medium">Cancel</Text>
+                <Text className={`font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Cancel</Text>
               </Pressable>
             </View>
 
             <View className="mb-4">
-              <Text className="text-base font-medium text-gray-700 mb-2">
+              <Text className={`text-base font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Weight (
                 {bodyMeasurements?.units === 'metric'
                   ? 'kg'
@@ -99,18 +101,20 @@ export function AddWeightModal({
                 onChangeText={setNewWeight}
                 placeholder={`Enter weight in ${bodyMeasurements?.units === 'metric' ? 'kg' : bodyMeasurements?.units === 'imperial' ? 'lbs' : bodyMeasurements?.units || 'kg'}`}
                 keyboardType="numeric"
-                className="border border-gray-200 rounded-xl p-4 text-base"
+                className={`rounded-xl p-4 text-base ${isDark ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-200 bg-white text-black'} border`}
+                placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
               />
             </View>
 
             <View className="mb-6">
-              <Text className="text-base font-medium text-gray-700 mb-2">Note (optional)</Text>
+              <Text className={`text-base font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Note (optional)</Text>
               <TextInput
                 value={newNote}
                 onChangeText={setNewNote}
                 placeholder="Add a note..."
                 multiline
-                className="border border-gray-200 rounded-xl p-4 text-base h-20"
+                className={`rounded-xl p-4 text-base h-20 ${isDark ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-200 bg-white text-black'} border`}
+                placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
               />
             </View>
 

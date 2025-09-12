@@ -8,6 +8,8 @@ import { useRevenueCat } from '@/context/revenuecat-provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import { toast } from 'sonner-native';
 import { DefaultLoader } from '@/components/ui/default-loader';
+import { useTheme } from '@/context/theme-provider';
+import { CosmicBackground } from '@/components/ui/cosmic-background';
 
 const features = [
   {
@@ -41,6 +43,7 @@ const features = [
 ];
 
 export default function PaywallScreen() {
+  const { isDark } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const { width: screenWidth } = Dimensions.get('window');
@@ -164,14 +167,14 @@ export default function PaywallScreen() {
   // Show error state if RevenueCat failed to load (only after we've had a chance to load)
   if (error || !offerings?.current) {
     return (
-      <View className="flex-1 bg-white">
+      <CosmicBackground theme="settings" isDark={isDark}>
         <SafeAreaView style={{ flex: 1 }}>
           <View className="flex-1 items-center justify-center px-6">
-            <View className="bg-red-50 p-4 rounded-xl border border-red-200 mb-4">
-              <Text className="text-red-800 font-semibold text-center mb-2">
+            <View className={`p-4 rounded-xl border mb-4 ${isDark ? 'bg-red-900/30 border-red-700' : 'bg-red-50 border-red-200'}`}>
+              <Text className={`font-semibold text-center mb-2 ${isDark ? 'text-red-300' : 'text-red-800'}`}>
                 Unable to Load Subscription Plans
               </Text>
-              <Text className="text-red-600 text-sm text-center leading-5">
+              <Text className={`text-sm text-center leading-5 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
                 {error
                   ? `Error: ${error}`
                   : 'Unable to connect to subscription service. Please check your internet connection and try again.'}
@@ -186,12 +189,12 @@ export default function PaywallScreen() {
             />
           </View>
         </SafeAreaView>
-      </View>
+      </CosmicBackground>
     );
   }
 
   return (
-    <View className="flex-1 bg-white" style={{ flex: 1 }}>
+    <CosmicBackground theme="settings" isDark={isDark}>
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
           className="flex-1"
@@ -211,8 +214,8 @@ export default function PaywallScreen() {
               } mb-2 flex-row items-center justify-between`}
             >
               <TouchableOpacity onPress={() => router.back()} className="flex-row items-center">
-                <ArrowLeft size={20} color="#6B7280" />
-                <Text className="text-gray-600 ml-2 text-base">Back</Text>
+                <ArrowLeft size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                <Text className={`ml-2 text-base ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Back</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -220,7 +223,7 @@ export default function PaywallScreen() {
                 className="py-2 px-3"
                 disabled={isLoading}
               >
-                <Text className="text-gray-500 font-medium text-sm underline">
+                <Text className={`font-medium text-sm underline ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   Continue for Free
                 </Text>
               </TouchableOpacity>
@@ -231,14 +234,14 @@ export default function PaywallScreen() {
               <Text
                 className={`${
                   isTablet ? 'text-4xl' : 'text-2xl'
-                } font-bold text-slate-900 text-center mb-4`}
+                } font-bold text-center mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}
               >
                 Upgrade to Premium
               </Text>
               <Text
                 className={`${
                   isTablet ? 'text-lg' : 'text-base'
-                } text-slate-600 text-center leading-6 px-6`}
+                } text-center leading-6 px-6 ${isDark ? 'text-gray-300' : 'text-slate-600'}`}
               >
                 Your body changes every month, LunaSync adapts with you.
               </Text>
@@ -256,7 +259,7 @@ export default function PaywallScreen() {
                     key={feature.title}
                     className={`${
                       isTablet ? 'w-full' : 'w-[48%]'
-                    } p-6 bg-gray-50 rounded-2xl border border-gray-100 mb-3`}
+                    } p-6 rounded-2xl border mb-3 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-100'}`}
                   >
                     <View
                       className={`${
@@ -267,14 +270,14 @@ export default function PaywallScreen() {
                       <feature.icon size={isTablet ? 32 : 24} color={feature.color} />
                     </View>
                     <Text
-                      className={`text-slate-900 font-bold ${
+                      className={`font-bold ${
                         isTablet ? 'text-xl' : 'text-base'
-                      } mb-2`}
+                      } mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}
                     >
                       {feature.title}
                     </Text>
                     <Text
-                      className={`text-slate-600 ${isTablet ? 'text-base' : 'text-xs'} leading-4`}
+                      className={`${isTablet ? 'text-base' : 'text-xs'} leading-4 ${isDark ? 'text-gray-300' : 'text-slate-600'}`}
                     >
                       {feature.description}
                     </Text>
@@ -293,8 +296,12 @@ export default function PaywallScreen() {
                   onPress={() => setSelectedPlan('monthly')}
                   className={`relative flex-1 ${
                     isTablet ? 'p-8' : 'p-6'
-                  } rounded-3xl border-2 bg-white ${
-                    selectedPlan === 'monthly' ? 'border-pink-500' : 'border-gray-200'
+                  } rounded-3xl border-2 ${
+                    isDark ? 'bg-gray-800' : 'bg-white'
+                  } ${
+                    selectedPlan === 'monthly' 
+                      ? 'border-pink-500' 
+                      : isDark ? 'border-gray-600' : 'border-gray-200'
                   }`}
                 >
                   {selectedPlan === 'monthly' && (
@@ -311,12 +318,12 @@ export default function PaywallScreen() {
                     <Text
                       className={`${
                         isTablet ? 'text-xl' : 'text-lg'
-                      } font-semibold text-gray-700 mb-2`}
+                      } font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                     >
                       Monthly
                     </Text>
                     <Text
-                      className={`${isTablet ? 'text-4xl' : 'text-3xl'} font-black text-gray-900`}
+                      className={`${isTablet ? 'text-4xl' : 'text-3xl'} font-black ${isDark ? 'text-white' : 'text-gray-900'}`}
                     >
                       {monthlyPackage?.product.priceString
                         ? monthlyPackage.product.price.toLocaleString('en-US', {
@@ -325,7 +332,7 @@ export default function PaywallScreen() {
                           })
                         : monthlyPrice}{' '}
                       <Text
-                        className={`${isTablet ? 'text-xl' : 'text-lg'} font-medium text-gray-500`}
+                        className={`${isTablet ? 'text-xl' : 'text-lg'} font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
                       >
                         /mo
                       </Text>
@@ -338,8 +345,12 @@ export default function PaywallScreen() {
                   onPress={() => setSelectedPlan('yearly')}
                   className={`relative flex-1 ${
                     isTablet ? 'p-8' : 'p-6'
-                  } rounded-3xl border-2 bg-white ${
-                    selectedPlan === 'yearly' ? 'border-pink-500' : 'border-gray-200'
+                  } rounded-3xl border-2 ${
+                    isDark ? 'bg-gray-800' : 'bg-white'
+                  } ${
+                    selectedPlan === 'yearly' 
+                      ? 'border-pink-500' 
+                      : isDark ? 'border-gray-600' : 'border-gray-200'
                   }`}
                 >
                   {selectedPlan === 'yearly' && (
@@ -356,12 +367,12 @@ export default function PaywallScreen() {
                     <Text
                       className={`${
                         isTablet ? 'text-xl' : 'text-lg'
-                      } font-semibold text-gray-700 mb-2`}
+                      } font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                     >
                       Yearly
                     </Text>
                     <Text
-                      className={`${isTablet ? 'text-4xl' : 'text-3xl'} font-black text-gray-900`}
+                      className={`${isTablet ? 'text-4xl' : 'text-3xl'} font-black ${isDark ? 'text-white' : 'text-gray-900'}`}
                     >
                       {yearlyPackage?.product.priceString
                         ? yearlyPackage.product.price.toLocaleString('en-US', {
@@ -370,7 +381,7 @@ export default function PaywallScreen() {
                           })
                         : `$${yearlyCost.toFixed(2)}`}{' '}
                       <Text
-                        className={`${isTablet ? 'text-xl' : 'text-lg'} font-medium text-gray-500`}
+                        className={`${isTablet ? 'text-xl' : 'text-lg'} font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
                       >
                         /yr
                       </Text>
@@ -399,9 +410,9 @@ export default function PaywallScreen() {
                   disabled={isLoading}
                 >
                   <Text
-                    className={`text-slate-500 text-center ${
+                    className={`text-center ${
                       isTablet ? 'text-sm' : 'text-xs'
-                    } underline`}
+                    } underline ${isDark ? 'text-gray-400' : 'text-slate-500'}`}
                   >
                     Restore Purchases
                   </Text>
@@ -414,14 +425,14 @@ export default function PaywallScreen() {
                     className="mr-4"
                   >
                     <Text
-                      className={`text-slate-500 ${isTablet ? 'text-sm' : 'text-xs'} underline`}
+                      className={`${isTablet ? 'text-sm' : 'text-xs'} underline ${isDark ? 'text-gray-400' : 'text-slate-500'}`}
                     >
                       Terms
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => Linking.openURL('https://lunasync.app/privacy')}>
                     <Text
-                      className={`text-slate-500 ${isTablet ? 'text-sm' : 'text-xs'} underline`}
+                      className={`${isTablet ? 'text-sm' : 'text-xs'} underline ${isDark ? 'text-gray-400' : 'text-slate-500'}`}
                     >
                       Privacy
                     </Text>
@@ -432,6 +443,6 @@ export default function PaywallScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </CosmicBackground>
   );
 }

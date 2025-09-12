@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useTheme } from '@/context/theme-provider';
 import { router } from 'expo-router';
 import { getLocalDateString } from '@/lib/utils/date-helpers';
 import {
@@ -321,35 +323,36 @@ export function TodaysWorkoutSection({
   };
 
   const todaysPlannedWorkout = getTodaysWorkoutFromPlan();
+  const { isDark } = useTheme();
 
   if (isLoading) {
     return (
       <View className="mx-4 mb-6">
-        <View className="h-6 bg-gray-200 rounded w-40 mb-4" />
-        <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-50">
+        <Skeleton width={160} height={24} borderRadius={6} className="mb-4" />
+        <View className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-50'} rounded-2xl p-6 shadow-sm border`}>
           {/* Workout header skeleton */}
-          <View className="bg-gray-100 rounded-2xl p-4 mb-4">
-            <View className="h-6 bg-gray-200 rounded w-32 mb-2" />
-            <View className="h-4 bg-gray-200 rounded w-48" />
+          <View className={`${isDark ? 'bg-gray-700' : 'bg-gray-100'} rounded-2xl p-4 mb-4`}>
+            <Skeleton width={128} height={24} borderRadius={4} className="mb-2" />
+            <Skeleton width={192} height={16} borderRadius={4} />
           </View>
 
           {/* Exercise items skeleton */}
           <View className="gap-2 mb-4">
             {Array.from({ length: 3 }).map((_, index) => (
-              <View key={index} className="bg-gray-50 rounded-xl p-3">
+              <View key={index} className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-xl p-3`}>
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
-                    <View className="h-4 bg-gray-200 rounded w-24 mb-1" />
-                    <View className="h-3 bg-gray-200 rounded w-16" />
+                    <Skeleton width={96} height={16} borderRadius={4} className="mb-1" />
+                    <Skeleton width={64} height={12} borderRadius={4} />
                   </View>
-                  <View className="h-6 w-6 bg-gray-200 rounded" />
+                  <Skeleton width={24} height={24} borderRadius={4} />
                 </View>
               </View>
             ))}
           </View>
 
           {/* Log Exercise button skeleton */}
-          <View className="h-12 bg-gray-200 rounded-2xl" />
+          <Skeleton width={300} height={48} borderRadius={24} />
         </View>
       </View>
     );

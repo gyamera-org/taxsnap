@@ -3,6 +3,7 @@ import { useAvatar } from '@/lib/hooks/use-avatar';
 import { useRouter } from 'expo-router';
 import { User } from 'lucide-react-native';
 import { useCallback } from 'react';
+import { useThemedColors } from '@/lib/utils/theme';
 
 interface AvatarProps {
   size?: number;
@@ -12,6 +13,7 @@ interface AvatarProps {
 
 export function Avatar({ size = 48, onPress, navigateToSettings = false }: AvatarProps) {
   const { data: avatarUrl } = useAvatar();
+  const colors = useThemedColors();
 
   const handlePress = useCallback(() => {
     if (onPress) {
@@ -28,7 +30,7 @@ export function Avatar({ size = 48, onPress, navigateToSettings = false }: Avata
         height: size,
         borderRadius: size / 2,
         overflow: 'hidden',
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.muted,
         alignItems: 'center',
         justifyContent: 'center',
       }}
@@ -45,7 +47,7 @@ export function Avatar({ size = 48, onPress, navigateToSettings = false }: Avata
           resizeMode="cover"
         />
       ) : (
-        <User size={size * 0.5} color="#9ca3af" />
+        <User size={size * 0.5} color={colors.gray[400]} />
       )}
     </TouchableOpacity>
   );
@@ -55,6 +57,7 @@ export function Avatar({ size = 48, onPress, navigateToSettings = false }: Avata
 export function NavigableAvatar({ size = 48, onPress }: Omit<AvatarProps, 'navigateToSettings'>) {
   const router = useRouter();
   const { data: avatarUrl } = useAvatar();
+  const colors = useThemedColors();
 
   const handlePress = useCallback(() => {
     if (onPress) {
@@ -72,7 +75,7 @@ export function NavigableAvatar({ size = 48, onPress }: Omit<AvatarProps, 'navig
         height: size,
         borderRadius: size / 2,
         overflow: 'hidden',
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.muted,
         alignItems: 'center',
         justifyContent: 'center',
       }}
@@ -89,7 +92,7 @@ export function NavigableAvatar({ size = 48, onPress }: Omit<AvatarProps, 'navig
           resizeMode="cover"
         />
       ) : (
-        <User size={size * 0.5} color="#9ca3af" />
+        <User size={size * 0.5} color={colors.gray[400]} />
       )}
     </TouchableOpacity>
   );

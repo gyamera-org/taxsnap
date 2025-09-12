@@ -6,6 +6,7 @@ import { Questionnaire } from '@/components/ui';
 import SubPageLayout from '@/components/layouts/sub-page';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
+import { useTheme } from '@/context/theme-provider';
 import {
   Target,
   Flame,
@@ -28,6 +29,7 @@ import { GenerateMacrosButton } from '@/components/nutrition/generate-macros-but
 
 export default function NutritionGoalsScreen() {
   const router = useRouter();
+  const { isDark } = useTheme();
 
   // Hooks
   const { data: nutritionGoals, isLoading } = useNutritionGoals();
@@ -231,24 +233,24 @@ export default function NutritionGoalsScreen() {
           ) : nutritionGoals && nutritionGoals.calories && nutritionGoals.protein ? (
             <>
               {/* Show calculated nutrition data from database */}
-              <View className="bg-white rounded-2xl p-6 mb-4 shadow-sm">
-                <Text className="text-lg font-semibold text-gray-900 mb-4">
+              <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} rounded-2xl p-6 mb-4 shadow-sm`}>
+                <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
                   Your Personalized Plan
                 </Text>
                 <View className="flex flex-col gap-4">
                   {/* Calories */}
-                  <View className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl">
+                  <View className={`flex-row items-center justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-xl`}>
                     <View className="flex-row items-center">
-                      <View className="bg-orange-100 p-3 rounded-full">
+                      <View className={`${isDark ? 'bg-orange-900/30' : 'bg-orange-100'} p-3 rounded-full`}>
                         <Flame size={28} color="#ea580c" />
                       </View>
                       <View className="ml-4">
-                        <Text className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                        <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wide`}>
                           Calories
                         </Text>
                         {editingField === 'calories' ? (
                           <TextInput
-                            className="text-3xl font-bold text-gray-900 border-b border-gray-300 min-w-20"
+                            className={`text-3xl font-bold ${isDark ? 'text-white border-gray-600' : 'text-gray-900 border-gray-300'} border-b min-w-20`}
                             value={editValues.calories}
                             onChangeText={(value) => handleValueChange('calories', value)}
                             keyboardType="numeric"
@@ -256,7 +258,7 @@ export default function NutritionGoalsScreen() {
                             onBlur={() => setEditingField('')}
                           />
                         ) : (
-                          <Text className="text-3xl font-bold text-gray-900">
+                          <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {nutritionGoals.calories}
                           </Text>
                         )}
@@ -266,14 +268,14 @@ export default function NutritionGoalsScreen() {
                       <View className="flex-row gap-2">
                         <TouchableOpacity
                           onPress={cancelEditing}
-                          className="bg-white p-3 rounded-full shadow-sm"
+                          className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                         >
                           <X size={16} color="#6b7280" />
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={saveChanges}
                           disabled={updateNutritionGoals.isPending}
-                          className="bg-white p-3 rounded-full shadow-sm"
+                          className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                         >
                           <Check size={16} color="#22c55e" />
                         </TouchableOpacity>
@@ -281,7 +283,7 @@ export default function NutritionGoalsScreen() {
                     ) : (
                       <TouchableOpacity
                         onPress={() => startEditing('calories')}
-                        className="bg-white p-3 rounded-full shadow-sm"
+                        className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                       >
                         <Edit3 size={16} color="#6b7280" />
                       </TouchableOpacity>
@@ -289,18 +291,18 @@ export default function NutritionGoalsScreen() {
                   </View>
 
                   {/* Protein */}
-                  <View className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl">
+                  <View className={`flex-row items-center justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-xl`}>
                     <View className="flex-row items-center">
-                      <View className="bg-red-100 p-3 rounded-full">
+                      <View className={`${isDark ? 'bg-red-900/30' : 'bg-red-100'} p-3 rounded-full`}>
                         <Beef size={28} color="#dc2626" />
                       </View>
                       <View className="ml-4">
-                        <Text className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                        <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wide`}>
                           Protein
                         </Text>
                         {editingField === 'protein' ? (
                           <TextInput
-                            className="text-3xl font-bold text-gray-900 border-b border-gray-300 min-w-20"
+                            className={`text-3xl font-bold ${isDark ? 'text-white border-gray-600' : 'text-gray-900 border-gray-300'} border-b min-w-20`}
                             value={editValues.protein}
                             onChangeText={(value) => handleValueChange('protein', value)}
                             keyboardType="numeric"
@@ -308,7 +310,7 @@ export default function NutritionGoalsScreen() {
                             onBlur={() => setEditingField('')}
                           />
                         ) : (
-                          <Text className="text-3xl font-bold text-gray-900">
+                          <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {nutritionGoals.protein}g
                           </Text>
                         )}
@@ -318,14 +320,14 @@ export default function NutritionGoalsScreen() {
                       <View className="flex-row gap-2">
                         <TouchableOpacity
                           onPress={cancelEditing}
-                          className="bg-white p-3 rounded-full shadow-sm"
+                          className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                         >
                           <X size={16} color="#6b7280" />
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={saveChanges}
                           disabled={updateNutritionGoals.isPending}
-                          className="bg-white p-3 rounded-full shadow-sm"
+                          className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                         >
                           <Check size={16} color="#22c55e" />
                         </TouchableOpacity>
@@ -333,7 +335,7 @@ export default function NutritionGoalsScreen() {
                     ) : (
                       <TouchableOpacity
                         onPress={() => startEditing('protein')}
-                        className="bg-white p-3 rounded-full shadow-sm"
+                        className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                       >
                         <Edit3 size={16} color="#6b7280" />
                       </TouchableOpacity>
@@ -341,18 +343,18 @@ export default function NutritionGoalsScreen() {
                   </View>
 
                   {/* Carbs */}
-                  <View className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl">
+                  <View className={`flex-row items-center justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-xl`}>
                     <View className="flex-row items-center">
-                      <View className="bg-amber-100 p-3 rounded-full">
+                      <View className={`${isDark ? 'bg-amber-900/30' : 'bg-amber-100'} p-3 rounded-full`}>
                         <Wheat size={28} color="#d97706" />
                       </View>
                       <View className="ml-4">
-                        <Text className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                        <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wide`}>
                           Carbs
                         </Text>
                         {editingField === 'carbs' ? (
                           <TextInput
-                            className="text-3xl font-bold text-gray-900 border-b border-gray-300 min-w-20"
+                            className={`text-3xl font-bold ${isDark ? 'text-white border-gray-600' : 'text-gray-900 border-gray-300'} border-b min-w-20`}
                             value={editValues.carbs}
                             onChangeText={(value) => handleValueChange('carbs', value)}
                             keyboardType="numeric"
@@ -360,7 +362,7 @@ export default function NutritionGoalsScreen() {
                             onBlur={() => setEditingField('')}
                           />
                         ) : (
-                          <Text className="text-3xl font-bold text-gray-900">
+                          <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {nutritionGoals.carbs}g
                           </Text>
                         )}
@@ -370,14 +372,14 @@ export default function NutritionGoalsScreen() {
                       <View className="flex-row gap-2">
                         <TouchableOpacity
                           onPress={cancelEditing}
-                          className="bg-white p-3 rounded-full shadow-sm"
+                          className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                         >
                           <X size={16} color="#6b7280" />
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={saveChanges}
                           disabled={updateNutritionGoals.isPending}
-                          className="bg-white p-3 rounded-full shadow-sm"
+                          className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                         >
                           <Check size={16} color="#22c55e" />
                         </TouchableOpacity>
@@ -385,7 +387,7 @@ export default function NutritionGoalsScreen() {
                     ) : (
                       <TouchableOpacity
                         onPress={() => startEditing('carbs')}
-                        className="bg-white p-3 rounded-full shadow-sm"
+                        className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                       >
                         <Edit3 size={16} color="#6b7280" />
                       </TouchableOpacity>
@@ -393,18 +395,18 @@ export default function NutritionGoalsScreen() {
                   </View>
 
                   {/* Fat */}
-                  <View className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl">
+                  <View className={`flex-row items-center justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-xl`}>
                     <View className="flex-row items-center">
-                      <View className="bg-blue-100 p-3 rounded-full">
+                      <View className={`${isDark ? 'bg-blue-900/30' : 'bg-blue-100'} p-3 rounded-full`}>
                         <OliveOilIcon size={28} color="#2563eb" />
                       </View>
                       <View className="ml-4">
-                        <Text className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                        <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wide`}>
                           Fat
                         </Text>
                         {editingField === 'fat' ? (
                           <TextInput
-                            className="text-3xl font-bold text-gray-900 border-b border-gray-300 min-w-20"
+                            className={`text-3xl font-bold ${isDark ? 'text-white border-gray-600' : 'text-gray-900 border-gray-300'} border-b min-w-20`}
                             value={editValues.fat}
                             onChangeText={(value) => handleValueChange('fat', value)}
                             keyboardType="numeric"
@@ -412,7 +414,7 @@ export default function NutritionGoalsScreen() {
                             onBlur={() => setEditingField('')}
                           />
                         ) : (
-                          <Text className="text-3xl font-bold text-gray-900">
+                          <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {nutritionGoals.fat}g
                           </Text>
                         )}
@@ -422,14 +424,14 @@ export default function NutritionGoalsScreen() {
                       <View className="flex-row gap-2">
                         <TouchableOpacity
                           onPress={cancelEditing}
-                          className="bg-white p-3 rounded-full shadow-sm"
+                          className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                         >
                           <X size={16} color="#6b7280" />
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={saveChanges}
                           disabled={updateNutritionGoals.isPending}
-                          className="bg-white p-3 rounded-full shadow-sm"
+                          className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                         >
                           <Check size={16} color="#22c55e" />
                         </TouchableOpacity>
@@ -437,7 +439,7 @@ export default function NutritionGoalsScreen() {
                     ) : (
                       <TouchableOpacity
                         onPress={() => startEditing('fat')}
-                        className="bg-white p-3 rounded-full shadow-sm"
+                        className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                       >
                         <Edit3 size={16} color="#6b7280" />
                       </TouchableOpacity>
@@ -447,19 +449,19 @@ export default function NutritionGoalsScreen() {
               </View>
 
               {/* Water Intake */}
-              <View className="bg-white rounded-2xl p-6 mb-4 shadow-sm">
-                <View className="flex-row items-center justify-between bg-gray-50 p-4 rounded-xl">
+              <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} rounded-2xl p-6 mb-4 shadow-sm`}>
+                <View className={`flex-row items-center justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-xl`}>
                   <View className="flex-row items-center">
-                    <View className="bg-cyan-100 p-3 rounded-full">
+                    <View className={`${isDark ? 'bg-cyan-900/30' : 'bg-cyan-100'} p-3 rounded-full`}>
                       <GlassWater size={28} color="#0891b2" />
                     </View>
                     <View className="ml-4">
-                      <Text className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                      <Text className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wide`}>
                         Water per day
                       </Text>
                       {editingField === 'water' ? (
                         <TextInput
-                          className="text-3xl font-bold text-gray-900 border-b border-gray-300 min-w-20"
+                          className={`text-3xl font-bold ${isDark ? 'text-white border-gray-600' : 'text-gray-900 border-gray-300'} border-b min-w-20`}
                           value={editValues.water_ml}
                           onChangeText={(value) => handleValueChange('water_ml', value)}
                           keyboardType="numeric"
@@ -467,7 +469,7 @@ export default function NutritionGoalsScreen() {
                           onBlur={() => setEditingField('')}
                         />
                       ) : (
-                        <Text className="text-3xl font-bold text-gray-900">
+                        <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                           {nutritionGoals.water_ml || 2500}ml
                         </Text>
                       )}
@@ -477,14 +479,14 @@ export default function NutritionGoalsScreen() {
                     <View className="flex-row gap-2">
                       <TouchableOpacity
                         onPress={cancelEditing}
-                        className="bg-white p-3 rounded-full shadow-sm"
+                        className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                       >
                         <X size={16} color="#6b7280" />
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={saveChanges}
                         disabled={updateNutritionGoals.isPending}
-                        className="bg-white p-3 rounded-full shadow-sm"
+                        className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                       >
                         <Check size={16} color="#22c55e" />
                       </TouchableOpacity>
@@ -492,7 +494,7 @@ export default function NutritionGoalsScreen() {
                   ) : (
                     <TouchableOpacity
                       onPress={() => startEditing('water')}
-                      className="bg-white p-3 rounded-full shadow-sm"
+                      className={`${isDark ? 'bg-gray-600' : 'bg-white'} p-3 rounded-full shadow-sm`}
                     >
                       <Edit3 size={16} color="#6b7280" />
                     </TouchableOpacity>
@@ -501,19 +503,19 @@ export default function NutritionGoalsScreen() {
               </View>
 
               {/* Goal Summary */}
-              <View className="bg-white rounded-2xl p-6 mb-4 shadow-sm">
+              <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} rounded-2xl p-6 mb-4 shadow-sm`}>
                 <View className="flex-row items-center mb-4">
-                  <View className="bg-gray-100 w-12 h-12 rounded-xl items-center justify-center mr-4">
-                    <Target size={24} color="#374151" />
+                  <View className={`${isDark ? 'bg-gray-700' : 'bg-gray-100'} w-12 h-12 rounded-xl items-center justify-center mr-4`}>
+                    <Target size={24} color={isDark ? '#d1d5db' : '#374151'} />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-lg font-semibold text-gray-900">Your Goal</Text>
-                    <Text className="text-sm text-gray-500">
+                    <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Your Goal</Text>
+                    <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {nutritionGoals.weight_recommendation || 'Your personalized goal'}
                     </Text>
                   </View>
                 </View>
-                <Text className="text-3xl font-bold text-gray-900">
+                <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {formatGoal(nutritionGoals.primary_goal)}
                 </Text>
               </View>

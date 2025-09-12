@@ -2,6 +2,7 @@ import { View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { GlassWater, Plus } from 'lucide-react-native';
 import { getAccurateCircularProgressStyles } from '@/lib/utils/progress-circle';
+import { useThemedStyles } from '@/lib/utils/theme';
 
 interface WaterIntakeCardProps {
   waterData: {
@@ -19,6 +20,7 @@ export default function WaterIntakeCard({
   onAddWaterPress,
   onQuickAdd,
 }: WaterIntakeCardProps) {
+  const themed = useThemedStyles();
   const progressStyles = getAccurateCircularProgressStyles(
     waterData.consumed,
     waterData.goal,
@@ -27,13 +29,13 @@ export default function WaterIntakeCard({
 
   return (
     <View className="px-4 mb-3">
-      <View className="bg-white rounded-2xl p-4 shadow-sm border border-gray-50">
+      <View className={themed("bg-white rounded-2xl p-4 shadow-sm border border-gray-50", "bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-700")}>
         <View className="flex-row items-center justify-between">
           {/* Left side - Text content */}
           <View className="flex-1">
-            <Text className="text-lg font-bold text-gray-900 mb-1">Water</Text>
-            <Text className="text-3xl font-bold text-gray-900 mb-1">{waterData.consumed}ml</Text>
-            <Text className="text-sm text-gray-500">of {waterData.goal}ml</Text>
+            <Text className={themed("text-lg font-bold text-gray-900 mb-1", "text-lg font-bold text-white mb-1")}>Water</Text>
+            <Text className={themed("text-3xl font-bold text-gray-900 mb-1", "text-3xl font-bold text-white mb-1")}>{waterData.consumed}ml</Text>
+            <Text className={themed("text-sm text-gray-500", "text-sm text-gray-400")}>of {waterData.goal}ml</Text>
           </View>
 
           {/* Right side - Circular progress with plus button */}

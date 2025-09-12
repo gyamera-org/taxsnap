@@ -3,6 +3,7 @@ import { View, Modal, TouchableOpacity, ScrollView, TextInput } from 'react-nati
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { X, Check } from 'lucide-react-native';
+import { useTheme } from '@/context/theme-provider';
 
 const DELETION_REASONS = [
   { value: 'not_using', label: "I'm not using the app anymore" },
@@ -29,6 +30,7 @@ export function DeleteAccountFeedbackModal({
   onConfirm,
   isDeleting = false,
 }: DeleteAccountFeedbackModalProps) {
+  const { isDark } = useTheme();
   const [selectedReason, setSelectedReason] = useState<string>('');
   const [additionalComments, setAdditionalComments] = useState('');
   const [showReasonError, setShowReasonError] = useState(false);
@@ -57,26 +59,26 @@ export function DeleteAccountFeedbackModal({
     <Modal visible={visible} animationType="fade" transparent>
       <View className="flex-1 bg-black/50 justify-center items-center px-4">
         <View
-          className="bg-white rounded-3xl w-full max-w-md"
+          className={`${isDark ? 'bg-card-dark' : 'bg-white'} rounded-3xl w-full max-w-md`}
           style={{ maxHeight: '90%', minHeight: 400 }}
         >
-          <View className="flex-row items-center justify-between p-6 border-b border-gray-100">
-            <Text className="text-xl font-bold text-gray-900">Why are you leaving?</Text>
+          <View className={`flex-row items-center justify-between p-6 border-b ${isDark ? 'border-gray-600' : 'border-gray-100'}`}>
+            <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Why are you leaving?☹️</Text>
             <TouchableOpacity onPress={handleClose} disabled={isDeleting}>
-              <X size={24} color="#6B7280" />
+              <X size={24} color={isDark ? '#D1D5DB' : '#6B7280'} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
             <View className="p-6">
-              <Text className="text-gray-600 text-base mb-6">
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-base mb-6`}>
                 Help us improve LunaSync by sharing your reason for leaving. Your feedback is
                 valuable and helps us serve our users better.
               </Text>
 
               {/* Reason Selection */}
               <View className="mb-6">
-                <Text className="text-lg font-semibold text-black mb-4">
+                <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'} mb-4`}>
                   Select your main reason:
                   {showReasonError && (
                     <Text className="text-red-500 text-sm font-normal ml-2">
@@ -91,7 +93,9 @@ export function DeleteAccountFeedbackModal({
                     className={`flex-row items-center justify-between py-4 px-4 mb-2 rounded-2xl border ${
                       selectedReason === reason.value
                         ? 'border-pink-500 bg-pink-50'
-                        : 'border-gray-200 bg-white'
+                        : isDark 
+                          ? 'border-gray-600 bg-gray-700'
+                          : 'border-gray-200 bg-white'
                     } ${showReasonError && !selectedReason ? 'border-red-300' : ''}`}
                     onPress={() => handleReasonSelect(reason.value)}
                     disabled={isDeleting}
@@ -100,7 +104,9 @@ export function DeleteAccountFeedbackModal({
                       className={`text-base flex-1 ${
                         selectedReason === reason.value
                           ? 'text-pink-800 font-medium'
-                          : 'text-gray-800'
+                          : isDark
+                            ? 'text-white'
+                            : 'text-gray-800'
                       }`}
                     >
                       {reason.label}
@@ -116,11 +122,11 @@ export function DeleteAccountFeedbackModal({
 
               {/* Additional Comments */}
               <View className="mb-6">
-                <Text className="text-lg font-semibold text-black mb-3">
+                <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'} mb-3`}>
                   Additional comments (optional):
                 </Text>
                 <View
-                  className="bg-white rounded-2xl border border-gray-200 p-4"
+                  className={`${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'} rounded-2xl border p-4`}
                   style={{
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
@@ -135,20 +141,20 @@ export function DeleteAccountFeedbackModal({
                     placeholder="Is there anything specific you'd like us to know? Any features you wished we had?"
                     multiline
                     numberOfLines={4}
-                    className="text-gray-800 text-base leading-relaxed"
+                    className={`${isDark ? 'text-white' : 'text-gray-800'} text-base leading-relaxed`}
                     style={{ textAlignVertical: 'top', minHeight: 100 }}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                     editable={!isDeleting}
                   />
                 </View>
               </View>
 
               {/* Warning Message */}
-              <View className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-                <Text className="text-red-800 font-semibold text-base mb-2">
+              <View className={`${isDark ? 'bg-red-900/20 border-red-700' : 'bg-red-50 border-red-200'} border rounded-2xl p-4 mb-6`}>
+                <Text className={`${isDark ? 'text-red-400' : 'text-red-800'} font-semibold text-base mb-2`}>
                   ⚠️ This action cannot be undone
                 </Text>
-                <Text className="text-red-700 text-sm">
+                <Text className={`${isDark ? 'text-red-300' : 'text-red-700'} text-sm`}>
                   Deleting your account will permanently remove all your data, including scanned
                   products, personal information, and account history. This cannot be reversed.
                 </Text>
@@ -157,7 +163,7 @@ export function DeleteAccountFeedbackModal({
           </ScrollView>
 
           {/* Action Buttons */}
-          <View className="p-6 pt-2 border-t border-gray-100">
+          <View className={`p-6 pt-2 border-t ${isDark ? 'border-gray-600' : 'border-gray-100'}`}>
             <View className="flex flex-row gap-2">
               <Button
                 title="Cancel"

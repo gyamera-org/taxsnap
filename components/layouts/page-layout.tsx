@@ -1,9 +1,11 @@
-import { View, Image, ColorValue, Dimensions } from 'react-native';
+import { View, Image, Dimensions } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { LinearGradient } from 'expo-linear-gradient';
 import WeeklyCalendar from '@/components/nutrition/weekly-calendar';
 import { NavigableAvatar } from '@/components/ui/avatar';
 import { NavigationErrorBoundary } from '@/components/ui/navigation-error-boundary';
+import { useTheme } from '@/context/theme-provider';
+import { CosmicBackground } from '@/components/ui/cosmic-background';
+import { PeriodLog } from '@/lib/utils/cycle-utils';
 
 interface Props {
   children: React.ReactNode;
@@ -16,6 +18,8 @@ interface Props {
   selectedDate?: Date;
   onDateSelect?: (date: Date) => void;
   loggedDates?: string[];
+  periodLogs?: PeriodLog[];
+  cycleSettings?: { cycle_length?: number; period_length?: number } | null;
 }
 
 const PageLayout = ({
@@ -28,26 +32,14 @@ const PageLayout = ({
   selectedDate,
   onDateSelect,
   loggedDates,
+  periodLogs,
+  cycleSettings,
 }: Props) => {
   const { width: screenWidth } = Dimensions.get('window');
   const isTablet = screenWidth >= 768;
+  const { isDark } = useTheme();
   
-  const getGradientColors = () => {
-    switch (theme) {
-      case 'nutrition':
-        return ['#f0fdf4', '#f1f5f9', '#f1f5f9']; // Very light green
-      case 'cycle':
-        return ['#fdf2f8', '#f1f5f9', '#f1f5f9']; // Very light pink
-      case 'exercise':
-        return ['#f5f3ff', '#f1f5f9', '#f1f5f9']; // Very light purple
-      case 'settings':
-      case 'progress':
-      default:
-        return ['#f1f5f9', '#f1f5f9', '#f1f5f9']; // Simple slate
-    }
-  };
-
-  const gradientColors = getGradientColors();
+  // Removed gradient colors logic - now handled by CosmicBackground
   const shouldShowCalendar =
     theme !== 'settings' && 
     theme !== 'progress' && 
@@ -56,19 +48,8 @@ const PageLayout = ({
     onDateSelect;
 
   return (
-    <View className="flex-1 pt-5">
-      <LinearGradient
-        colors={gradientColors as [ColorValue, ColorValue, ColorValue]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        }}
-      />
+    <CosmicBackground theme={theme} isDark={isDark}>
+      <View className="flex-1 pt-5">
       <View 
         className={`flex-row items-center justify-between pb-4 pt-12 ${isTablet ? 'px-8' : 'px-4'}`}
         style={isTablet ? { maxWidth: 1024, marginHorizontal: 'auto', width: '100%' } : undefined}
@@ -80,9 +61,9 @@ const PageLayout = ({
             </NavigationErrorBoundary>
           )}
           <View className={theme !== 'settings' ? 'ml-3 flex-1' : 'flex-1'}>
-            <Text className={`${isTablet ? 'text-4xl' : 'text-3xl'} font-bold text-black`}>{title}</Text>
+            <Text className={`${isTablet ? 'text-4xl' : 'text-3xl'} font-bold ${isDark ? 'text-white' : 'text-black'}`}>{title}</Text>
             {extraSubtitle && (
-              <Text className={`${isTablet ? 'text-base' : 'text-sm'} text-gray-600 mt-1`}>
+              <Text className={`${isTablet ? 'text-base' : 'text-sm'} ${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
                 {extraSubtitle}
               </Text>
             )}
@@ -106,6 +87,8 @@ const PageLayout = ({
               onDateSelect={onDateSelect!}
               loggedDates={loggedDates || []}
               theme={theme}
+              periodLogs={periodLogs}
+              cycleSettings={cycleSettings}
             />
           </View>
         </NavigationErrorBoundary>
@@ -114,7 +97,8 @@ const PageLayout = ({
       <View style={isTablet ? { maxWidth: 1024, marginHorizontal: 'auto', width: '100%', flex: 1 } : { flex: 1 }}>
         {children}
       </View>
-    </View>
+      </View>
+    </CosmicBackground>
   );
 };
 

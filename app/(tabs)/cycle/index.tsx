@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import PageLayout from '@/components/layouts/page-layout';
-import { Calendar, CalendarHeart } from 'lucide-react-native';
+import { CalendarHeart } from 'lucide-react-native';
+import { RobotIcon } from '@/components/ui/robot-icon';
+import { AIChatInterface } from '@/components/ui/ai-chat-interface';
+import { useAIChat } from '@/lib/hooks/use-ai-chat';
 import { router } from 'expo-router';
 
 import {
@@ -26,6 +29,7 @@ import { getLocalDateString } from '@/lib/utils/date-helpers';
 export default function CycleScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showPredictionInfoModal, setShowPredictionInfoModal] = useState(false);
+  const { isVisible, openChat, closeChat, handleSendMessage, config } = useAIChat('cycle');
 
   const {
     data: currentCycleInfo,
@@ -131,7 +135,7 @@ export default function CycleScreen() {
       btn={
         <TouchableOpacity
           className="bg-pink-500 p-3 rounded-full"
-          onPress={() => router.push('/log-period')}
+          onPress={openChat}
           style={{
             shadowColor: '#EC4899',
             shadowOffset: { width: 0, height: 2 },
@@ -140,7 +144,7 @@ export default function CycleScreen() {
             elevation: 3,
           }}
         >
-          <Calendar size={18} color="#FFFFFF" />
+          <RobotIcon size={18} color="#FFFFFF" theme="cycle" />
         </TouchableOpacity>
       }
     >
@@ -226,6 +230,16 @@ export default function CycleScreen() {
       <PredictionInfoModal
         visible={showPredictionInfoModal}
         onClose={() => setShowPredictionInfoModal(false)}
+      />
+
+      <AIChatInterface
+        visible={isVisible}
+        onClose={closeChat}
+        context="cycle"
+        title={config.title}
+        introMessages={config.introMessages}
+        quickActions={config.quickActions}
+        onSendMessage={handleSendMessage}
       />
 
     </PageLayout>

@@ -1,4 +1,5 @@
 import { View, Image, ActivityIndicator } from 'react-native';
+import { useThemedColors } from '@/lib/utils/theme';
 
 interface DefaultLoaderProps {
   size?: number;
@@ -6,8 +7,10 @@ interface DefaultLoaderProps {
 }
 
 export function DefaultLoader({ size = 80, showSpinner = true }: DefaultLoaderProps) {
+  const colors = useThemedColors();
+
   return (
-    <View className="flex-1 items-center justify-center" style={{ backgroundColor: '#FEF9F9' }}>
+    <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.background }}>
       <View className="items-center">
         {/* App Icon */}
         <Image

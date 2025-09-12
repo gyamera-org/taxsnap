@@ -6,6 +6,7 @@ import { Questionnaire } from '@/components/ui';
 import SubPageLayout from '@/components/layouts/sub-page';
 import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
+import { useTheme } from '@/context/theme-provider';
 import { Target, Calendar, Zap } from 'lucide-react-native';
 import { useFitnessGoals, useUpdateFitnessGoals } from '@/lib/hooks/use-fitness-goals';
 import { FitnessGoalsSkeleton } from '@/components/fitness/fitness-goals-skeleton';
@@ -18,6 +19,7 @@ import {
 
 export default function FitnessGoalsScreen() {
   const router = useRouter();
+  const { isDark } = useTheme();
 
   // Hooks
   const { data: fitnessGoals, isLoading } = useFitnessGoals();
@@ -93,18 +95,18 @@ export default function FitnessGoalsScreen() {
     value: string | number;
     subtitle: string;
   }) => (
-    <View className="bg-white rounded-2xl p-6 mb-4 shadow-sm">
+    <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} rounded-2xl p-6 mb-4 shadow-sm`}>
       <View className="flex-row items-center mb-4">
-        <View className="bg-gray-100 w-12 h-12 rounded-xl items-center justify-center mr-4">
-          {React.createElement(icon, { size: 24, color: '#374151' })}
+        <View className={`${isDark ? 'bg-gray-700' : 'bg-gray-100'} w-12 h-12 rounded-xl items-center justify-center mr-4`}>
+          {React.createElement(icon, { size: 24, color: isDark ? '#F9FAFB' : '#374151' })}
         </View>
         <View className="flex-1">
-          <Text className="text-lg font-semibold text-gray-900">{title}</Text>
-          <Text className="text-sm text-gray-500">{subtitle}</Text>
+          <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{title}</Text>
+          <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{subtitle}</Text>
         </View>
       </View>
 
-      <Text className="text-3xl font-bold text-gray-900">{value}</Text>
+      <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{value}</Text>
     </View>
   );
 

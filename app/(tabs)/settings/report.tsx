@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import SubPageLayout from '@/components/layouts/sub-page';
 import { useAuth } from '@/context/auth-provider';
+import { useTheme } from '@/context/theme-provider';
 
 const REPORT_TYPES = [
   { value: 'bug', label: 'Bug Report' },
@@ -33,6 +34,7 @@ export default function ReportScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedReportType = REPORT_TYPES.find((type) => type.value === reportType);
+  const { isDark } = useTheme();
 
   // Auto-populate email from user authentication
   useEffect(() => {
@@ -107,19 +109,19 @@ export default function ReportScreen() {
           <View className="px-4 pt-6">
             {/* Header */}
             <View className="mb-8">
-              <Text className="text-2xl font-bold text-gray-900 mb-2">
+              <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
                 Help us improve LunaSync
               </Text>
-              <Text className="text-gray-600 text-base">
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-base`}>
                 Report bugs or request new features to make the app better for everyone.
               </Text>
             </View>
 
             {/* Report Type Selector */}
             <View className="mb-6">
-              <Text className="text-lg font-semibold text-black mb-3">Report Type</Text>
+              <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'} mb-3`}>Report Type</Text>
               <TouchableOpacity
-                className="bg-white rounded-2xl border border-gray-200 p-4 flex-row items-center justify-between"
+                className={`${isDark ? 'bg-card-dark border-gray-600' : 'bg-white border-gray-200'} rounded-2xl border p-4 flex-row items-center justify-between`}
                 onPress={() => setShowReportTypeModal(true)}
                 style={{
                   shadowColor: '#000',
@@ -129,18 +131,18 @@ export default function ReportScreen() {
                   elevation: 3,
                 }}
               >
-                <Text className="text-gray-800 text-base">
+                <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-base`}>
                   {selectedReportType?.label || 'Select type'}
                 </Text>
-                <ChevronDown size={20} color="#6B7280" />
+                <ChevronDown size={20} color={isDark ? '#D1D5DB' : '#6B7280'} />
               </TouchableOpacity>
             </View>
 
             {/* Email */}
             <View className="mb-6">
-              <Text className="text-lg font-semibold text-black mb-3">Your Email</Text>
+              <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'} mb-3`}>Your Email</Text>
               <View
-                className="bg-white rounded-2xl border border-gray-200 p-4"
+                className={`${isDark ? 'bg-card-dark border-gray-600' : 'bg-white border-gray-200'} rounded-2xl border p-4`}
                 style={{
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
@@ -156,17 +158,17 @@ export default function ReportScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
-                  className="text-gray-800 text-base"
-                  placeholderTextColor="#9CA3AF"
+                  className={`${isDark ? 'text-white' : 'text-gray-800'} text-base`}
+                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                 />
               </View>
             </View>
 
             {/* Subject */}
             <View className="mb-6">
-              <Text className="text-lg font-semibold text-black mb-3">Subject</Text>
+              <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'} mb-3`}>Subject</Text>
               <View
-                className="bg-white rounded-2xl border border-gray-200 p-4"
+                className={`${isDark ? 'bg-card-dark border-gray-600' : 'bg-white border-gray-200'} rounded-2xl border p-4`}
                 style={{
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
@@ -183,19 +185,19 @@ export default function ReportScreen() {
                       ? 'Brief description of the bug'
                       : 'Brief description of your feature request'
                   }
-                  className="text-gray-800 text-base"
-                  placeholderTextColor="#9CA3AF"
+                  className={`${isDark ? 'text-white' : 'text-gray-800'} text-base`}
+                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                 />
               </View>
             </View>
 
             {/* Message */}
             <View className="mb-8">
-              <Text className="text-lg font-semibold text-black mb-3">
+              <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'} mb-3`}>
                 {reportType === 'bug' ? 'Bug Description' : 'Feature Details'}
               </Text>
               <View
-                className="bg-white rounded-2xl border border-gray-200 p-4"
+                className={`${isDark ? 'bg-card-dark border-gray-600' : 'bg-white border-gray-200'} rounded-2xl border p-4`}
                 style={{
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 2 },
@@ -214,9 +216,9 @@ export default function ReportScreen() {
                   }
                   multiline
                   numberOfLines={6}
-                  className="text-gray-800 text-base leading-relaxed"
+                  className={`${isDark ? 'text-white' : 'text-gray-800'} text-base leading-relaxed`}
                   style={{ textAlignVertical: 'top', minHeight: 120 }}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                 />
               </View>
             </View>
@@ -238,11 +240,17 @@ export default function ReportScreen() {
       {/* Report Type Modal */}
       <Modal visible={showReportTypeModal} animationType="slide" transparent>
         <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl">
-            <View className="flex-row items-center justify-between p-6 border-b border-gray-100">
-              <Text className="text-xl font-bold text-gray-900">Select Report Type</Text>
+          <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} rounded-t-3xl`}>
+            <View
+              className={`flex-row items-center justify-between p-6 border-b ${
+                isDark ? 'border-gray-600' : 'border-gray-100'
+              }`}
+            >
+              <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Select Report Type
+              </Text>
               <TouchableOpacity onPress={() => setShowReportTypeModal(false)}>
-                <X size={24} color="#6B7280" />
+                <X size={24} color={isDark ? '#D1D5DB' : '#6B7280'} />
               </TouchableOpacity>
             </View>
 
@@ -250,15 +258,21 @@ export default function ReportScreen() {
               {REPORT_TYPES.map((type) => (
                 <TouchableOpacity
                   key={type.value}
-                  className="flex-row items-center justify-between py-4 border-b border-gray-50 last:border-b-0"
+                  className={`flex-row items-center justify-between py-4 border-b ${
+                    isDark ? 'border-gray-600' : 'border-gray-50'
+                  } last:border-b-0`}
                   onPress={() => {
                     setReportType(type.value);
                     setShowReportTypeModal(false);
                   }}
                 >
                   <View>
-                    <Text className="text-lg font-medium text-gray-900">{type.label}</Text>
-                    <Text className="text-sm text-gray-500 mt-1">
+                    <Text
+                      className={`text-lg font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                    >
+                      {type.label}
+                    </Text>
+                    <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'} mt-1`}>
                       {type.value === 'bug'
                         ? 'Report issues or problems with the app'
                         : 'Suggest new features or improvements'}

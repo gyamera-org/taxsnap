@@ -22,7 +22,7 @@
         "NSPhotoLibraryUsageDescription": "LunaSync accesses your photo library to upload meal photos for nutrition tracking, choose profile avatar pictures, and add progress pictures for your insights.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "20"
+      "buildNumber": "21"
     },
     "android": {
       "userInterfaceStyle": "light",

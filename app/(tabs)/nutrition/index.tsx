@@ -133,7 +133,6 @@ export default function NutritionScreen() {
           <StreakDisplay
             currentStreak={currentStreak}
             isLoading={streakLoading}
-            onAddMealPress={() => router.push('/log-meal')}
           />
         )
       }

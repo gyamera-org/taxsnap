@@ -1,5 +1,6 @@
 import { View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { useThemedStyles } from '@/lib/utils/theme';
 
 import { MealCard } from './meal-card';
 import { EmptyMealsState } from './empty-meals-state';
@@ -38,6 +39,7 @@ export default function MealsSection({
   onSavePendingFood,
   onDiscardPendingFood,
 }: MealsSectionProps) {
+  const themed = useThemedStyles();
   const sortedMeals = meals.sort((a, b) => {
     const aAnalyzing = a.analysis_status === 'analyzing' || a.isAnalyzing;
     const bAnalyzing = b.analysis_status === 'analyzing' || b.isAnalyzing;
@@ -58,7 +60,7 @@ export default function MealsSection({
   return (
     <View className="px-4 mb-6 mt-4">
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-xl font-bold text-gray-900">Today's Meals</Text>
+        <Text className={themed("text-xl font-bold text-gray-900", "text-xl font-bold text-white")}>Today's Meals</Text>
         <TouchableOpacity onPress={onAddMealPress}>
           <Text className="text-green-600 font-medium">Add Meal</Text>
         </TouchableOpacity>

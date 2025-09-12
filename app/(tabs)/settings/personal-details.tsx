@@ -9,9 +9,11 @@ import { useAccount, useUpdateAccount } from '@/lib/hooks/use-accounts';
 import { AvatarUpload } from '@/components/settings/avatar-upload';
 import { toast } from 'sonner-native';
 import { useRouter } from 'expo-router';
+import { useTheme } from '@/context/theme-provider';
 
 export default function PersonalDetailsScreen() {
   const router = useRouter();
+  const { isDark } = useTheme();
   const { data: account, isLoading } = useAccount();
   const { mutate: updateAccount } = useUpdateAccount();
 
@@ -82,14 +84,14 @@ export default function PersonalDetailsScreen() {
   return (
     <SubPageLayout title="Personal Details" onBack={handleGoBack}>
       {/* Avatar Section */}
-      <View className="bg-white mx-4 p-6 rounded-2xl shadow mb-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 p-6 rounded-2xl shadow mb-4`}>
         <View className="items-center">
           <AvatarUpload size={100} showActions={true} />
         </View>
       </View>
 
       {/* Personal Information */}
-      <View className="bg-white mx-4 p-4 rounded-2xl shadow flex flex-col gap-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 p-4 rounded-2xl shadow flex flex-col gap-4`}>
         {Object.entries(details).map(([field, value], index) => (
           <SettingsDetailItem
             key={field}
@@ -115,12 +117,12 @@ export default function PersonalDetailsScreen() {
       {Platform.OS === 'ios' ? (
         <Modal visible={showCalendar} transparent animationType="slide">
           <View className="flex-1 justify-end bg-black/50">
-            <View className="bg-white rounded-t-3xl">
-              <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
+            <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} rounded-t-3xl`}>
+              <View className={`flex-row items-center justify-between p-4 border-b ${isDark ? 'border-gray-600' : 'border-gray-100'}`}>
                 <Pressable onPress={() => setShowCalendar(false)}>
                   <Text className="text-pink-600 font-medium">Cancel</Text>
                 </Pressable>
-                <Text className="text-lg font-semibold text-black">Date of Birth</Text>
+                <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'}`}>Date of Birth</Text>
                 <Pressable onPress={() => setShowCalendar(false)}>
                   <Text className="text-pink-600 font-medium">Done</Text>
                 </Pressable>

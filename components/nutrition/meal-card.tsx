@@ -17,6 +17,7 @@ import {
   Zap,
 } from 'lucide-react-native';
 import { OliveOilIcon } from '@/components/icons/olive-oil-icon';
+import { useThemedStyles } from '@/lib/utils/theme';
 
 interface MealData {
   id: string;
@@ -126,6 +127,7 @@ export const MealCard = ({
   onPress?: (meal: MealData) => void;
   onDiscardPending?: (meal: MealData) => void;
 }) => {
+  const themed = useThemedStyles();
   const IconComponent = getMealIcon(meal.type);
   const mealTypeColor = getMealTypeColor(meal.type);
 
@@ -167,7 +169,7 @@ export const MealCard = ({
 
   return (
     <TouchableOpacity
-      className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-gray-50 relative"
+      className={themed("bg-white rounded-2xl p-4 mb-3 shadow-sm border border-gray-50 relative", "bg-gray-800 rounded-2xl p-4 mb-3 shadow-sm border border-gray-700 relative")}
       onPress={handlePress}
       disabled={isAnalyzing}
       style={{ opacity: isAnalyzing ? 0.9 : isFailed ? 0.8 : 1 }}
@@ -265,19 +267,19 @@ export const MealCard = ({
 
         {/* Food Details */}
         <View className="flex-1 gap-3">
-          <Text className="text-base font-semibold text-gray-900 mb-1" numberOfLines={1}>
+          <Text className={themed("text-base font-semibold text-gray-900 mb-1", "text-base font-semibold text-white mb-1")} numberOfLines={1}>
             {displayName}
           </Text>
 
           {/* Calories */}
           <View className="flex-row items-center gap-2">
-            <View className="rounded-full bg-gray-100 p-1">
+            <View className={themed("rounded-full bg-gray-100 p-1", "rounded-full bg-gray-700 p-1")}>
               <Flame size={14} color="#F59E0B" />
             </View>
             {isAnalyzing ? (
-              <View className="bg-gray-200 h-4 w-20 rounded animate-pulse" />
+              <View className={themed("bg-gray-200 h-4 w-20 rounded animate-pulse", "bg-gray-600 h-4 w-20 rounded animate-pulse")} />
             ) : (
-              <Text className="text-sm text-gray-600 font-semibold">
+              <Text className={themed("text-sm text-gray-600 font-semibold", "text-sm text-gray-300 font-semibold")}>
                 {isFailed ? 'Analysis failed' : `${displayCalories} calories`}
               </Text>
             )}
@@ -290,9 +292,9 @@ export const MealCard = ({
                 <Beef size={14} color="#EF4444" />
               </View>
               {isAnalyzing ? (
-                <View className="bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse" />
+                <View className={themed("bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse", "bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse")} />
               ) : (
-                <Text className="text-sm text-gray-700 ml-1">{displayProtein}g</Text>
+                <Text className={themed("text-sm text-gray-700 ml-1", "text-sm text-gray-300 ml-1")}>{displayProtein}g</Text>
               )}
             </View>
             <View className="flex-row items-center">
@@ -300,9 +302,9 @@ export const MealCard = ({
                 <Wheat size={14} color="#F59E0B" />
               </View>
               {isAnalyzing ? (
-                <View className="bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse" />
+                <View className={themed("bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse", "bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse")} />
               ) : (
-                <Text className="text-sm text-gray-700 ml-1">{displayCarbs}g</Text>
+                <Text className={themed("text-sm text-gray-700 ml-1", "text-sm text-gray-300 ml-1")}>{displayCarbs}g</Text>
               )}
             </View>
             <View className="flex-row items-center">
@@ -310,9 +312,9 @@ export const MealCard = ({
                 <OliveOilIcon size={14} color="#8B5CF6" />
               </View>
               {isAnalyzing ? (
-                <View className="bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse" />
+                <View className={themed("bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse", "bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse")} />
               ) : (
-                <Text className="text-sm text-gray-700 ml-1">{displayFat}g</Text>
+                <Text className={themed("text-sm text-gray-700 ml-1", "text-sm text-gray-300 ml-1")}>{displayFat}g</Text>
               )}
             </View>
           </View>
@@ -320,7 +322,7 @@ export const MealCard = ({
 
         {/* Right side - Time and Status */}
         <View className="items-end">
-          <Text className="text-xs text-gray-400 mb-1">{meal.time}</Text>
+          <Text className={themed("text-xs text-gray-400 mb-1", "text-xs text-gray-500 mb-1")}>{meal.time}</Text>
           {!isPending && !isAnalyzing && <ChevronRight size={16} color="#D1D5DB" />}
         </View>
       </View>

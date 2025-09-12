@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 import { OliveOilIcon } from '@/components/icons/olive-oil-icon';
 import { MacroCard } from './macro-card';
+import { useThemedStyles } from '@/lib/utils/theme';
 
 interface MealData {
   id: string;
@@ -60,6 +61,7 @@ export function FoodDetailsModal({
   onDone,
   onRetry,
 }: FoodDetailsModalProps) {
+  const themed = useThemedStyles();
   const [quantity, setQuantity] = useState(1);
   const [originalQuantity, setOriginalQuantity] = useState(1); // Track original quantity for change detection
   const [editableCalories, setEditableCalories] = useState<number | null>(null);
@@ -188,16 +190,16 @@ export function FoodDetailsModal({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <KeyboardAvoidingView
-        className="flex-1 bg-white"
+        className={themed("flex-1 bg-white", "flex-1 bg-gray-900")}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between p-6 bg-white">
-          <Text className="text-xl font-bold text-gray-900">Food Details</Text>
+        <View className={themed("flex-row items-center justify-between p-6 bg-white", "flex-row items-center justify-between p-6 bg-gray-900")}>
+          <Text className={themed("text-xl font-bold text-gray-900", "text-xl font-bold text-white")}>Food Details</Text>
           <TouchableOpacity
             onPress={onClose}
-            className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center"
+            className={themed("w-10 h-10 bg-gray-100 rounded-full items-center justify-center", "w-10 h-10 bg-gray-700 rounded-full items-center justify-center")}
           >
             <X size={20} color="#6B7280" />
           </TouchableOpacity>
@@ -205,7 +207,7 @@ export function FoodDetailsModal({
 
         {/* Food Image */}
         {(food.image_url || meal.image_url) && (
-          <View className="h-48 bg-gray-100">
+          <View className={themed("h-48 bg-gray-100", "h-48 bg-gray-800")}>
             <Image
               source={{ uri: food.image_url || meal.image_url }}
               className="w-full h-full"
@@ -216,35 +218,35 @@ export function FoodDetailsModal({
 
         <ScrollView className="flex-1 px-6 py-4">
           {/* Food Title and Quantity */}
-          <View className="mb-6 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-            <Text className="text-3xl font-bold text-gray-900 mb-2">
+          <View className={themed("mb-6 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm", "mb-6 bg-gray-800 rounded-2xl p-5 border border-gray-700 shadow-sm")}>
+            <Text className={themed("text-3xl font-bold text-gray-900 mb-2", "text-3xl font-bold text-white mb-2")}>
               {food.name || meal.name || 'Unknown Food'}
             </Text>
             {food.brand && food.brand !== 'AI Detected' && (
-              <Text className="text-gray-600 mb-4 text-lg">{food.brand}</Text>
+              <Text className={themed("text-gray-600 mb-4 text-lg", "text-gray-300 mb-4 text-lg")}>{food.brand}</Text>
             )}
 
             {/* Quantity Input */}
-            <View className="flex-row items-center justify-between border border-slate-200 rounded-xl p-3">
+            <View className={themed("flex-row items-center justify-between border border-slate-200 rounded-xl p-3", "flex-row items-center justify-between border border-gray-600 rounded-xl p-3")}>
               <View className="flex-row items-center">
-                <View className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center mr-2">
-                  <Text className="text-slate-600 font-bold text-sm">#</Text>
+                <View className={themed("w-8 h-8 bg-slate-100 rounded-full items-center justify-center mr-2", "w-8 h-8 bg-gray-700 rounded-full items-center justify-center mr-2")}>
+                  <Text className={themed("text-slate-600 font-bold text-sm", "text-gray-300 font-bold text-sm")}>#</Text>
                 </View>
-                <Text className="text-base font-semibold text-slate-800">Servings</Text>
+                <Text className={themed("text-base font-semibold text-slate-800", "text-base font-semibold text-gray-200")}>Servings</Text>
               </View>
               <View className="flex-row items-center">
                 <TouchableOpacity
                   onPress={() => setQuantity(Math.max(0.1, quantity - 0.5))}
-                  className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center"
+                  className={themed("w-8 h-8 bg-slate-100 rounded-full items-center justify-center", "w-8 h-8 bg-gray-700 rounded-full items-center justify-center")}
                 >
                   <Minus size={14} color="#64748B" />
                 </TouchableOpacity>
-                <Text className="mx-4 text-lg font-bold text-slate-700 min-w-[40px] text-center">
+                <Text className={themed("mx-4 text-lg font-bold text-slate-700 min-w-[40px] text-center", "mx-4 text-lg font-bold text-gray-200 min-w-[40px] text-center")}>
                   {quantity}
                 </Text>
                 <TouchableOpacity
                   onPress={() => setQuantity(quantity + 0.5)}
-                  className="w-8 h-8 bg-slate-100 rounded-full items-center justify-center"
+                  className={themed("w-8 h-8 bg-slate-100 rounded-full items-center justify-center", "w-8 h-8 bg-gray-700 rounded-full items-center justify-center")}
                 >
                   <Plus size={14} color="#64748B" />
                 </TouchableOpacity>
@@ -254,14 +256,14 @@ export function FoodDetailsModal({
 
           {/* Calories */}
           <View className="mb-6">
-            <View className="rounded-2xl p-4 border border-yellow-200 bg-white shadow-sm">
+            <View className={themed("rounded-2xl p-4 border border-yellow-200 bg-white shadow-sm", "rounded-2xl p-4 border border-yellow-800/30 bg-gray-800 shadow-sm")}>
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center flex-1">
-                  <View className="w-10 h-10 bg-yellow-100 rounded-full items-center justify-center mr-3">
+                  <View className={themed("w-10 h-10 bg-yellow-100 rounded-full items-center justify-center mr-3", "w-10 h-10 bg-yellow-900/30 rounded-full items-center justify-center mr-3")}>
                     <Flame size={18} color="#EAB308" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-lg font-semibold text-gray-800">Calories</Text>
+                    <Text className={themed("text-lg font-semibold text-gray-800", "text-lg font-semibold text-gray-200")}>Calories</Text>
                     {editableCalories !== null ? (
                       <TextInput
                         value={nutrition.calories.toString()}
@@ -270,7 +272,7 @@ export function FoodDetailsModal({
                           setEditableCalories(num);
                         }}
                         keyboardType="numeric"
-                        className="text-2xl font-bold bg-gray-50 rounded-lg px-3 py-1 mt-1 text-yellow-500"
+                        className={themed("text-2xl font-bold bg-gray-50 rounded-lg px-3 py-1 mt-1 text-yellow-500", "text-2xl font-bold bg-gray-700 rounded-lg px-3 py-1 mt-1 text-yellow-500")}
                         selectTextOnFocus
                         autoFocus
                         onBlur={() => setEditableCalories(null)}
@@ -288,7 +290,7 @@ export function FoodDetailsModal({
                   onPress={() =>
                     setEditableCalories(editableCalories !== null ? null : nutrition.calories)
                   }
-                  className="w-8 h-8 bg-gray-50 rounded-full items-center justify-center ml-3"
+                  className={themed("w-8 h-8 bg-gray-50 rounded-full items-center justify-center ml-3", "w-8 h-8 bg-gray-700 rounded-full items-center justify-center ml-3")}
                 >
                   <Edit3 size={14} color="#EAB308" />
                 </TouchableOpacity>
@@ -298,7 +300,7 @@ export function FoodDetailsModal({
 
           {/* Macros */}
           <View className="mb-8">
-            <Text className="text-xl font-bold text-gray-900 mb-4">Macronutrients</Text>
+            <Text className={themed("text-xl font-bold text-gray-900 mb-4", "text-xl font-bold text-white mb-4")}>Macronutrients</Text>
             <View className="flex flex-col gap-4">
               <MacroCard
                 title="Protein"
@@ -381,7 +383,7 @@ export function FoodDetailsModal({
         </ScrollView>
 
         {/* Action Buttons */}
-        <View className="flex-row gap-4 p-6 border-t border-gray-100">
+        <View className={themed("flex-row gap-4 p-6 border-t border-gray-100", "flex-row gap-4 p-6 border-t border-gray-700")}>
           {/* Retry Button (only show for failed analysis) */}
           {meal?.analysis_status === 'failed' && onRetry && (
             <TouchableOpacity

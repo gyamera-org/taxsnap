@@ -28,12 +28,17 @@ import { useAvatar } from '@/lib/hooks/use-avatar';
 import * as StoreReview from 'expo-store-review';
 import { useRevenueCat } from '@/context/revenuecat-provider';
 import { supabase } from '@/lib/supabase/client';
+import { ThemeSelector } from '@/components/settings/theme-selector';
+import { useTheme } from '@/context/theme-provider';
+import { PremiumGradientBackground } from '@/components/ui/animated-gradient';
 
 function SettingsPageSkeleton() {
+  const { isDark } = useTheme();
+  
   return (
     <>
       {/* User Profile Card Skeleton */}
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4 p-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 rounded-2xl shadow mb-4 p-4`}>
         <View className="flex-row items-center">
           <Skeleton width={60} height={60} className="rounded-full mr-4" />
           <View className="flex-1">
@@ -44,7 +49,7 @@ function SettingsPageSkeleton() {
       </View>
 
       {/* Settings Items - Individual cards matching the layout */}
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 rounded-2xl shadow mb-4`}>
         <View className="p-4">
           <View className="flex-row items-center">
             <Skeleton width={20} height={20} className="mr-3" />
@@ -53,7 +58,7 @@ function SettingsPageSkeleton() {
         </View>
       </View>
 
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 rounded-2xl shadow mb-4`}>
         <View className="p-4">
           <View className="flex-row items-center">
             <Skeleton width={20} height={20} className="mr-3" />
@@ -62,7 +67,7 @@ function SettingsPageSkeleton() {
         </View>
       </View>
 
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 rounded-2xl shadow mb-4`}>
         <View className="p-4">
           <View className="flex-row items-center">
             <Skeleton width={20} height={20} className="mr-3" />
@@ -71,7 +76,7 @@ function SettingsPageSkeleton() {
         </View>
       </View>
 
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 rounded-2xl shadow mb-4`}>
         <View className="p-4">
           <View className="flex-row items-center">
             <Skeleton width={20} height={20} className="mr-3" />
@@ -80,7 +85,7 @@ function SettingsPageSkeleton() {
         </View>
       </View>
 
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 rounded-2xl shadow mb-4`}>
         <View className="p-4">
           <View className="flex-row items-center">
             <Skeleton width={20} height={20} className="mr-3" />
@@ -89,7 +94,7 @@ function SettingsPageSkeleton() {
         </View>
       </View>
 
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 rounded-2xl shadow mb-4`}>
         <View className="p-4">
           <View className="flex-row items-center">
             <Skeleton width={20} height={20} className="mr-3" />
@@ -98,7 +103,7 @@ function SettingsPageSkeleton() {
         </View>
       </View>
 
-      <View className="bg-white mx-4 rounded-2xl shadow mb-4">
+      <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} mx-4 rounded-2xl shadow mb-4`}>
         <View className="p-4">
           <View className="flex-row items-center">
             <Skeleton width={20} height={20} className="mr-3" />
@@ -125,6 +130,7 @@ export default function SettingsScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { width: screenWidth } = Dimensions.get('window');
   const isTablet = screenWidth >= 768;
+  const { isDark } = useTheme();
 
   const { data: account, isLoading } = useAccount();
   const { mutate: deleteAccount, isPending: isDeleting } = useDeleteAccount();
@@ -228,7 +234,7 @@ export default function SettingsScreen() {
             <>
               {/* User Profile Card */}
               <TouchableOpacity
-                className={`bg-white ${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow mb-4 ${
+                className={`${isDark ? 'bg-card-dark' : 'bg-white'} ${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow mb-4 ${
                   isTablet ? 'p-6' : 'p-4'
                 }`}
                 onPress={() => router.push('/settings/personal-details')}
@@ -236,55 +242,69 @@ export default function SettingsScreen() {
                 <View className="flex-row items-center">
                   <AvatarUpload size={60} showActions={true} showIcon={!avatarUrl} />
                   <View className="ml-4 flex-1">
-                    <Text className="text-xl font-semibold">{getUserDisplayData().name}</Text>
-                    <Text className="text-gray-500">{getUserDisplayData().ageText}</Text>
+                    <Text className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-black'}`}>{getUserDisplayData().name}</Text>
+                    <Text className={`${isDark ? 'text-gray-300' : 'text-gray-500'}`}>{getUserDisplayData().ageText}</Text>
                   </View>
                 </View>
               </TouchableOpacity>
 
               {/* Subscription Section */}
               {!isSubscribed && !isInGracePeriod && (
-                <TouchableOpacity
-                  className={`bg-gradient-to-r from-purple-500 to-pink-500 ${
-                    isTablet ? 'mx-8' : 'mx-4'
-                  } rounded-2xl shadow mb-4 ${isTablet ? 'p-6' : 'p-4'}`}
-                  style={{
-                    backgroundColor: '#8B5CF6',
-                    shadowColor: '#8B5CF6',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 6,
-                  }}
-                  onPress={() => router.push('/paywall')}
+                <PremiumGradientBackground 
+                  className={`${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow mb-4 overflow-hidden`}
                 >
-                  <View className="flex-row items-center">
-                    <View className="w-12 h-12 bg-white/20 rounded-full items-center justify-center mr-4">
-                      <Crown size={24} color="white" />
+                  <TouchableOpacity
+                    className={`${isTablet ? 'p-6' : 'p-4'}`}
+                    style={{
+                      shadowColor: '#EC4899',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      elevation: 6,
+                    }}
+                    onPress={() => router.push('/paywall')}
+                  >
+                    <View className="flex-row items-center">
+                      <View className="w-14 h-14 bg-white/20 rounded-full items-center justify-center mr-4 backdrop-blur-sm">
+                        <Crown size={26} color="white" />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-white text-xl font-bold mb-1">Upgrade to Premium</Text>
+                        <Text className="text-white/90 text-sm">Unlock all features & get personalized insights</Text>
+                      </View>
+                      <View className="items-center">
+                        <Sparkles size={24} color="white" className="mb-1" />
+                        <View className="w-2 h-2 bg-white/60 rounded-full" />
+                      </View>
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-white text-lg font-bold">Upgrade to Premium</Text>
-                      <Text className="text-white/90 text-sm">Get more out of LunaSync</Text>
-                    </View>
-                    <Sparkles size={20} color="white" />
-                  </View>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </PremiumGradientBackground>
               )}
 
               {/* Show subscription status for premium users */}
               {(isSubscribed || isInGracePeriod) && (
                 <View
-                  className={`bg-green-50 border border-green-200 ${
+                  className={`${
+                    isDark 
+                      ? 'bg-emerald-900/30 border border-emerald-700/50' 
+                      : 'bg-emerald-50 border border-emerald-200'
+                  } ${
                     isTablet ? 'mx-8' : 'mx-4'
                   } rounded-2xl mb-4 ${isTablet ? 'p-6' : 'p-4'}`}
                 >
                   <View className="flex-row items-center">
-                    <View className="w-12 h-12 bg-green-100 rounded-full items-center justify-center mr-4">
-                      <Crown size={24} color="#10B981" />
+                    <View className={`w-14 h-14 rounded-full items-center justify-center mr-4 ${
+                      isDark ? 'bg-emerald-800/50' : 'bg-emerald-100'
+                    }`}>
+                      <Crown size={26} color={isDark ? '#10B981' : '#059669'} />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-green-800 text-lg font-bold">Premium Active</Text>
-                      <Text className="text-green-600 text-sm">
+                      <Text className={`text-xl font-bold mb-1 ${
+                        isDark ? 'text-emerald-200' : 'text-emerald-800'
+                      }`}>Premium Active</Text>
+                      <Text className={`text-sm ${
+                        isDark ? 'text-emerald-300' : 'text-emerald-600'
+                      }`}>
                         {isInGracePeriod
                           ? 'Grace period - enjoy all features'
                           : 'All features unlocked'}
@@ -332,11 +352,14 @@ export default function SettingsScreen() {
                 />
               </View> */}
 
+              {/* Theme Selector */}
+              <ThemeSelector />
+
               {/* Wellness Section */}
               {/* <View className="mx-4 mt-3">
                 <Text className="text-lg font-semibold text-black mb-3">Wellness</Text>
               </View> */}
-              <View className={`bg-white ${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow mb-4`}>
+              <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} ${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow mb-4`}>
                 <SettingsItem
                   icon={Target}
                   label="Fitness goals"
@@ -356,7 +379,7 @@ export default function SettingsScreen() {
               </View>
 
               {/* Support Section */}
-              <View className={`bg-white ${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow mb-4`}>
+              <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} ${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow mb-4`}>
                 <SettingsItem
                   icon={Brain}
                   label="How Luna works"
@@ -404,7 +427,7 @@ export default function SettingsScreen() {
               {/* <View className="mx-4 mt-3 mb-8">
                 <Text className="text-lg font-semibold text-black mb-3">Legal & Account</Text>
               </View> */}
-              <View className={`bg-white ${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow`}>
+              <View className={`${isDark ? 'bg-card-dark' : 'bg-white'} ${isTablet ? 'mx-8' : 'mx-4'} rounded-2xl shadow`}>
                 <SettingsItem
                   icon={FileText}
                   label="Terms"
@@ -453,16 +476,17 @@ function SettingsItem({
 }) {
   const { width: screenWidth } = Dimensions.get('window');
   const isTablet = screenWidth >= 768;
+  const { isDark } = useTheme();
 
   return (
     <Pressable
       className={`flex-row items-center ${isTablet ? 'p-6' : 'p-4'} ${
-        !isLast && 'border-b border-gray-100'
+        !isLast && `border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`
       }`}
       onPress={onPress}
     >
-      <Icon size={isTablet ? 24 : 20} color="black" />
-      <Text className={`${isTablet ? 'text-xl' : 'text-lg'} ${textClassName} ml-2`}>{label}</Text>
+      <Icon size={isTablet ? 24 : 20} color={isDark ? '#F9FAFB' : 'black'} />
+      <Text className={`${isTablet ? 'text-xl' : 'text-lg'} ${isDark ? 'text-white' : 'text-black'} ${textClassName} ml-2`}>{label}</Text>
     </Pressable>
   );
 }

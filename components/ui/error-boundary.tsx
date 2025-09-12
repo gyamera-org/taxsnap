@@ -1,5 +1,6 @@
 import { Component, ReactNode } from 'react';
 import { View, Text } from 'react-native';
+import { useThemedColors } from '@/lib/utils/theme';
 
 interface ErrorBoundaryState {
   hasError: boolean;
