@@ -15,8 +15,15 @@ import { CosmicBackground } from '@/components/ui/cosmic-background';
 import { OTPInput } from '@/components/ui/otp-input';
 
 export default function AuthScreen() {
-  const { signInWithEmail, signInWithApple, signUpWithOnboarding, signUpWithAppleOnboarding, sendOTPEmail, verifyOTP, resetPasswordWithVerifiedOTP } =
-    useAuth();
+  const {
+    signInWithEmail,
+    signInWithApple,
+    signUpWithOnboarding,
+    signUpWithAppleOnboarding,
+    sendOTPEmail,
+    verifyOTP,
+    resetPasswordWithVerifiedOTP,
+  } = useAuth();
 
   const { mode, method } = useLocalSearchParams<{
     mode?: 'signin' | 'signup';
@@ -24,7 +31,7 @@ export default function AuthScreen() {
   }>();
 
   const [isSignUp, setIsSignUp] = useState(mode === 'signup');
-  
+
   useEffect(() => {
     if (mode === 'signup') {
       setAuthMode('signup');
@@ -41,7 +48,9 @@ export default function AuthScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [hasOnboardingData, setHasOnboardingData] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup' | 'forgot-password' | 'verify-otp' | 'new-password'>('signin');
+  const [authMode, setAuthMode] = useState<
+    'signin' | 'signup' | 'forgot-password' | 'verify-otp' | 'new-password'
+  >('signin');
   const [resetEmail, setResetEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const { shouldShowPaywall } = useRevenueCat();
@@ -104,7 +113,6 @@ export default function AuthScreen() {
     try {
       if (isSignUp) {
         await signUpWithOnboarding(email, password, firstName.trim(), lastName.trim());
-        toast.success('Your account has been created🤩');
       } else {
         await signInWithEmail(email, password);
         handlePostAuth();
@@ -122,7 +130,6 @@ export default function AuthScreen() {
     try {
       if (isSignUp) {
         await signUpWithAppleOnboarding();
-        toast.success('Your account has been created🤩');
       } else {
         await signInWithApple();
         handlePostAuth();
@@ -220,7 +227,7 @@ export default function AuthScreen() {
       setAuthMode('signin');
       setIsSignUp(false);
     }
-    
+
     // Clear form fields when switching modes
     setEmail('');
     setPassword('');
@@ -297,9 +304,9 @@ export default function AuthScreen() {
           disabled={isSubmitting}
         >
           {showPassword ? (
-            <EyeOff size={20} color={isDark ? "#64748B" : "#9CA3AF"} />
+            <EyeOff size={20} color={isDark ? '#64748B' : '#9CA3AF'} />
           ) : (
-            <Eye size={20} color={isDark ? "#64748B" : "#9CA3AF"} />
+            <Eye size={20} color={isDark ? '#64748B' : '#9CA3AF'} />
           )}
         </Pressable>
       </View>
@@ -334,7 +341,11 @@ export default function AuthScreen() {
 
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-            buttonStyle={isDark ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            buttonStyle={
+              isDark
+                ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+            }
             cornerRadius={100}
             style={{
               width: '100%',
@@ -397,9 +408,9 @@ export default function AuthScreen() {
           disabled={isSubmitting}
         >
           {showPassword ? (
-            <EyeOff size={20} color={isDark ? "#64748B" : "#9CA3AF"} />
+            <EyeOff size={20} color={isDark ? '#64748B' : '#9CA3AF'} />
           ) : (
-            <Eye size={20} color={isDark ? "#64748B" : "#9CA3AF"} />
+            <Eye size={20} color={isDark ? '#64748B' : '#9CA3AF'} />
           )}
         </Pressable>
       </View>
@@ -424,7 +435,11 @@ export default function AuthScreen() {
 
           <AppleAuthentication.AppleAuthenticationButton
             buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP}
-            buttonStyle={isDark ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            buttonStyle={
+              isDark
+                ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+            }
             cornerRadius={100}
             style={{
               width: '100%',
@@ -450,7 +465,7 @@ export default function AuthScreen() {
       <Text className={`text-center mb-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
         Enter your email address and we'll send you a verification code to reset your password.
       </Text>
-      
+
       <TextInput
         value={resetEmail}
         onChangeText={setResetEmail}
@@ -470,10 +485,7 @@ export default function AuthScreen() {
         className="mb-4"
       />
 
-      <Pressable
-        onPress={() => setAuthMode('signin')}
-        disabled={isSubmitting}
-      >
+      <Pressable onPress={() => setAuthMode('signin')} disabled={isSubmitting}>
         <Text className={`text-center text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
           Back to <Text className="text-pink-500 font-semibold">Sign In</Text>
         </Text>
@@ -486,14 +498,9 @@ export default function AuthScreen() {
       <Text className={`text-center mb-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
         Enter the 6-digit verification code sent to {resetEmail}
       </Text>
-      
+
       <View className="mb-6">
-        <OTPInput
-          value={otpCode}
-          onChange={setOtpCode}
-          length={6}
-          disabled={isSubmitting}
-        />
+        <OTPInput value={otpCode} onChange={setOtpCode} length={6} disabled={isSubmitting} />
       </View>
 
       <Button
@@ -505,10 +512,7 @@ export default function AuthScreen() {
         className="mb-4"
       />
 
-      <Pressable
-        onPress={() => setAuthMode('forgot-password')}
-        disabled={isSubmitting}
-      >
+      <Pressable onPress={() => setAuthMode('forgot-password')} disabled={isSubmitting}>
         <Text className={`text-center text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
           Back to <Text className="text-pink-500 font-semibold">Email Entry</Text>
         </Text>
@@ -521,7 +525,7 @@ export default function AuthScreen() {
       <Text className={`text-center mb-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
         Enter your new password
       </Text>
-      
+
       <View className="relative mb-6">
         <TextInput
           value={password}
@@ -537,9 +541,9 @@ export default function AuthScreen() {
           disabled={isSubmitting}
         >
           {showPassword ? (
-            <EyeOff size={20} color={isDark ? "#64748B" : "#9CA3AF"} />
+            <EyeOff size={20} color={isDark ? '#64748B' : '#9CA3AF'} />
           ) : (
-            <Eye size={20} color={isDark ? "#64748B" : "#9CA3AF"} />
+            <Eye size={20} color={isDark ? '#64748B' : '#9CA3AF'} />
           )}
         </Pressable>
       </View>
@@ -605,8 +609,6 @@ export default function AuthScreen() {
       {authContent}
     </CosmicBackground>
   ) : (
-    <View className="flex-1 bg-white">
-      {authContent}
-    </View>
+    <View className="flex-1 bg-white">{authContent}</View>
   );
 }

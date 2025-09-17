@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { queryKeys } from './query-keys';
 import { toast } from 'sonner-native';
@@ -63,8 +64,6 @@ export function useGenerateMealPlan() {
         throw new Error('Not authenticated');
       }
 
-      console.log('🍽️ Starting meal plan generation (background)');
-
       const response = await supabase.functions.invoke('meal-plan-generator', {
         body: params,
       });
@@ -74,15 +73,9 @@ export function useGenerateMealPlan() {
         throw new Error(response.error.message || 'Failed to generate meal plan');
       }
 
-      console.log('✅ Meal plan generation started successfully');
       return response.data;
     },
     onSuccess: async (data) => {
-      // Show success message immediately
-      toast.success('Meal plan is being generated!', {
-        description: 'You can continue using the app. We\'ll notify you when it\'s ready.',
-      });
-
       // Invalidate and refetch meal plan queries
       await queryClient.invalidateQueries({ queryKey: queryKeys.nutrition.mealPlans });
       await queryClient.refetchQueries({
@@ -101,8 +94,56 @@ export function useGenerateMealPlan() {
   });
 }
 
-// Get user's meal plans
+// Get user's meal plans with real-time updates
 export function useMealPlans() {
+  const queryClient = useQueryClient();
+
+  // Set up realtime subscription for meal plan updates
+  useEffect(() => {
+    const setupSubscription = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.user?.id) return;
+
+      const channelName = `meal_plans_user_${session.user.id}`;
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events: INSERT, UPDATE, DELETE
+            schema: 'public',
+            table: 'meal_plans',
+            filter: `user_id=eq.${session.user.id}`,
+          },
+          (payload) => {
+            console.log('🔄 Meal plan update detected:', payload);
+            
+            // Invalidate and refetch meal plan queries
+            queryClient.invalidateQueries({ queryKey: queryKeys.nutrition.mealPlans });
+            queryClient.invalidateQueries({ queryKey: [...queryKeys.nutrition.mealPlans, 'latest'] });
+            queryClient.invalidateQueries({ queryKey: [...queryKeys.nutrition.mealPlans, 'current'] });
+            
+            // Show success toast when a new meal plan is inserted
+            if (payload.eventType === 'INSERT') {
+              toast.success('Your meal plan is ready!', {
+                description: 'A new meal plan has been generated for you.',
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    setupSubscription();
+  }, [queryClient]);
+
   return useQuery<MealPlan[], Error>({
     queryKey: queryKeys.nutrition.mealPlans,
     queryFn: async () => {
@@ -204,8 +245,56 @@ export function useCurrentMealPlan() {
   });
 }
 
-// Get grocery list for a meal plan
+// Get grocery list for a meal plan with real-time updates
 export function useGroceryList(mealPlanId?: string) {
+  const queryClient = useQueryClient();
+
+  // Set up realtime subscription for grocery list updates
+  useEffect(() => {
+    if (!mealPlanId) return;
+
+    const setupSubscription = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.user?.id) return;
+
+      const channelName = `grocery_list_${mealPlanId}`;
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'grocery_lists',
+            filter: `meal_plan_id=eq.${mealPlanId}`,
+          },
+          (payload) => {
+            console.log('🔄 Grocery list update detected:', payload);
+            
+            // Invalidate and refetch grocery list queries
+            queryClient.invalidateQueries({ queryKey: [...queryKeys.nutrition.groceryLists, mealPlanId] });
+            
+            // Show success toast when grocery list is created
+            if (payload.eventType === 'INSERT') {
+              toast.success('Grocery list is ready!', {
+                description: 'Your shopping list has been generated.',
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    setupSubscription();
+  }, [mealPlanId, queryClient]);
+
   return useQuery<GroceryList | null, Error>({
     queryKey: [...queryKeys.nutrition.groceryLists, mealPlanId],
     queryFn: async () => {

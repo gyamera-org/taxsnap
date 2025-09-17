@@ -80,7 +80,6 @@ export function GenerateMacrosButton({
       };
 
       await nutritionGoalSetter.mutateAsync(goalData);
-      toast.success('Your macro goals have been generated!');
       onGenerationComplete?.();
     } catch (error) {
       toast.error('Failed to calculate nutrition goals');

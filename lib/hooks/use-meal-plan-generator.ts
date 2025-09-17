@@ -32,8 +32,6 @@ export function useGenerateMealPlan() {
 
   return useMutation({
     mutationFn: async (params: MealPlanParams): Promise<GeneratedMealPlan> => {
-      console.log('Starting meal plan generation with params:', params);
-      
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -42,9 +40,6 @@ export function useGenerateMealPlan() {
         console.error('No session found');
         throw new Error('Not authenticated');
       }
-
-      console.log('User authenticated:', session.user.id);
-      console.log('Calling edge function with URL:', `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/meal-plan-generator`);
 
       // Call the meal planner edge function
       const response = await fetch(
@@ -59,9 +54,6 @@ export function useGenerateMealPlan() {
         }
       );
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
@@ -75,15 +67,12 @@ export function useGenerateMealPlan() {
       }
 
       const data = await response.json();
-      console.log('Success response:', data);
       return data;
     },
     onSuccess: (data) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['meal-plans'] });
       queryClient.invalidateQueries({ queryKey: ['grocery-lists'] });
-      
-      toast.success('Meal plan generated successfully!');
     },
     onError: (error: Error) => {
       console.error('Error generating meal plan:', error);
@@ -93,4 +82,3 @@ export function useGenerateMealPlan() {
     },
   });
 }
-

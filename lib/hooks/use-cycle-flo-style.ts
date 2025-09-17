@@ -92,10 +92,8 @@ export function useCurrentCycleInfo(selectedDate?: string) {
   return useQuery({
     queryKey: [...floStyleQueryKeys.currentInfo(selectedDate), 'v2'], // Added v2 to bust cache
     queryFn: async () => {
-      console.log('[DEBUG] 🚀 Calling current-info endpoint with selectedDate:', selectedDate);
       const params = selectedDate ? `?date=${selectedDate}` : '';
       const result = await callFloStyleCycleFunction(`current-info${params}`);
-      console.log('[DEBUG] 📡 current-info response:', JSON.stringify(result, null, 2));
       return result;
     },
     staleTime: 0, // Always fresh for debugging
@@ -340,10 +338,10 @@ export function useSaveFlow() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (flowData: { 
-      date: string; 
+    mutationFn: (flowData: {
+      date: string;
       flow_level: 'light' | 'moderate' | 'heavy' | 'spotting';
-      notes?: string; 
+      notes?: string;
     }) =>
       callFloStyleCycleFunction('save-flow', {
         method: 'POST',
@@ -351,12 +349,12 @@ export function useSaveFlow() {
       }),
     onSuccess: (data, variables) => {
       // Invalidate flow data for the specific date
-      queryClient.invalidateQueries({ 
-        queryKey: [...floStyleQueryKeys.all, 'flow', variables.date] 
+      queryClient.invalidateQueries({
+        queryKey: [...floStyleQueryKeys.all, 'flow', variables.date],
       });
       // Also invalidate all cycle queries in case this affects period detection
       queryClient.invalidateQueries({ queryKey: floStyleQueryKeys.all });
-      
+
       toast.success(`Flow data ${data.action}`, {
         description: 'Your flow information has been saved',
       });

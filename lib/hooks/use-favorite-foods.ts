@@ -115,7 +115,6 @@ export function useAddFavoriteFood() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: favoriteQueryKeys.foods() });
-      toast.success('Added to favorite foods');
     },
     onError: (error: any) => {
       console.error('Error adding favorite food:', error);
@@ -146,7 +145,6 @@ export function useRemoveFavoriteFood() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: favoriteQueryKeys.foods() });
-      toast.success('Removed from favorites');
     },
     onError: (error: Error) => {
       console.error('Error removing favorite food:', error);
@@ -206,7 +204,6 @@ export function useUpdateDietaryPreferences() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: favoriteQueryKeys.preferences() });
-      toast.success('Dietary preferences updated');
     },
     onError: (error: Error) => {
       console.error('Error updating dietary preferences:', error);

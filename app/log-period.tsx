@@ -24,16 +24,13 @@ export default function LogPeriodScreen() {
   // Use the new simplified period dates hook
   const { data: periodDates = [], isLoading } = usePeriodDates();
   const logPeriodDays = useLogPeriodDays();
-  
+
   // Get current cycle info to show predicted periods
   const { data: currentCycleInfo } = useCurrentCycleInfo();
 
   // Load existing period data when component mounts
   useEffect(() => {
     if (!isLoading && periodDates) {
-      console.log('=== LOADING PERIOD DATA (NEW) ===');
-      console.log('Period dates:', periodDates);
-
       setOriginalPeriodDates(periodDates);
       setCurrentPeriodDates(periodDates);
       setHasChanges(false);
@@ -62,22 +59,15 @@ export default function LogPeriodScreen() {
   const predictedDates = React.useMemo(() => {
     const dates: string[] = [];
 
-    console.log('[DEBUG] Getting predicted dates for calendar...');
-    console.log('[DEBUG] currentCycleInfo:', JSON.stringify(currentCycleInfo, null, 2));
-
     try {
       if (!currentCycleInfo?.next_period_prediction) {
-        console.log('[DEBUG] No next_period_prediction found');
         return dates;
       }
 
       const nextPeriodPrediction = currentCycleInfo.next_period_prediction;
-      console.log('[DEBUG] Next period prediction:', nextPeriodPrediction);
-      
+
       const nextPeriodDate = new Date(nextPeriodPrediction.start_date);
       const nextPeriodEndDate = new Date(nextPeriodPrediction.end_date);
-
-      console.log('[DEBUG] Parsed dates - start:', nextPeriodDate, 'end:', nextPeriodEndDate);
 
       // Reset time to avoid timezone issues
       nextPeriodDate.setHours(0, 0, 0, 0);
@@ -87,33 +77,23 @@ export default function LogPeriodScreen() {
         const currentDate = new Date(nextPeriodDate);
         while (currentDate <= nextPeriodEndDate) {
           const dateStr = getLocalDateString(currentDate);
-          console.log('[DEBUG] Generated predicted date:', dateStr);
-          
+
           // Don't show predicted dates that are already logged as actual periods
           if (!currentPeriodDates.includes(dateStr)) {
             dates.push(dateStr);
-            console.log('[DEBUG] Added predicted date:', dateStr);
-          } else {
-            console.log('[DEBUG] Skipped predicted date (already logged):', dateStr);
           }
           currentDate.setDate(currentDate.getDate() + 1);
         }
-      } else {
-        console.log('[DEBUG] Invalid dates - start valid:', !isNaN(nextPeriodDate.getTime()), 'end valid:', !isNaN(nextPeriodEndDate.getTime()));
       }
     } catch (error) {
       console.error('[DEBUG] Error generating predicted calendar dates:', error);
     }
 
-    console.log('[DEBUG] Final predicted dates:', dates);
     return dates;
   }, [currentCycleInfo, currentPeriodDates]);
 
   const handleDateToggle = (date: Date, shouldBePeriodDate: boolean) => {
     const dateString = getLocalDateString(date);
-    console.log(
-      `Toggling date ${dateString} to ${shouldBePeriodDate ? 'period' : 'non-period'} date`
-    );
 
     setCurrentPeriodDates((prev) => {
       let newDates;
@@ -137,30 +117,21 @@ export default function LogPeriodScreen() {
 
   const handleSaveChanges = async () => {
     if (!hasChanges) {
-      console.log('No changes detected, skipping save');
       return;
     }
 
-    console.log('=== SAVING PERIOD CHANGES (SIMPLIFIED) ===');
-    console.log('Current period dates:', currentPeriodDates);
-    console.log('Original period dates:', originalPeriodDates);
-
     try {
       // Calculate what actually changed
-      const datesToAdd = currentPeriodDates.filter(date => !originalPeriodDates.includes(date));
-      const datesToRemove = originalPeriodDates.filter(date => !currentPeriodDates.includes(date));
-      
-      console.log('Dates to add:', datesToAdd);
-      console.log('Dates to remove:', datesToRemove);
-      
+      const datesToAdd = currentPeriodDates.filter((date) => !originalPeriodDates.includes(date));
+      const datesToRemove = originalPeriodDates.filter(
+        (date) => !currentPeriodDates.includes(date)
+      );
+
       // Use the simplified endpoint that only needs the changes
       const result = await logPeriodDays.mutateAsync({
         dates_to_add: datesToAdd,
         dates_to_remove: datesToRemove,
       });
-
-      console.log('Successfully saved period changes with new simplified API');
-      console.log('Save result:', result);
 
       // Add a small delay before navigation to allow cache invalidation
       setTimeout(() => {
@@ -209,9 +180,14 @@ export default function LogPeriodScreen() {
           predictedDates={predictedDates}
           editMode={true}
           onDateToggle={handleDateToggle}
-          maxDate={currentCycleInfo?.next_period_prediction ? 
-            new Date(new Date(currentCycleInfo.next_period_prediction.end_date).getTime() + 7 * 24 * 60 * 60 * 1000) : // Add 7 days buffer
-            new Date()}
+          maxDate={
+            currentCycleInfo?.next_period_prediction
+              ? new Date(
+                  new Date(currentCycleInfo.next_period_prediction.end_date).getTime() +
+                    7 * 24 * 60 * 60 * 1000
+                ) // Add 7 days buffer
+              : new Date()
+          }
         />
       </View>
     </SubPageLayout>

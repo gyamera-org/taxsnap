@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, TextInput } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useThemedStyles } from '@/lib/utils/theme';
-import { Plus, X } from 'lucide-react-native';
+import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useTheme } from '@/context/theme-provider';
 
 interface ExistingIngredientsProps {
@@ -24,6 +24,12 @@ export default function ExistingIngredientsSection({
   const themed = useThemedStyles();
   const { isDark } = useTheme();
   const [newIngredient, setNewIngredient] = useState('');
+  const [showAllCommon, setShowAllCommon] = useState(false);
+
+  // Show only first 12 common ingredients when collapsed
+  const displayedCommonIngredients = showAllCommon 
+    ? commonIngredients 
+    : commonIngredients.slice(0, 12);
 
   const addIngredient = () => {
     if (newIngredient.trim() && !existingIngredients.includes(newIngredient.trim())) {
@@ -78,8 +84,8 @@ export default function ExistingIngredientsSection({
       <Text className={themed("text-sm text-gray-600 mb-2", "text-sm text-gray-400 mb-2")}>
         Common ingredients:
       </Text>
-      <View className="flex-row flex-wrap gap-2 mb-4">
-        {commonIngredients.map((ingredient) => (
+      <View className="flex-row flex-wrap gap-2 mb-2">
+        {displayedCommonIngredients.map((ingredient) => (
           <TouchableOpacity
             key={ingredient}
             onPress={() => toggleIngredient(ingredient)}
@@ -99,6 +105,30 @@ export default function ExistingIngredientsSection({
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Show more/less button for common ingredients */}
+      {commonIngredients.length > 12 && (
+        <TouchableOpacity
+          onPress={() => setShowAllCommon(!showAllCommon)}
+          className={`flex-row items-center justify-center py-2 mb-4 rounded-lg ${themed('bg-gray-100', 'bg-gray-800')}`}
+        >
+          {showAllCommon ? (
+            <>
+              <ChevronUp size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+              <Text className={themed("ml-1 text-sm text-gray-600", "ml-1 text-sm text-gray-400")}>
+                Show less
+              </Text>
+            </>
+          ) : (
+            <>
+              <ChevronDown size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+              <Text className={themed("ml-1 text-sm text-gray-600", "ml-1 text-sm text-gray-400")}>
+                Show {commonIngredients.length - 12} more
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
 
       {/* Selected ingredients */}
       {existingIngredients.length > 0 && (

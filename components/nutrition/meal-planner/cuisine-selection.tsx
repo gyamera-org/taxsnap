@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TouchableOpacity, TextInput } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { Plus, X } from 'lucide-react-native';
+import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useThemedStyles } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 
@@ -28,6 +28,12 @@ export default function CuisineSelection({
 }: CuisineSelectionProps) {
   const themed = useThemedStyles();
   const { isDark } = useTheme();
+  const [showAllCuisines, setShowAllCuisines] = useState(false);
+
+  // Show only first 8 cuisines when collapsed
+  const displayedCuisines = showAllCuisines 
+    ? suggestedCuisines 
+    : suggestedCuisines.slice(0, 8);
 
   return (
     <View className="mb-6">
@@ -54,8 +60,8 @@ export default function CuisineSelection({
       </View>
 
       {/* Suggested cuisines */}
-      <View className="flex-row flex-wrap gap-2 mb-3">
-        {suggestedCuisines.map((cuisine) => (
+      <View className="flex-row flex-wrap gap-2 mb-2">
+        {displayedCuisines.map((cuisine) => (
           <TouchableOpacity
             key={cuisine}
             onPress={() => toggleCuisine(cuisine)}
@@ -75,6 +81,30 @@ export default function CuisineSelection({
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Show more/less button for cuisines */}
+      {suggestedCuisines.length > 8 && (
+        <TouchableOpacity
+          onPress={() => setShowAllCuisines(!showAllCuisines)}
+          className={`flex-row items-center justify-center py-2 mb-3 rounded-lg ${themed('bg-gray-100', 'bg-gray-800')}`}
+        >
+          {showAllCuisines ? (
+            <>
+              <ChevronUp size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+              <Text className={themed("ml-1 text-sm text-gray-600", "ml-1 text-sm text-gray-400")}>
+                Show less
+              </Text>
+            </>
+          ) : (
+            <>
+              <ChevronDown size={16} color={isDark ? '#9CA3AF' : '#6B7280'} />
+              <Text className={themed("ml-1 text-sm text-gray-600", "ml-1 text-sm text-gray-400")}>
+                Show {suggestedCuisines.length - 8} more
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
 
       {/* Selected cuisines */}
       {selectedCuisines.length > 0 && (

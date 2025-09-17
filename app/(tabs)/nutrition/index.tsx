@@ -230,6 +230,7 @@ export default function NutritionScreen() {
                   setSelectedMealType(mealType);
                   setShowSimpleMealModal(true);
                 }}
+                onGeneratePlan={() => setShowMealPlanner(true)}
               />
             </View>
 

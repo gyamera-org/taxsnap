@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useThemedStyles } from '@/lib/utils/theme';
-import { useTheme } from '@/context/theme-provider';
-import { Clock, Flame, Beef, Wheat, Plus, ChefHat, Eye, Check, Heart } from 'lucide-react-native';
-import { OliveOilIcon } from '@/components/icons/olive-oil-icon';
-import { useCreateMealEntry } from '@/lib/hooks/use-meal-tracking';
+import { ChefHat, Sparkles, Timer } from 'lucide-react-native';
+import { useCreateMealEntry, useMealEntries } from '@/lib/hooks/use-meal-tracking';
 import { useCurrentMealPlan } from '@/lib/hooks/use-meal-plans';
 import {
   useAddFavoriteFood,
@@ -13,28 +11,84 @@ import {
   useFavoriteFoods,
 } from '@/lib/hooks/use-favorite-foods';
 import { toast } from 'sonner-native';
+import PlannedMealCard from './planned-meal-card';
+import SimpleMealModal from './simple-meal-modal';
 
 interface PlannedMealsSectionProps {
   onShowMealPlan?: (plan: any) => void;
   onShowMealDetails?: (meal: any, mealType: string) => void;
+  onGeneratePlan?: () => void;
+  isGeneratingPlan?: boolean;
+  // Optional props to override default behavior
+  title?: string;
+  dayData?: any; // If provided, use this instead of current meal plan
+  showHeader?: boolean;
+  showViewAllButton?: boolean;
 }
 
 export default function PlannedMealsSection({
   onShowMealPlan,
   onShowMealDetails,
+  onGeneratePlan,
+  isGeneratingPlan = false,
+  title = 'Planned Meals',
+  dayData,
+  showHeader = true,
+  showViewAllButton = true,
 }: PlannedMealsSectionProps) {
   const themed = useThemedStyles();
-  const { isDark } = useTheme();
   const createMealEntry = useCreateMealEntry();
   const { data: currentMealPlan } = useCurrentMealPlan();
   const addFavoriteFood = useAddFavoriteFood();
   const removeFavoriteFood = useRemoveFavoriteFood();
   const { data: favoriteFoods } = useFavoriteFoods();
+
+  // Get today's logged meals
+  const today = new Date().toISOString().split('T')[0];
+  const { data: loggedMealEntries } = useMealEntries(today);
+
   const [loggedMeals, setLoggedMeals] = useState<Set<string>>(new Set());
   const [savedMeals, setSavedMeals] = useState<Set<string>>(new Set());
+  const [selectedMeal, setSelectedMeal] = useState<any>(null);
+  const [selectedMealType, setSelectedMealType] = useState<string>('');
+  const [showMealModal, setShowMealModal] = useState(false);
 
-  // Get today's date
-  const today = new Date().toISOString().split('T')[0];
+  // Initialize savedMeals from favorite foods data
+  React.useEffect(() => {
+    if (favoriteFoods) {
+      const savedMealKeys = new Set<string>();
+      favoriteFoods.forEach((food) => {
+        if ((food.category === 'Planned Meal' || food.category === 'meal') && food.is_active) {
+          // Try to match with any meal type since we don't store meal type in favorites
+          ['breakfast', 'lunch', 'dinner', 'snack'].forEach((mealType) => {
+            const mealKey = `${mealType}-${food.food_name}`;
+            savedMealKeys.add(mealKey);
+          });
+        }
+      });
+      setSavedMeals(savedMealKeys);
+    }
+  }, [favoriteFoods]);
+
+  // Update logged meals based on actual logged entries
+  React.useEffect(() => {
+    if (loggedMealEntries) {
+      const loggedMealKeys = new Set<string>();
+
+      loggedMealEntries.forEach((entry) => {
+        entry.food_items?.forEach((foodItem) => {
+          // Check if this food item is from a meal plan (has 'Meal Plan' brand or 'Planned Meal' category)
+          if (foodItem.food?.brand === 'Meal Plan' || foodItem.food?.category === 'Planned Meal') {
+            // Create key to match planned meals: mealType-mealName
+            const mealKey = `${entry.meal_type}-${foodItem.food.name}`;
+            loggedMealKeys.add(mealKey);
+          }
+        });
+      });
+
+      setLoggedMeals(loggedMealKeys);
+    }
+  }, [loggedMealEntries]);
 
   // Find today's meals from the current meal plan
   const getTodaysPlannedMeals = () => {
@@ -70,7 +124,7 @@ export default function PlannedMealsSection({
     return todaysDay;
   };
 
-  const todaysDay = getTodaysPlannedMeals();
+  const todaysDay = dayData || getTodaysPlannedMeals();
 
   const toggleFavoriteMeal = (meal: any, mealType: string) => {
     const mealKey = `${mealType}-${meal.name}`;
@@ -93,7 +147,9 @@ export default function PlannedMealsSection({
     if (isSaved) {
       // Remove from favorites
       const favoriteFood = favoriteFoods?.find(
-        (food: any) => food.name === meal.name && food.category === 'Planned Meal'
+        (food: any) =>
+          food.food_name === meal.name &&
+          (food.category === 'Planned Meal' || food.category === 'meal')
       );
       if (favoriteFood) {
         removeFavoriteFood.mutate(favoriteFood.id, {
@@ -103,7 +159,6 @@ export default function PlannedMealsSection({
               newSet.delete(mealKey);
               return newSet;
             });
-            toast.success(`${meal.name} removed from favorites`);
           },
           onError: () => {
             toast.error('Failed to remove from favorites');
@@ -115,7 +170,6 @@ export default function PlannedMealsSection({
       addFavoriteFood.mutate(foodData, {
         onSuccess: () => {
           setSavedMeals((prev: Set<string>) => new Set(prev).add(mealKey));
-          toast.success(`${meal.name} added to favorites`);
         },
         onError: () => {
           toast.error('Failed to add to favorites');
@@ -132,12 +186,12 @@ export default function PlannedMealsSection({
       meal_type: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
       food_items: [
         {
-          quantity: 1,
           food: {
             id: `planned-meal-${Date.now()}`, // Generate unique ID for planned meal
             name: meal.name,
-            servingSize: '1 serving',
+            brand: 'Meal Plan',
             category: 'Planned Meal',
+            servingSize: '1 serving',
             nutrition: {
               calories: meal.calories || 0,
               protein: meal.protein || 0,
@@ -147,6 +201,7 @@ export default function PlannedMealsSection({
               sugar: 0,
             },
           },
+          quantity: 1,
         },
       ],
       logged_date: today,
@@ -156,14 +211,31 @@ export default function PlannedMealsSection({
 
     createMealEntry.mutate(mealEntryData, {
       onSuccess: () => {
-        setLoggedMeals((prev: Set<string>) => new Set(prev).add(mealKey));
-        toast.success(`${meal.name} added to today's log!`);
+        // No need to manually update loggedMeals - the useEffect will handle it
+        // when loggedMealEntries updates due to the mutation
+        // toast.success(`${meal.name} added to today's log!`);
       },
-      onError: (error) => {
+      onError: () => {
         toast.error('Failed to add meal to log');
-        console.error('Error adding meal to log:', error);
       },
     });
+  };
+
+  // Check if a meal is saved in favorites
+  const isMealSaved = (meal: any, mealType: string) => {
+    const mealKey = `${mealType}-${meal.name}`;
+    const isSavedInState = savedMeals.has(mealKey);
+
+    // Also check in actual favorite foods data
+    // Check for both old format ("meal") and new format ("Planned Meal")
+    const isSavedInDB = favoriteFoods?.some(
+      (food) =>
+        food.food_name === meal.name &&
+        (food.category === 'Planned Meal' || food.category === 'meal') &&
+        food.is_active
+    );
+
+    return isSavedInState || isSavedInDB;
   };
 
   const renderPlannedMeal = (meal: any, mealType: string) => {
@@ -171,218 +243,136 @@ export default function PlannedMealsSection({
 
     const mealKey = `${mealType}-${meal.name}`;
     const isLogged = loggedMeals.has(mealKey);
-    const isSaved = savedMeals.has(mealKey);
+    const isSaved = isMealSaved(meal, mealType);
 
     return (
-      <View
-        key={mealType}
-        className={themed(
-          'bg-white rounded-2xl p-4 mb-3 border border-gray-100 shadow-sm',
-          'bg-gray-900 rounded-2xl p-4 mb-3 border border-gray-700 shadow-sm'
-        )}
-      >
-        <View className="flex-row">
-          {/* Left: Calories Display */}
-          <View
-            className={themed(
-              'w-16 h-16 bg-yellow-50 rounded-xl items-center justify-center mr-4',
-              'w-16 h-16 bg-yellow-900/30 rounded-xl items-center justify-center mr-4'
-            )}
-          >
-            <Flame size={20} color="#EAB308" />
-            <Text
-              className={themed(
-                'text-xs font-bold text-yellow-700 mt-1',
-                'text-xs font-bold text-yellow-300 mt-1'
-              )}
-            >
-              {meal.calories || 0}
-            </Text>
-          </View>
-
-          {/* Center: Meal Info */}
-          <View className="flex-1">
-            <Text
-              className={themed(
-                'text-xs font-medium text-green-600 uppercase tracking-wide mb-1',
-                'text-xs font-medium text-green-400 uppercase tracking-wide mb-1'
-              )}
-            >
-              {mealType}
-            </Text>
-
-            <Text
-              className={themed(
-                'text-lg font-semibold text-gray-900 mb-2',
-                'text-lg font-semibold text-white mb-2'
-              )}
-              numberOfLines={2}
-            >
-              {meal.name}
-            </Text>
-
-            {/* Prep Time */}
-            {meal.prep_time && (
-              <View className="flex-row items-center mb-2">
-                <Clock size={12} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                <Text
-                  className={themed('text-xs text-gray-500 ml-1', 'text-xs text-gray-400 ml-1')}
-                >
-                  {meal.prep_time}
-                </Text>
-              </View>
-            )}
-
-            {/* Simplified Nutrition Info */}
-            <View className="flex-row items-center gap-4">
-              <View className="flex-row items-center">
-                <View
-                  className={themed(
-                    'w-5 h-5 bg-red-100 rounded-full items-center justify-center mr-1',
-                    'w-5 h-5 bg-red-900/30 rounded-full items-center justify-center mr-1'
-                  )}
-                >
-                  <Beef size={10} color="#EF4444" />
-                </View>
-                <Text className={themed('text-xs text-gray-600', 'text-xs text-gray-400')}>
-                  {meal.protein || 0}g
-                </Text>
-              </View>
-              <View className="flex-row items-center">
-                <View
-                  className={themed(
-                    'w-5 h-5 bg-orange-100 rounded-full items-center justify-center mr-1',
-                    'w-5 h-5 bg-orange-900/30 rounded-full items-center justify-center mr-1'
-                  )}
-                >
-                  <Wheat size={10} color="#F59E0B" />
-                </View>
-                <Text className={themed('text-xs text-gray-600', 'text-xs text-gray-400')}>
-                  {meal.carbs || 0}g
-                </Text>
-              </View>
-              <View className="flex-row items-center">
-                <View
-                  className={themed(
-                    'w-5 h-5 bg-purple-100 rounded-full items-center justify-center mr-1',
-                    'w-5 h-5 bg-purple-900/30 rounded-full items-center justify-center mr-1'
-                  )}
-                >
-                  <OliveOilIcon size={10} color="#8B5CF6" />
-                </View>
-                <Text className={themed('text-xs text-gray-600', 'text-xs text-gray-400')}>
-                  {meal.fat || 0}g
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Right: Action Buttons */}
-          <View className="items-center justify-center ml-3 gap-1">
-            {/* View Button */}
-            <TouchableOpacity
-              onPress={() => onShowMealDetails?.(meal, mealType)}
-              className={themed(
-                'w-8 h-8 bg-gray-100 rounded-full items-center justify-center',
-                'w-8 h-8 bg-gray-700 rounded-full items-center justify-center'
-              )}
-              activeOpacity={0.8}
-            >
-              <Eye size={14} color={isDark ? '#9CA3AF' : '#6B7280'} />
-            </TouchableOpacity>
-
-            {/* Save Button */}
-            <TouchableOpacity
-              onPress={() => toggleFavoriteMeal(meal, mealType)}
-              className={themed(
-                isSaved
-                  ? 'w-8 h-8 bg-pink-100 rounded-full items-center justify-center'
-                  : 'w-8 h-8 bg-gray-100 rounded-full items-center justify-center',
-                isSaved
-                  ? 'w-8 h-8 bg-pink-900/30 rounded-full items-center justify-center'
-                  : 'w-8 h-8 bg-gray-700 rounded-full items-center justify-center'
-              )}
-              activeOpacity={0.8}
-            >
-              <Heart
-                size={14}
-                color={isSaved ? '#EC4899' : isDark ? '#9CA3AF' : '#6B7280'}
-                fill={isSaved ? '#EC4899' : 'none'}
-              />
-            </TouchableOpacity>
-
-            {/* Add to Log Button */}
-            <TouchableOpacity
-              onPress={() => handleAddMealToLog(meal, mealType)}
-              disabled={createMealEntry.isPending || isLogged}
-              className={themed(
-                isLogged
-                  ? 'w-8 h-8 bg-green-100 rounded-full items-center justify-center'
-                  : 'w-8 h-8 bg-green-500 rounded-full items-center justify-center',
-                isLogged
-                  ? 'w-8 h-8 bg-green-900/30 rounded-full items-center justify-center'
-                  : 'w-8 h-8 bg-green-600 rounded-full items-center justify-center'
-              )}
-              activeOpacity={0.8}
-            >
-              {isLogged ? <Check size={14} color="#10B981" /> : <Plus size={14} color="white" />}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+      <PlannedMealCard
+        key={mealKey}
+        meal={meal}
+        mealType={mealType}
+        isLogged={isLogged}
+        isSaved={isSaved}
+        onView={(meal, mealType) => {
+          if (onShowMealDetails) {
+            onShowMealDetails(meal, mealType);
+          } else {
+            // Use built-in modal if no external handler provided
+            setSelectedMeal(meal);
+            setSelectedMealType(mealType);
+            setShowMealModal(true);
+          }
+        }}
+        onToggleFavorite={toggleFavoriteMeal}
+        onAddToLog={handleAddMealToLog}
+        isAddingToLog={createMealEntry.isPending}
+      />
     );
   };
 
-  // Don't show section if no meal plan or no meals for today
-  if (!currentMealPlan || !todaysDay) {
+  // Show generate button if no meals data and onGeneratePlan is provided
+  if (!todaysDay && onGeneratePlan) {
+    return (
+      <View className="mx-4 mb-6">
+        <TouchableOpacity 
+          onPress={onGeneratePlan} 
+          disabled={isGeneratingPlan}
+          className={themed(
+            isGeneratingPlan ? 'bg-gray-400 rounded-2xl p-6 shadow-lg' : 'bg-green-500 rounded-2xl p-6 shadow-lg',
+            isGeneratingPlan ? 'bg-gray-500 rounded-2xl p-6 shadow-lg' : 'bg-green-600 rounded-2xl p-6 shadow-lg'
+          )}
+          style={{
+            shadowColor: isGeneratingPlan ? '#9CA3AF' : '#10B981',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 6,
+          }}
+          activeOpacity={isGeneratingPlan ? 1 : 0.8}
+        >
+          <View>
+            <View className="flex-row items-center mb-2">
+              {isGeneratingPlan ? (
+                <Timer size={24} color="white" />
+              ) : (
+                <Sparkles size={24} color="white" />
+              )}
+              <Text className="text-white text-xl font-bold ml-3">
+                {isGeneratingPlan ? 'Generating Your Meal Plan' : 'Generate Meal Plan'}
+              </Text>
+            </View>
+            
+            <Text className="text-white text-sm opacity-90 leading-5">
+              {isGeneratingPlan 
+                ? 'We are creating your personalized meal plan and grocery list...'
+                : 'Get personalized meal plans with cycle-synced nutrition and auto-generated grocery lists'
+              }
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Don't show section if no meals data and no generate function
+  if (!todaysDay) {
     return null;
   }
 
   return (
     <View className="mx-4 mb-6">
-      <View className="flex-row items-center justify-between mb-4">
-        <View className="flex-row items-center">
-          <View
-            className={themed(
-              'w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3',
-              'w-8 h-8 bg-green-900/30 rounded-full items-center justify-center mr-3'
-            )}
-          >
-            <ChefHat size={16} color="#10B981" />
+      {showHeader && (
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center">
+            <View
+              className={themed(
+                'w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3',
+                'w-8 h-8 bg-green-900/30 rounded-full items-center justify-center mr-3'
+              )}
+            >
+              <ChefHat size={16} color="#10B981" />
+            </View>
+            <Text
+              className={themed('text-xl font-bold text-gray-900', 'text-xl font-bold text-white')}
+            >
+              {title}
+            </Text>
           </View>
-          <Text
-            className={themed('text-xl font-bold text-gray-900', 'text-xl font-bold text-white')}
-          >
-            Planned Meals
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => onShowMealPlan?.(currentMealPlan)}
-          className={themed(
-            'px-3 py-1 bg-green-50 rounded-full',
-            'px-3 py-1 bg-green-900/20 rounded-full'
+          {showViewAllButton && currentMealPlan && (
+            <TouchableOpacity
+              onPress={() => onShowMealPlan?.(currentMealPlan)}
+              className={themed(
+                'px-3 py-1 bg-green-50 rounded-full',
+                'px-3 py-1 bg-green-900/20 rounded-full'
+              )}
+              activeOpacity={0.8}
+            >
+              <Text
+                className={themed(
+                  'text-xs font-medium text-green-700',
+                  'text-xs font-medium text-green-300'
+                )}
+              >
+                View All Plans
+              </Text>
+            </TouchableOpacity>
           )}
-          activeOpacity={0.8}
-        >
-          <Text
-            className={themed(
-              'text-xs font-medium text-green-700',
-              'text-xs font-medium text-green-300'
-            )}
-          >
-            View All Plans
-          </Text>
-        </TouchableOpacity>
-      </View>
+        </View>
+      )}
 
       <View>
         {todaysDay.meals?.breakfast && renderPlannedMeal(todaysDay.meals.breakfast, 'breakfast')}
         {todaysDay.meals?.lunch && renderPlannedMeal(todaysDay.meals.lunch, 'lunch')}
         {todaysDay.meals?.dinner && renderPlannedMeal(todaysDay.meals.dinner, 'dinner')}
-        {todaysDay.meals?.snacks?.map((snack: any) =>
-          renderPlannedMeal(snack, 'snack')
-        )}
+        {todaysDay.meals?.snacks?.map((snack: any) => renderPlannedMeal(snack, 'snack'))}
       </View>
+
+      {/* Simple Meal Modal */}
+      <SimpleMealModal
+        isVisible={showMealModal}
+        onClose={() => setShowMealModal(false)}
+        meal={selectedMeal}
+        mealType={selectedMealType}
+      />
     </View>
   );
 }

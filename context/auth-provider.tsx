@@ -362,15 +362,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Reset password using our Edge Function
     try {
-      console.log('Attempting to reset password for email:', email);
       const { data, error } = await supabase.functions.invoke('reset-password-with-otp', {
         body: {
           email,
           newPassword,
         },
       });
-
-      console.log('Edge function response:', { data, error });
 
       // Clear the stored OTP after attempt
       setOtpTokenStorage(null);
@@ -384,8 +381,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Password reset failed, data:', data);
         throw new Error(data?.error || 'Password reset failed');
       }
-
-      console.log('Password reset successful');
     } catch (error: any) {
       // Clear the token after attempt (success or failure)
       setOtpTokenStorage(null);

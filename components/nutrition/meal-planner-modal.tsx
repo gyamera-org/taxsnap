@@ -7,6 +7,7 @@ import { useTheme } from '@/context/theme-provider';
 import { useFavoriteFoods } from '@/lib/hooks/use-favorite-foods';
 import { useGenerateMealPlan } from '@/lib/hooks/use-meal-plans';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner-native';
 import CuisineSelection from './meal-planner/cuisine-selection';
 import PlanDurationSection from './meal-planner/plan-duration-section';
 import BudgetInputSection from './meal-planner/budget-input-section';
@@ -86,6 +87,12 @@ export default function MealPlannerModal({
       existingIngredients,
       userContext,
     };
+
+    // Show immediate toast notification
+    toast.success('🍽️ Creating your meal plan!', {
+      description: 'We\'re generating your personalized meal plan and grocery list. You can continue using the app - we\'ll notify you when it\'s ready.',
+      duration: 10000, // Show for 10 seconds
+    });
 
     // Close modal immediately - user can continue using app
     onClose();
