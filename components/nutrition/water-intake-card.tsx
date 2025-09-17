@@ -26,13 +26,34 @@ export default function WaterIntakeCard({
 
   return (
     <View className="px-4 mb-3">
-      <View className={themed("bg-white rounded-xl p-3 border border-gray-100", "bg-gray-900 rounded-xl p-3 border border-green-700")}>
+      <View
+        className={themed(
+          'bg-white rounded-xl p-3 border border-gray-100',
+          'bg-gray-900 rounded-xl p-3 border border-gray-700'
+        )}
+      >
         <View className="flex-row items-center justify-between">
           {/* Left side - Text content */}
           <View className="flex-1">
-            <Text className={themed("text-base font-bold text-gray-900 mb-1", "text-base font-bold text-white mb-1")}>Water</Text>
-            <Text className={themed("text-2xl font-bold text-gray-900 mb-1", "text-2xl font-bold text-white mb-1")}>{waterData.consumed}ml</Text>
-            <Text className={themed("text-xs text-gray-500", "text-xs text-gray-400")}>of {waterData.goal}ml • {Math.round((waterData.consumed / waterData.goal) * 100)}%</Text>
+            <Text
+              className={themed(
+                'text-base font-bold text-gray-900 mb-1',
+                'text-base font-bold text-white mb-1'
+              )}
+            >
+              Water
+            </Text>
+            <Text
+              className={themed(
+                'text-2xl font-bold text-gray-900 mb-1',
+                'text-2xl font-bold text-white mb-1'
+              )}
+            >
+              {waterData.consumed}ml
+            </Text>
+            <Text className={themed('text-xs text-gray-500', 'text-xs text-gray-400')}>
+              of {waterData.goal}ml • {Math.round((waterData.consumed / waterData.goal) * 100)}%
+            </Text>
           </View>
 
           {/* Right side - Circular progress with plus button */}
@@ -48,9 +69,11 @@ export default function WaterIntakeCard({
               animated={true}
               showOverflow={true}
             >
-              <View 
+              <View
                 className="w-9 h-9 rounded-full items-center justify-center"
-                style={{ backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)' }}
+                style={{
+                  backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                }}
               >
                 <GlassWater size={18} color="#3B82F6" />
               </View>

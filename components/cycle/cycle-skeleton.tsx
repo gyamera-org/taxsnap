@@ -33,7 +33,11 @@ export const CyclePhaseSkeleton = () => {
 
   return (
     <View className="px-4 mb-6">
-      <View className={`${isDark ? 'bg-gray-900 border-pink-700' : 'bg-white border-gray-100'} rounded-3xl p-6 border`}>
+      <View
+        className={`${
+          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
+        } rounded-3xl p-6 border`}
+      >
         {/* Circular Progress Section */}
         <View className="items-center mb-8">
           <View className="relative items-center justify-center">
@@ -78,7 +82,11 @@ export const TodaysMoodSkeleton = () => {
 
   return (
     <View className="px-4 mb-6">
-      <View className={`${isDark ? 'bg-gray-900 border-pink-700' : 'bg-white border-gray-100'} rounded-2xl p-4 border`}>
+      <View
+        className={`${
+          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
+        } rounded-2xl p-4 border`}
+      >
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
@@ -148,7 +156,11 @@ export const TodaysSymptomsSkeleton = () => {
 
   return (
     <View className="px-4 mb-6">
-      <View className={`${isDark ? 'bg-gray-900 border-pink-700' : 'bg-white border-gray-100'} rounded-2xl p-4 border`}>
+      <View
+        className={`${
+          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
+        } rounded-2xl p-4 border`}
+      >
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
@@ -161,7 +173,13 @@ export const TodaysSymptomsSkeleton = () => {
         {/* Symptoms Grid */}
         <View className="flex-row flex-wrap gap-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <View key={index} className={`${isDark ? 'bg-pink-900/30' : 'bg-purple-50'} rounded-2xl p-3 items-center`} style={{ width: '30%' }}>
+            <View
+              key={index}
+              className={`${
+                isDark ? 'bg-pink-900/30' : 'bg-purple-50'
+              } rounded-2xl p-3 items-center`}
+              style={{ width: '30%' }}
+            >
               <SkeletonBox width={28} height={28} className="rounded mb-2" />
               <SkeletonBox width={60} height={12} className="rounded" />
             </View>
@@ -200,7 +218,11 @@ export const CycleAveragesSkeleton = () => {
       {/* Two Column Layout */}
       <View className="flex-row gap-3">
         {/* First Column - Cycle Length */}
-        <View className={`flex-1 ${isDark ? 'bg-gray-900 border-pink-700' : 'bg-white border-gray-100'} rounded-2xl p-4 border`}>
+        <View
+          className={`flex-1 ${
+            isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
+          } rounded-2xl p-4 border`}
+        >
           <View className="items-center">
             <SkeletonBox width={40} height={40} className="rounded-full mb-3" />
             <SkeletonBox width={32} height={32} className="rounded mb-1" />
@@ -210,7 +232,11 @@ export const CycleAveragesSkeleton = () => {
         </View>
 
         {/* Second Column - Period Length */}
-        <View className={`flex-1 ${isDark ? 'bg-gray-900 border-pink-700' : 'bg-white border-gray-100'} rounded-2xl p-4 border`}>
+        <View
+          className={`flex-1 ${
+            isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
+          } rounded-2xl p-4 border`}
+        >
           <View className="items-center">
             <SkeletonBox width={40} height={40} className="rounded-full mb-3" />
             <SkeletonBox width={32} height={32} className="rounded mb-1" />
@@ -229,7 +255,11 @@ export const TodaysFlowSkeleton = () => {
 
   return (
     <View className="px-4 mb-6">
-      <View className={`${isDark ? 'bg-gray-900 border-pink-700' : 'bg-white border-gray-100'} rounded-2xl p-4 border`}>
+      <View
+        className={`${
+          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
+        } rounded-2xl p-4 border`}
+      >
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">

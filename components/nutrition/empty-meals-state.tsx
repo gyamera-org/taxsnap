@@ -5,13 +5,25 @@ import { useThemedStyles } from '@/lib/utils/theme';
 
 export const EmptyMealsState = ({ onAddMealPress }: { onAddMealPress?: () => void }) => {
   const themed = useThemedStyles();
-  
+
   return (
-    <View className={themed("bg-white rounded-2xl p-8 items-center border border-gray-100", "bg-gray-900 rounded-2xl p-8 items-center border border-green-700")}>
-      <View className={themed("w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4", "w-16 h-16 bg-gray-700 rounded-full items-center justify-center mb-4")}>
+    <View
+      className={themed(
+        'bg-white rounded-2xl p-8 items-center border border-gray-100',
+        'bg-gray-900 rounded-2xl p-8 items-center border border-gray-700'
+      )}
+    >
+      <View
+        className={themed(
+          'w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4',
+          'w-16 h-16 bg-gray-700 rounded-full items-center justify-center mb-4'
+        )}
+      >
         <Utensils size={24} color="#9CA3AF" />
       </View>
-      <Text className={themed("text-gray-500 text-center mb-2", "text-gray-400 text-center mb-2")}>No meals logged today</Text>
+      <Text className={themed('text-gray-500 text-center mb-2', 'text-gray-400 text-center mb-2')}>
+        No meals logged today
+      </Text>
       <TouchableOpacity onPress={onAddMealPress} className="bg-green-500 px-4 py-2 rounded-xl">
         <Text className="text-white font-medium">Log Your First Meal</Text>
       </TouchableOpacity>

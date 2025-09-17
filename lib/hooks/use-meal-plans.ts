@@ -18,6 +18,9 @@ export interface MealPlan {
   estimated_cost?: number;
   nutrition_summary?: any;
   generation_context: any;
+  generation_status?: 'generating' | 'completed' | 'failed' | 'pending';
+  generation_progress?: number;
+  generation_stage?: 'planning' | 'generating' | 'processing' | 'finalizing';
   created_at: string;
   updated_at: string;
 }
@@ -94,56 +97,7 @@ export function useGenerateMealPlan() {
   });
 }
 
-// Get user's meal plans with real-time updates
 export function useMealPlans() {
-  const queryClient = useQueryClient();
-
-  // Set up realtime subscription for meal plan updates
-  useEffect(() => {
-    const setupSubscription = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.user?.id) return;
-
-      const channelName = `meal_plans_user_${session.user.id}`;
-      const channel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: '*', // Listen to all events: INSERT, UPDATE, DELETE
-            schema: 'public',
-            table: 'meal_plans',
-            filter: `user_id=eq.${session.user.id}`,
-          },
-          (payload) => {
-            console.log('🔄 Meal plan update detected:', payload);
-            
-            // Invalidate and refetch meal plan queries
-            queryClient.invalidateQueries({ queryKey: queryKeys.nutrition.mealPlans });
-            queryClient.invalidateQueries({ queryKey: [...queryKeys.nutrition.mealPlans, 'latest'] });
-            queryClient.invalidateQueries({ queryKey: [...queryKeys.nutrition.mealPlans, 'current'] });
-            
-            // Show success toast when a new meal plan is inserted
-            if (payload.eventType === 'INSERT') {
-              toast.success('Your meal plan is ready!', {
-                description: 'A new meal plan has been generated for you.',
-              });
-            }
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    };
-
-    setupSubscription();
-  }, [queryClient]);
-
   return useQuery<MealPlan[], Error>({
     queryKey: queryKeys.nutrition.mealPlans,
     queryFn: async () => {
@@ -272,11 +226,11 @@ export function useGroceryList(mealPlanId?: string) {
             filter: `meal_plan_id=eq.${mealPlanId}`,
           },
           (payload) => {
-            console.log('🔄 Grocery list update detected:', payload);
-            
             // Invalidate and refetch grocery list queries
-            queryClient.invalidateQueries({ queryKey: [...queryKeys.nutrition.groceryLists, mealPlanId] });
-            
+            queryClient.invalidateQueries({
+              queryKey: [...queryKeys.nutrition.groceryLists, mealPlanId],
+            });
+
             // Show success toast when grocery list is created
             if (payload.eventType === 'INSERT') {
               toast.success('Grocery list is ready!', {

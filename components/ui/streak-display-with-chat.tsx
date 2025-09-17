@@ -29,7 +29,12 @@ export function StreakDisplayWithChat({
   if (isLoading) {
     return (
       <View className="flex-row items-center">
-        <View className={themed("mr-3 bg-gray-200 rounded-xl px-3 py-2 w-16 h-8", "mr-3 bg-gray-600 rounded-xl px-3 py-2 w-16 h-8")} />
+        <View
+          className={themed(
+            'mr-3 bg-gray-200 rounded-xl px-3 py-2 w-16 h-8',
+            'mr-3 bg-gray-600 rounded-xl px-3 py-2 w-16 h-8'
+          )}
+        />
         <TouchableOpacity
           onPress={openChat}
           className="w-10 h-10 rounded-full items-center justify-center"
@@ -44,9 +49,13 @@ export function StreakDisplayWithChat({
   return (
     <View className="flex-row items-center">
       {/* Streak Display */}
-      <View className={themed("mr-3 rounded-xl px-3 py-2 flex-row items-center", "mr-3 rounded-xl px-3 py-2 flex-row items-center")}
-        style={{ 
-          backgroundColor: themed(streakColor + '20', streakColor + '30') 
+      <View
+        className={themed(
+          'mr-3 rounded-xl px-3 py-2 flex-row items-center',
+          'mr-3 rounded-xl px-3 py-2 flex-row items-center'
+        )}
+        style={{
+          backgroundColor: themed(streakColor + '20', streakColor + '30'),
         }}
       >
         <Flame size={16} color={streakColor} />
@@ -56,15 +65,15 @@ export function StreakDisplayWithChat({
       </View>
 
       {/* AI Chat Button */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={openChat}
         className="w-10 h-10 rounded-full items-center justify-center"
         style={{ backgroundColor: buttonColor }}
       >
         <RobotIcon size={20} color="white" theme={context} />
-      </TouchableOpacity>
-      
-      <AIChatInterface
+      </TouchableOpacity> */}
+
+      {/* <AIChatInterface
         visible={isVisible}
         onClose={closeChat}
         context={context}
@@ -72,7 +81,7 @@ export function StreakDisplayWithChat({
         introMessages={config.introMessages}
         quickActions={config.quickActions}
         onSendMessage={handleSendMessage}
-      />
+      /> */}
     </View>
   );
 }

@@ -66,7 +66,7 @@ export function useUpdateMealNutrition() {
         });
 
         queryClient.invalidateQueries({
-          queryKey: [...queryKeys.settings.nutritionGoals],
+          queryKey: queryKeys.settings.nutritionGoals(),
         });
 
         queryClient.invalidateQueries({

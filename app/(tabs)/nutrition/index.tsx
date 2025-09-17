@@ -40,6 +40,7 @@ import PlannedMealsSection from '@/components/nutrition/planned-meals-section';
 import SimpleMealModal from '@/components/nutrition/simple-meal-modal';
 import { useThemedStyles } from '@/lib/utils/theme';
 import { useCurrentCyclePhase, useTodaysPeriodLog } from '@/lib/hooks/use-cycle-data';
+import { useGenerateMealPlan } from '@/lib/hooks/use-meal-plan-generator';
 
 export default function NutritionScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -80,6 +81,9 @@ export default function NutritionScreen() {
   const { data: bodyMeasurements, isLoading: bodyMeasurementsLoading } = useBodyMeasurements();
   const { data: streakData, isLoading: streakLoading } = useNutritionStreak();
   const { data: loggedDates = [] } = useLoggedDates(startDate, endDate);
+  
+  // Meal plan generation hook
+  const generateMealPlan = useGenerateMealPlan();
 
   // Meal planner data
   const { data: currentCyclePhase } = useCurrentCyclePhase();
@@ -231,6 +235,8 @@ export default function NutritionScreen() {
                   setShowSimpleMealModal(true);
                 }}
                 onGeneratePlan={() => setShowMealPlanner(true)}
+                isGeneratingPlan={generateMealPlan.isPending}
+                selectedDate={dateString}
               />
             </View>
 
@@ -269,6 +275,7 @@ export default function NutritionScreen() {
         isVisible={showMealPlanner}
         onClose={() => setShowMealPlanner(false)}
         onMealPlanGenerated={handleMealPlanGenerated}
+        generateMealPlan={generateMealPlan}
         userContext={{
           cyclePhase: currentCyclePhase?.phase,
           cycleDay: currentCyclePhase?.day_in_cycle,

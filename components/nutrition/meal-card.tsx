@@ -146,10 +146,10 @@ export const MealCard = ({
   const isFailed = meal.analysis_status === 'failed';
 
   // Determine display values based on state
-  const displayName = isFailed 
-    ? 'Analysis failed - Tap to retry' 
-    : isAnalyzing 
-    ? getStageText(meal.analysis_stage || 'analyzing') 
+  const displayName = isFailed
+    ? 'Analysis failed - Tap to retry'
+    : isAnalyzing
+    ? getStageText(meal.analysis_stage || 'analyzing')
     : meal.name;
 
   const displayCalories = isAnalyzing ? 0 : meal.calories;
@@ -171,7 +171,10 @@ export const MealCard = ({
 
   return (
     <TouchableOpacity
-      className={themed("bg-white rounded-2xl p-4 mb-3 border border-gray-100 relative", "bg-gray-900 rounded-2xl p-4 mb-3 border border-green-700 relative")}
+      className={themed(
+        'bg-white rounded-2xl p-4 mb-3 border border-gray-100 relative',
+        'bg-gray-900 rounded-2xl p-4 mb-3 border border-gray-700 relative'
+      )}
       onPress={handlePress}
       disabled={isAnalyzing}
       style={{ opacity: isAnalyzing ? 0.9 : isFailed ? 0.8 : 1 }}
@@ -269,19 +272,37 @@ export const MealCard = ({
 
         {/* Food Details */}
         <View className="flex-1 gap-3">
-          <Text className={themed("text-base font-semibold text-gray-900 mb-1", "text-base font-semibold text-white mb-1")} numberOfLines={1}>
+          <Text
+            className={themed(
+              'text-base font-semibold text-gray-900 mb-1',
+              'text-base font-semibold text-white mb-1'
+            )}
+            numberOfLines={1}
+          >
             {displayName}
           </Text>
 
           {/* Calories */}
           <View className="flex-row items-center gap-2">
-            <View className={themed("rounded-full bg-gray-100 p-1", "rounded-full bg-gray-700 p-1")}>
+            <View
+              className={themed('rounded-full bg-gray-100 p-1', 'rounded-full bg-gray-700 p-1')}
+            >
               <Flame size={14} color="#F59E0B" />
             </View>
             {isAnalyzing ? (
-              <View className={themed("bg-gray-200 h-4 w-20 rounded animate-pulse", "bg-gray-600 h-4 w-20 rounded animate-pulse")} />
+              <View
+                className={themed(
+                  'bg-gray-200 h-4 w-20 rounded animate-pulse',
+                  'bg-gray-600 h-4 w-20 rounded animate-pulse'
+                )}
+              />
             ) : (
-              <Text className={themed("text-sm text-gray-600 font-semibold", "text-sm text-gray-300 font-semibold")}>
+              <Text
+                className={themed(
+                  'text-sm text-gray-600 font-semibold',
+                  'text-sm text-gray-300 font-semibold'
+                )}
+              >
                 {isFailed ? 'Analysis failed' : `${displayCalories} calories`}
               </Text>
             )}
@@ -290,33 +311,72 @@ export const MealCard = ({
           {/* Macronutrients with Icons */}
           <View className="flex-row items-center gap-4">
             <View className="flex-row items-center">
-              <View className={themed("rounded-full bg-red-100 p-1", "rounded-full bg-red-900/30 p-1")}>
+              <View
+                className={themed('rounded-full bg-red-100 p-1', 'rounded-full bg-red-900/30 p-1')}
+              >
                 <Beef size={14} color="#EF4444" />
               </View>
               {isAnalyzing ? (
-                <View className={themed("bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse", "bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse")} />
+                <View
+                  className={themed(
+                    'bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse',
+                    'bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse'
+                  )}
+                />
               ) : (
-                <Text className={themed("text-sm text-gray-700 ml-1", "text-sm text-gray-300 ml-1")}>{displayProtein}g</Text>
+                <Text
+                  className={themed('text-sm text-gray-700 ml-1', 'text-sm text-gray-300 ml-1')}
+                >
+                  {displayProtein}g
+                </Text>
               )}
             </View>
             <View className="flex-row items-center">
-              <View className={themed("rounded-full bg-amber-100 p-1", "rounded-full bg-amber-900/30 p-1")}>
+              <View
+                className={themed(
+                  'rounded-full bg-amber-100 p-1',
+                  'rounded-full bg-amber-900/30 p-1'
+                )}
+              >
                 <Wheat size={14} color="#F59E0B" />
               </View>
               {isAnalyzing ? (
-                <View className={themed("bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse", "bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse")} />
+                <View
+                  className={themed(
+                    'bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse',
+                    'bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse'
+                  )}
+                />
               ) : (
-                <Text className={themed("text-sm text-gray-700 ml-1", "text-sm text-gray-300 ml-1")}>{displayCarbs}g</Text>
+                <Text
+                  className={themed('text-sm text-gray-700 ml-1', 'text-sm text-gray-300 ml-1')}
+                >
+                  {displayCarbs}g
+                </Text>
               )}
             </View>
             <View className="flex-row items-center">
-              <View className={themed("rounded-full bg-purple-100 p-1", "rounded-full bg-purple-900/30 p-1")}>
+              <View
+                className={themed(
+                  'rounded-full bg-purple-100 p-1',
+                  'rounded-full bg-purple-900/30 p-1'
+                )}
+              >
                 <OliveOilIcon size={14} color="#8B5CF6" />
               </View>
               {isAnalyzing ? (
-                <View className={themed("bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse", "bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse")} />
+                <View
+                  className={themed(
+                    'bg-gray-200 h-3 w-8 rounded ml-1 animate-pulse',
+                    'bg-gray-600 h-3 w-8 rounded ml-1 animate-pulse'
+                  )}
+                />
               ) : (
-                <Text className={themed("text-sm text-gray-700 ml-1", "text-sm text-gray-300 ml-1")}>{displayFat}g</Text>
+                <Text
+                  className={themed('text-sm text-gray-700 ml-1', 'text-sm text-gray-300 ml-1')}
+                >
+                  {displayFat}g
+                </Text>
               )}
             </View>
           </View>
@@ -324,7 +384,9 @@ export const MealCard = ({
 
         {/* Right side - Time and Status */}
         <View className="items-end">
-          <Text className={themed("text-xs text-gray-400 mb-1", "text-xs text-gray-500 mb-1")}>{meal.time}</Text>
+          <Text className={themed('text-xs text-gray-400 mb-1', 'text-xs text-gray-500 mb-1')}>
+            {meal.time}
+          </Text>
           {!isPending && !isAnalyzing && <ChevronRight size={16} color="#D1D5DB" />}
         </View>
       </View>

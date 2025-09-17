@@ -30,7 +30,7 @@ interface SubscriptionContextValue extends SubscriptionState {
   // Core RevenueCat functionality
   purchasePackage: (pack: PurchasesPackage) => Promise<{ success: boolean; error?: string }>;
   // Feature-specific paywall checks
-  requiresSubscriptionForFeature: (feature: 'workout-generation' | 'scan-food') => boolean;
+  requiresSubscriptionForFeature: (feature: 'workout-generation' | 'scan-food' | 'meal-plan-generation') => boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(undefined);
@@ -209,7 +209,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const requiresSubscriptionForFeature = (feature: 'workout-generation' | 'scan-food'): boolean => {
+  const requiresSubscriptionForFeature = (feature: 'workout-generation' | 'scan-food' | 'meal-plan-generation'): boolean => {
     // If user has active subscription or is in grace period, allow all features
     if (state.isSubscribed || state.isInGracePeriod) {
       return false;

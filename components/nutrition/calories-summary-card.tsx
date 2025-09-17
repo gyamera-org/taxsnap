@@ -26,7 +26,7 @@ export default function CaloriesSummaryCard({
   const themed = useThemedStyles();
   const colors = useThemedColors();
   const { isDark } = useTheme();
-  
+
   const caloriesLeft = isLoading ? 0 : macroData.calories.target - macroData.calories.consumed;
   const isOverTarget = !isLoading && macroData.calories.target > 0 && caloriesLeft < 0;
   const hasValidTarget = !isLoading && macroData.calories.target > 0;
@@ -65,17 +65,32 @@ export default function CaloriesSummaryCard({
 
   return (
     <View className="px-4 mb-6">
-      <View className={themed("bg-white rounded-2xl p-4 border border-gray-100", "bg-gray-900 rounded-2xl p-4 border border-green-700")}>
+      <View
+        className={themed(
+          'bg-white rounded-2xl p-4 border border-gray-100',
+          'bg-gray-900 rounded-2xl p-4 border border-gray-700'
+        )}
+      >
         <View className="flex-row items-center justify-between mb-4">
           {/* Left side - Large number and text */}
           <View className="flex-1">
-            <Text className={themed("text-6xl font-bold text-gray-900 mb-1", "text-6xl font-bold text-white mb-1")}>
+            <Text
+              className={themed(
+                'text-6xl font-bold text-gray-900 mb-1',
+                'text-6xl font-bold text-white mb-1'
+              )}
+            >
               {displayIsOverTarget
                 ? `-${Math.round(Math.abs(displayCaloriesLeft))}`
                 : Math.round(displayCaloriesLeft)}
             </Text>
             <View className="flex-row items-center">
-              <Text className={themed("text-gray-600 text-lg font-medium", "text-gray-300 text-lg font-medium")}>
+              <Text
+                className={themed(
+                  'text-gray-600 text-lg font-medium',
+                  'text-gray-300 text-lg font-medium'
+                )}
+              >
                 {displayIsOverTarget ? 'Calories over' : 'Calories left'}
               </Text>
               <View className="flex-row items-center ml-3">
@@ -84,7 +99,7 @@ export default function CaloriesSummaryCard({
                     displayIsOverTarget ? 'bg-red-500' : 'bg-green-500'
                   }`}
                 />
-                <Text className={themed("text-gray-500 text-sm", "text-gray-400 text-sm")}>
+                <Text className={themed('text-gray-500 text-sm', 'text-gray-400 text-sm')}>
                   {`${Math.round(displayCaloriesConsumed)} consumed`}
                 </Text>
               </View>
@@ -103,14 +118,19 @@ export default function CaloriesSummaryCard({
             animated={true}
             showOverflow={true}
           >
-            <View className={themed("w-12 h-12 bg-orange-100 rounded-full items-center justify-center", "w-12 h-12 bg-orange-900/30 rounded-full items-center justify-center")}>
+            <View
+              className={themed(
+                'w-12 h-12 bg-orange-100 rounded-full items-center justify-center',
+                'w-12 h-12 bg-orange-900/30 rounded-full items-center justify-center'
+              )}
+            >
               <Flame size={20} color="#F59E0B" />
             </View>
           </CircularProgress>
         </View>
 
         {/* Meal Breakdown */}
-        <View className={themed("border-t border-gray-100 pt-4", "border-t border-gray-700 pt-4")}>
+        <View className={themed('border-t border-gray-100 pt-4', 'border-t border-gray-700 pt-4')}>
           <View className="flex-row justify-between">
             {mealBreakdown.map((meal) => {
               return (
@@ -121,8 +141,22 @@ export default function CaloriesSummaryCard({
                   >
                     <meal.icon size={14} color={meal.color} />
                   </View>
-                  <Text className={themed("text-xs font-medium text-gray-900", "text-xs font-medium text-white")}>{meal.calories || '--'}</Text>
-                  <Text className={themed("text-xs text-gray-500 capitalize", "text-xs text-gray-400 capitalize")}>{meal.type}</Text>
+                  <Text
+                    className={themed(
+                      'text-xs font-medium text-gray-900',
+                      'text-xs font-medium text-white'
+                    )}
+                  >
+                    {meal.calories || '--'}
+                  </Text>
+                  <Text
+                    className={themed(
+                      'text-xs text-gray-500 capitalize',
+                      'text-xs text-gray-400 capitalize'
+                    )}
+                  >
+                    {meal.type}
+                  </Text>
                 </View>
               );
             })}

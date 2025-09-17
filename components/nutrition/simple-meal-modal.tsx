@@ -144,12 +144,7 @@ export default function SimpleMealModal({
                 >
                   {meal.calories || 0}
                 </Text>
-                <Text
-                  className={themed(
-                    'text-xs text-gray-600',
-                    'text-xs text-gray-400'
-                  )}
-                >
+                <Text className={themed('text-xs text-gray-600', 'text-xs text-gray-400')}>
                   cal
                 </Text>
               </View>
@@ -172,12 +167,7 @@ export default function SimpleMealModal({
                 >
                   {meal.protein || 0}g
                 </Text>
-                <Text
-                  className={themed(
-                    'text-xs text-gray-600',
-                    'text-xs text-gray-400'
-                  )}
-                >
+                <Text className={themed('text-xs text-gray-600', 'text-xs text-gray-400')}>
                   protein
                 </Text>
               </View>
@@ -200,12 +190,7 @@ export default function SimpleMealModal({
                 >
                   {meal.carbs || 0}g
                 </Text>
-                <Text
-                  className={themed(
-                    'text-xs text-gray-600',
-                    'text-xs text-gray-400'
-                  )}
-                >
+                <Text className={themed('text-xs text-gray-600', 'text-xs text-gray-400')}>
                   carbs
                 </Text>
               </View>
@@ -228,12 +213,7 @@ export default function SimpleMealModal({
                 >
                   {meal.fat || 0}g
                 </Text>
-                <Text
-                  className={themed(
-                    'text-xs text-gray-600',
-                    'text-xs text-gray-400'
-                  )}
-                >
+                <Text className={themed('text-xs text-gray-600', 'text-xs text-gray-400')}>
                   fat
                 </Text>
               </View>
@@ -262,30 +242,6 @@ export default function SimpleMealModal({
                   <Text className={themed('text-gray-700', 'text-gray-300')}>{ingredient}</Text>
                 </View>
               ))}
-            </View>
-          )}
-
-          {/* Instructions */}
-          {meal.instructions && (
-            <View
-              className={themed(
-                'bg-white rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm',
-                'bg-gray-800 rounded-2xl p-4 mb-6 border border-gray-700 shadow-sm'
-              )}
-            >
-              <Text
-                className={themed(
-                  'font-semibold text-gray-900 mb-3',
-                  'font-semibold text-white mb-3'
-                )}
-              >
-                Instructions
-              </Text>
-              <Text
-                className={themed('text-gray-700 leading-relaxed', 'text-gray-300 leading-relaxed')}
-              >
-                {meal.instructions}
-              </Text>
             </View>
           )}
         </ScrollView>

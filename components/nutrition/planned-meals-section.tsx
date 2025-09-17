@@ -3,25 +3,32 @@ import { View, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { useThemedStyles } from '@/lib/utils/theme';
 import { ChefHat, Sparkles, Timer } from 'lucide-react-native';
+import { format } from 'date-fns';
+import { useRevenueCat } from '@/context/revenuecat-provider';
+import { useRouter } from 'expo-router';
 import { useCreateMealEntry, useMealEntries } from '@/lib/hooks/use-meal-tracking';
-import { useCurrentMealPlan } from '@/lib/hooks/use-meal-plans';
+import { useCurrentMealPlan, useMealPlans } from '@/lib/hooks/use-meal-plans';
+import { useMealPlanGenerationRealtime } from '@/lib/hooks/use-meal-plan-generation-realtime';
 import {
   useAddFavoriteFood,
   useRemoveFavoriteFood,
   useFavoriteFoods,
 } from '@/lib/hooks/use-favorite-foods';
 import { toast } from 'sonner-native';
+import { supabase } from '@/lib/supabase/client';
 import PlannedMealCard from './planned-meal-card';
 import SimpleMealModal from './simple-meal-modal';
+import MealPlanErrorState from './meal-plan-error-state';
+import MealPlanLoadingState from './meal-plan-loading-state';
 
 interface PlannedMealsSectionProps {
   onShowMealPlan?: (plan: any) => void;
   onShowMealDetails?: (meal: any, mealType: string) => void;
   onGeneratePlan?: () => void;
   isGeneratingPlan?: boolean;
-  // Optional props to override default behavior
   title?: string;
-  dayData?: any; // If provided, use this instead of current meal plan
+  dayData?: any;
+  selectedDate?: string; // Add selectedDate prop to know which date we're viewing
   showHeader?: boolean;
   showViewAllButton?: boolean;
 }
@@ -33,19 +40,30 @@ export default function PlannedMealsSection({
   isGeneratingPlan = false,
   title = 'Planned Meals',
   dayData,
+  selectedDate,
   showHeader = true,
   showViewAllButton = true,
 }: PlannedMealsSectionProps) {
   const themed = useThemedStyles();
+  const { requiresSubscriptionForFeature } = useRevenueCat();
+  const router = useRouter();
   const createMealEntry = useCreateMealEntry();
   const { data: currentMealPlan } = useCurrentMealPlan();
+  const { data: allMealPlans } = useMealPlans();
+
+  useMealPlanGenerationRealtime({
+    onGenerationComplete: () => {},
+    onGenerationFailed: () => {},
+    onGenerationProgress: () => {},
+  });
   const addFavoriteFood = useAddFavoriteFood();
   const removeFavoriteFood = useRemoveFavoriteFood();
   const { data: favoriteFoods } = useFavoriteFoods();
 
-  // Get today's logged meals
-  const today = new Date().toISOString().split('T')[0];
-  const { data: loggedMealEntries } = useMealEntries(today);
+  // Use selectedDate if provided, otherwise use today
+  const currentDate = selectedDate || format(new Date(), 'yyyy-MM-dd');
+  const isViewingToday = currentDate === format(new Date(), 'yyyy-MM-dd');
+  const { data: loggedMealEntries } = useMealEntries(currentDate);
 
   const [loggedMeals, setLoggedMeals] = useState<Set<string>>(new Set());
   const [savedMeals, setSavedMeals] = useState<Set<string>>(new Set());
@@ -70,16 +88,13 @@ export default function PlannedMealsSection({
     }
   }, [favoriteFoods]);
 
-  // Update logged meals based on actual logged entries
   React.useEffect(() => {
     if (loggedMealEntries) {
       const loggedMealKeys = new Set<string>();
 
       loggedMealEntries.forEach((entry) => {
         entry.food_items?.forEach((foodItem) => {
-          // Check if this food item is from a meal plan (has 'Meal Plan' brand or 'Planned Meal' category)
           if (foodItem.food?.brand === 'Meal Plan' || foodItem.food?.category === 'Planned Meal') {
-            // Create key to match planned meals: mealType-mealName
             const mealKey = `${entry.meal_type}-${foodItem.food.name}`;
             loggedMealKeys.add(mealKey);
           }
@@ -90,41 +105,51 @@ export default function PlannedMealsSection({
     }
   }, [loggedMealEntries]);
 
-  // Find today's meals from the current meal plan
-  const getTodaysPlannedMeals = () => {
-    if (!currentMealPlan?.meals_data?.days) {
+  const getPlannedMealsForDate = () => {
+    if (!allMealPlans || allMealPlans.length === 0) {
       return null;
     }
 
-    // First try to match by exact date
-    let todaysDay = currentMealPlan.meals_data.days.find((day: any) => day.date === today);
-
-    if (todaysDay) {
-      return todaysDay;
+    for (const mealPlan of allMealPlans) {
+      if (mealPlan.meals_data?.days) {
+        const dayData = mealPlan.meals_data.days.find((day: any) => day.date === currentDate);
+        if (dayData) {
+          return dayData;
+        }
+      }
     }
 
-    // If no exact match, try to match by day of week
-    const selectedDayOfWeek = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const todayName = dayNames[selectedDayOfWeek];
-
-    todaysDay = currentMealPlan.meals_data.days.find((day: any) => {
-      const matches =
-        day.day_name?.toLowerCase() === todayName.toLowerCase() ||
-        day.day?.toLowerCase().includes(todayName.toLowerCase());
-
-      return matches;
-    });
-
-    // If still no match, try to get the first day of the week or just the first day
-    if (!todaysDay && currentMealPlan.meals_data.days.length > 0) {
-      todaysDay = currentMealPlan.meals_data.days[0];
-    }
-
-    return todaysDay;
+    return null;
   };
 
-  const todaysDay = dayData || getTodaysPlannedMeals();
+  const getTodaysDay = () => {
+    if (dayData) return dayData;
+
+    return getPlannedMealsForDate();
+  };
+
+  const todaysDay = getTodaysDay();
+
+  const generatingMealPlan = allMealPlans?.find(
+    (plan) => plan.generation_status === 'generating' || plan.generation_status === 'pending'
+  );
+
+  const isActuallyGenerating = isGeneratingPlan || !!generatingMealPlan;
+
+  const handleGeneratePlan = () => {
+    if (requiresSubscriptionForFeature('meal-plan-generation')) {
+      try {
+        router.push('/paywall');
+      } catch (error) {
+        console.error('Navigation error:', error);
+        toast.error('Please upgrade to premium to generate meal plans');
+      }
+      return;
+    }
+
+    // Proceed with generation if user has access
+    onGeneratePlan?.();
+  };
 
   const toggleFavoriteMeal = (meal: any, mealType: string) => {
     const mealKey = `${mealType}-${meal.name}`;
@@ -179,7 +204,6 @@ export default function PlannedMealsSection({
   };
 
   const handleAddMealToLog = (meal: any, mealType: string) => {
-    const mealKey = `${mealType}-${meal.name}`;
     const now = new Date().toTimeString().split(' ')[0];
 
     const mealEntryData = {
@@ -204,7 +228,7 @@ export default function PlannedMealsSection({
           quantity: 1,
         },
       ],
-      logged_date: today,
+      logged_date: currentDate,
       logged_time: now,
       notes: `Added from meal plan: ${meal.name}`,
     };
@@ -221,13 +245,10 @@ export default function PlannedMealsSection({
     });
   };
 
-  // Check if a meal is saved in favorites
   const isMealSaved = (meal: any, mealType: string) => {
     const mealKey = `${mealType}-${meal.name}`;
     const isSavedInState = savedMeals.has(mealKey);
 
-    // Also check in actual favorite foods data
-    // Check for both old format ("meal") and new format ("Planned Meal")
     const isSavedInDB = favoriteFoods?.some(
       (food) =>
         food.food_name === meal.name &&
@@ -256,7 +277,6 @@ export default function PlannedMealsSection({
           if (onShowMealDetails) {
             onShowMealDetails(meal, mealType);
           } else {
-            // Use built-in modal if no external handler provided
             setSelectedMeal(meal);
             setSelectedMealType(mealType);
             setShowMealModal(true);
@@ -269,43 +289,95 @@ export default function PlannedMealsSection({
     );
   };
 
-  // Show generate button if no meals data and onGeneratePlan is provided
-  if (!todaysDay && onGeneratePlan) {
+  if (generatingMealPlan && onGeneratePlan) {
+    const hasError =
+      generatingMealPlan.generation_status === 'failed' ||
+      (generatingMealPlan.generation_status === 'generating' &&
+        generatingMealPlan.updated_at &&
+        new Date().getTime() - new Date(generatingMealPlan.updated_at).getTime() > 5 * 60 * 1000);
+
+    if (hasError) {
+      return (
+        <MealPlanErrorState
+          onRetry={() => {
+            if (generatingMealPlan?.id) {
+              const clearPlan = async () => {
+                try {
+                  const { error } = await supabase
+                    .from('meal_plans')
+                    .delete()
+                    .eq('id', generatingMealPlan.id);
+
+                  if (error) {
+                    console.error('Error clearing stuck meal plan:', error);
+                  }
+
+                  setTimeout(() => {
+                    handleGeneratePlan();
+                  }, 500);
+                } catch (error) {
+                  console.error('Exception clearing stuck meal plan:', error);
+                  handleGeneratePlan();
+                }
+              };
+
+              clearPlan();
+            } else {
+              handleGeneratePlan();
+            }
+          }}
+        />
+      );
+    }
+
+    return (
+      <MealPlanLoadingState
+        generationStage={generatingMealPlan.generation_stage}
+        generationProgress={generatingMealPlan.generation_progress || 0}
+      />
+    );
+  }
+
+  // Only show generate button when viewing today and no meals exist
+  if (!todaysDay && onGeneratePlan && isViewingToday) {
     return (
       <View className="mx-4 mb-6">
-        <TouchableOpacity 
-          onPress={onGeneratePlan} 
-          disabled={isGeneratingPlan}
+        <TouchableOpacity
+          onPress={handleGeneratePlan}
+          disabled={isActuallyGenerating}
           className={themed(
-            isGeneratingPlan ? 'bg-gray-400 rounded-2xl p-6 shadow-lg' : 'bg-green-500 rounded-2xl p-6 shadow-lg',
-            isGeneratingPlan ? 'bg-gray-500 rounded-2xl p-6 shadow-lg' : 'bg-green-600 rounded-2xl p-6 shadow-lg'
+            isActuallyGenerating
+              ? 'bg-gray-400 rounded-2xl p-6 shadow-lg'
+              : 'bg-green-500 rounded-2xl p-6 shadow-lg',
+            isActuallyGenerating
+              ? 'bg-gray-500 rounded-2xl p-6 shadow-lg'
+              : 'bg-green-600 rounded-2xl p-6 shadow-lg'
           )}
           style={{
-            shadowColor: isGeneratingPlan ? '#9CA3AF' : '#10B981',
+            shadowColor: isActuallyGenerating ? '#9CA3AF' : '#10B981',
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.2,
             shadowRadius: 8,
             elevation: 6,
           }}
-          activeOpacity={isGeneratingPlan ? 1 : 0.8}
+          activeOpacity={isActuallyGenerating ? 1 : 0.8}
         >
           <View>
             <View className="flex-row items-center mb-2">
-              {isGeneratingPlan ? (
+              {isActuallyGenerating ? (
                 <Timer size={24} color="white" />
               ) : (
                 <Sparkles size={24} color="white" />
               )}
               <Text className="text-white text-xl font-bold ml-3">
-                {isGeneratingPlan ? 'Generating Your Meal Plan' : 'Generate Meal Plan'}
+                {isActuallyGenerating ? 'Generating Your Meal Plan' : 'Generate Meal Plan'}
               </Text>
             </View>
-            
+
             <Text className="text-white text-sm opacity-90 leading-5">
-              {isGeneratingPlan 
+              {isActuallyGenerating
                 ? 'We are creating your personalized meal plan and grocery list...'
-                : 'Get personalized meal plans with cycle-synced nutrition and auto-generated grocery lists'
-              }
+                : 'Get personalized meal plans with cycle-synced nutrition and auto-generated grocery lists'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -313,8 +385,64 @@ export default function PlannedMealsSection({
     );
   }
 
-  // Don't show section if no meals data and no generate function
+  // If no meals for the current date and not viewing today, show empty state
   if (!todaysDay) {
+    if (!isViewingToday) {
+      return (
+        <View className="mx-4 mb-6">
+          <View className="flex-row items-center mb-4">
+            <View
+              className={themed(
+                'w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3',
+                'w-8 h-8 bg-green-900 rounded-full items-center justify-center mr-3'
+              )}
+            >
+              <ChefHat size={16} color="#10B981" />
+            </View>
+            <Text
+              className={themed('text-xl font-bold text-gray-900', 'text-xl font-bold text-white')}
+            >
+              {title}
+            </Text>
+          </View>
+
+          {/* Empty state card matching the app's design */}
+          <View
+            className={themed(
+              'bg-white rounded-2xl p-6 shadow-sm border border-gray-100',
+              'bg-gray-900 rounded-2xl p-6 border border-gray-700'
+            )}
+          >
+            <View className="items-center py-8">
+              <View
+                className={themed(
+                  'w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4',
+                  'w-16 h-16 bg-gray-700/50 rounded-full items-center justify-center mb-4'
+                )}
+              >
+                <ChefHat size={24} color="#9CA3AF" />
+              </View>
+              <Text
+                className={themed(
+                  'text-center text-gray-900 text-lg font-semibold mb-2',
+                  'text-center text-white text-lg font-semibold mb-2'
+                )}
+              >
+                No meals planned
+              </Text>
+              <Text
+                className={themed(
+                  'text-center text-gray-500 text-sm',
+                  'text-center text-gray-400 text-sm'
+                )}
+              >
+                No meals were planned for {currentDate}
+              </Text>
+            </View>
+          </View>
+        </View>
+      );
+    }
     return null;
   }
 
@@ -326,7 +454,7 @@ export default function PlannedMealsSection({
             <View
               className={themed(
                 'w-8 h-8 bg-green-100 rounded-full items-center justify-center mr-3',
-                'w-8 h-8 bg-green-900/30 rounded-full items-center justify-center mr-3'
+                'w-8 h-8 bg-green-900 rounded-full items-center justify-center mr-3'
               )}
             >
               <ChefHat size={16} color="#10B981" />
@@ -366,7 +494,6 @@ export default function PlannedMealsSection({
         {todaysDay.meals?.snacks?.map((snack: any) => renderPlannedMeal(snack, 'snack'))}
       </View>
 
-      {/* Simple Meal Modal */}
       <SimpleMealModal
         isVisible={showMealModal}
         onClose={() => setShowMealModal(false)}

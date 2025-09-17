@@ -12,7 +12,7 @@ export const CaloriesSummaryCardSkeleton = () => {
     <View className="px-4 mb-6">
       <View
         className={`${isDark ? 'bg-gray-900' : 'bg-white'} rounded-2xl p-4 ${
-          isDark ? 'border border-green-700' : 'border border-gray-100'
+          isDark ? 'border border-gray-700' : 'border border-gray-100'
         }`}
       >
         {/* Main content */}
@@ -63,7 +63,7 @@ const IndividualMacroCardSkeleton = () => {
   return (
     <View
       className={`${
-        isDark ? 'bg-gray-900 border-green-700' : 'bg-white border-gray-100'
+        isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
       } rounded-2xl p-4 border mb-4`}
     >
       <View className="flex-row items-center justify-between">
@@ -107,7 +107,7 @@ export const WaterIntakeCardSkeleton = () => {
     <View className="px-4 mb-6">
       <View
         className={`${
-          isDark ? 'bg-gray-900 border-green-700' : 'bg-white border-gray-100'
+          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
         } rounded-2xl p-4 border`}
       >
         <View className="flex-row items-center justify-between mb-4">
@@ -136,7 +136,7 @@ const MealCardSkeleton = ({ isAnalyzing = false }: { isAnalyzing?: boolean }) =>
   return (
     <View
       className={`${
-        isDark ? 'bg-gray-900 border-green-700' : 'bg-white border-gray-100'
+        isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
       } rounded-2xl p-4 mb-3 border`}
     >
       <View className="flex-row items-center justify-between mb-3">

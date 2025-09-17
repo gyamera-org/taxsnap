@@ -65,7 +65,6 @@ export default function MealPlanViewerModal({
     });
   };
 
-
   // All meal logic is now handled by PlannedMealsSection
 
   const renderGroceryCategory = (categoryName: string, items: any[]) => {
@@ -79,7 +78,10 @@ export default function MealPlanViewerModal({
         {items.map((item, index) => (
           <View
             key={index}
-            className="flex-row items-center justify-between py-2 border-b border-gray-200"
+            className={themed(
+              'flex-row items-center justify-between py-2 border-b border-gray-200',
+              'flex-row items-center justify-between py-2 border-b border-gray-700'
+            )}
           >
             <View className="flex-1">
               <Text className={themed('text-gray-900', 'text-white')}>{item.name}</Text>
@@ -88,7 +90,7 @@ export default function MealPlanViewerModal({
               </Text>
             </View>
             <Text className={themed('font-medium text-gray-900', 'font-medium text-white')}>
-              ${item.estimatedPrice}
+              ${item.estimated_price || item.estimatedPrice || '0.00'}
             </Text>
           </View>
         ))}
@@ -266,7 +268,7 @@ export default function MealPlanViewerModal({
             <View>
               {groceryList ? (
                 <>
-                  <View
+                  {/* <View
                     className={themed(
                       'bg-green-50 rounded-xl p-4 mb-6',
                       'bg-green-900/20 rounded-xl p-4 mb-6'
@@ -287,12 +289,33 @@ export default function MealPlanViewerModal({
                         Total: ${groceryList.total_estimated_cost}
                       </Text>
                     </View>
-                  </View>
+                  </View> */}
 
-                  {groceryList.items?.categories &&
-                    Object.entries(groceryList.items.categories).map(
-                      ([category, items]: [string, any]) => renderGroceryCategory(category, items)
-                    )}
+                  {groceryList.items && Array.isArray(groceryList.items) ? (
+                    <View className="px-4">
+                      {/* Group items by category and render each category */}
+                      {(() => {
+                        const groupedItems = groceryList.items.reduce((acc: any, item: any) => {
+                          const category = item.category || 'Other';
+                          if (!acc[category]) acc[category] = [];
+                          acc[category].push(item);
+                          return acc;
+                        }, {});
+
+                        return Object.entries(groupedItems).map(
+                          ([category, items]: [string, any]) =>
+                            renderGroceryCategory(category, items)
+                        );
+                      })()}
+                    </View>
+                  ) : (
+                    <View className="items-center py-8">
+                      <ShoppingCart size={48} color="#9CA3AF" />
+                      <Text className={themed('text-gray-600 mt-4', 'text-gray-400 mt-4')}>
+                        No grocery items found
+                      </Text>
+                    </View>
+                  )}
                 </>
               ) : (
                 <View className="items-center py-8">

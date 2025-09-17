@@ -104,7 +104,6 @@ export default function CycleScreen() {
     return allDates;
   }, [periodCycles]);
 
-
   // Check if user is currently on their period for the selected date
   const isOnPeriod = React.useMemo(() => {
     if (!periodCycles.length) return false;
@@ -115,11 +114,11 @@ export default function CycleScreen() {
 
   // Get cycle settings which includes calculated averages from backend
   const { data: cycleSettings } = useCycleSettings();
-  
+
   // Get average cycle data from backend settings
   const averageCycleData = React.useMemo(() => {
     if (!cycleSettings) return undefined;
-    
+
     return {
       average_cycle_length: cycleSettings.cycle_length || 28,
       average_period_length: cycleSettings.period_length || 5,
@@ -179,7 +178,7 @@ export default function CycleScreen() {
           </TouchableOpacity>
 
           {/* AI Chat Button */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             className="bg-pink-500 p-3 rounded-full"
             onPress={openChat}
             style={{
@@ -191,7 +190,7 @@ export default function CycleScreen() {
             }}
           >
             <RobotIcon size={18} color="#FFFFFF" theme="cycle" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       }
     >

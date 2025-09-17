@@ -15,7 +15,12 @@ interface TodaysFlowProps {
   isOnPeriod?: boolean; // New prop to determine if user is on period
 }
 
-export function TodaysFlow({ selectedDate, flowData, isLoading, isOnPeriod = false }: TodaysFlowProps) {
+export function TodaysFlow({
+  selectedDate,
+  flowData,
+  isLoading,
+  isOnPeriod = false,
+}: TodaysFlowProps) {
   const { isDark } = useTheme();
   const isToday = selectedDate.toDateString() === new Date().toDateString();
   const isFuture = selectedDate > new Date() && !isToday;
@@ -28,13 +33,23 @@ export function TodaysFlow({ selectedDate, flowData, isLoading, isOnPeriod = fal
   if (isLoading) {
     return (
       <View className="px-4 mb-6">
-        <View className={`${isDark ? 'bg-gray-900 border-pink-700' : 'bg-white border-gray-100'} rounded-2xl p-4 border`}>
+        <View
+          className={`${
+            isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
+          } rounded-2xl p-4 border`}
+        >
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center">
-              <View className={`w-10 h-10 rounded-2xl ${isDark ? 'bg-pink-900' : 'bg-red-100'} items-center justify-center mr-3`}>
+              <View
+                className={`w-10 h-10 rounded-2xl ${
+                  isDark ? 'bg-pink-900' : 'bg-red-100'
+                } items-center justify-center mr-3`}
+              >
                 <Droplets size={20} color={isDark ? '#EC4899' : '#DC2626'} />
               </View>
-              <Text className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-black'}`}>Flow</Text>
+              <Text className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-black'}`}>
+                Flow
+              </Text>
             </View>
           </View>
           <View className="animate-pulse">
@@ -48,18 +63,32 @@ export function TodaysFlow({ selectedDate, flowData, isLoading, isOnPeriod = fal
 
   return (
     <View className="px-4 mb-6">
-      <View className={`${isDark ? 'bg-gray-900 border-pink-700' : 'bg-white border-gray-100'} rounded-2xl p-4 border`}>
+      <View
+        className={`${
+          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-100'
+        } rounded-2xl p-4 border`}
+      >
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center">
-            <View className={`w-10 h-10 rounded-2xl ${isDark ? 'bg-pink-900' : 'bg-red-100'} items-center justify-center mr-3`}>
+            <View
+              className={`w-10 h-10 rounded-2xl ${
+                isDark ? 'bg-pink-900' : 'bg-red-100'
+              } items-center justify-center mr-3`}
+            >
               <Droplets size={20} color={isDark ? '#EC4899' : '#DC2626'} />
             </View>
-            <Text className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-black'}`}>Flow</Text>
+            <Text className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-black'}`}>
+              Flow
+            </Text>
           </View>
           {!isFuture && (
             <TouchableOpacity
-              onPress={() => router.push(`/log-flow?date=${selectedDate.toISOString().split('T')[0]}`)}
-              className={`w-8 h-8 rounded-full ${isDark ? 'bg-pink-900' : 'bg-red-100'} items-center justify-center`}
+              onPress={() =>
+                router.push(`/log-flow?date=${selectedDate.toISOString().split('T')[0]}`)
+              }
+              className={`w-8 h-8 rounded-full ${
+                isDark ? 'bg-pink-900' : 'bg-red-100'
+              } items-center justify-center`}
             >
               <Plus size={16} color={isDark ? '#EC4899' : '#DC2626'} />
             </TouchableOpacity>
@@ -87,7 +116,11 @@ export function TodaysFlow({ selectedDate, flowData, isLoading, isOnPeriod = fal
 
                 {/* Flow Info */}
                 <View>
-                  <Text className={`${isDark ? 'text-gray-100' : 'text-gray-900'} text-2xl font-bold text-center`}>
+                  <Text
+                    className={`${
+                      isDark ? 'text-gray-100' : 'text-gray-900'
+                    } text-2xl font-bold text-center`}
+                  >
                     {FlowLevels[flowData.flow_level]} Flow
                   </Text>
                 </View>
@@ -102,11 +135,19 @@ export function TodaysFlow({ selectedDate, flowData, isLoading, isOnPeriod = fal
                     className="w-1 h-4 rounded-full mr-2"
                     style={{ backgroundColor: '#DC2626' }}
                   />
-                  <Text className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'} uppercase tracking-wider`}>
+                  <Text
+                    className={`text-xs font-semibold ${
+                      isDark ? 'text-gray-300' : 'text-gray-600'
+                    } uppercase tracking-wider`}
+                  >
                     Notes
                   </Text>
                 </View>
-                <Text className={`${isDark ? 'text-gray-200' : 'text-gray-700'} text-sm leading-relaxed pl-3`}>
+                <Text
+                  className={`${
+                    isDark ? 'text-gray-200' : 'text-gray-700'
+                  } text-sm leading-relaxed pl-3`}
+                >
                   {flowData.notes}
                 </Text>
               </View>
@@ -128,18 +169,30 @@ export function TodaysFlow({ selectedDate, flowData, isLoading, isOnPeriod = fal
             </View>
 
             {/* Empty State Text */}
-            <Text className={`${isDark ? 'text-gray-200' : 'text-gray-800'} text-center text-base font-semibold mb-2`}>
+            <Text
+              className={`${
+                isDark ? 'text-gray-200' : 'text-gray-800'
+              } text-center text-base font-semibold mb-2`}
+            >
               No flow logged
             </Text>
-            <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-center text-sm mb-5 px-6 leading-relaxed`}>
+            <Text
+              className={`${
+                isDark ? 'text-gray-400' : 'text-gray-500'
+              } text-center text-sm mb-5 px-6 leading-relaxed`}
+            >
               Track your flow intensity to better understand your period patterns
             </Text>
 
             {/* Action Button */}
             {!isFuture && (
               <TouchableOpacity
-                onPress={() => router.push(`/log-flow?date=${selectedDate.toISOString().split('T')[0]}`)}
-                className={`rounded-xl px-6 py-3 flex-row items-center ${isDark ? 'bg-pink-600' : 'bg-red-500'}`}
+                onPress={() =>
+                  router.push(`/log-flow?date=${selectedDate.toISOString().split('T')[0]}`)
+                }
+                className={`rounded-xl px-6 py-3 flex-row items-center ${
+                  isDark ? 'bg-pink-600' : 'bg-red-500'
+                }`}
               >
                 <Plus size={16} color="white" style={{ marginRight: 6 }} />
                 <Text className="text-white font-semibold text-sm">Log Flow</Text>
