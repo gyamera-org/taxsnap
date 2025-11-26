@@ -20,44 +20,26 @@ export default function Layout() {
   return (
     <ErrorBoundary>
       <RootProvider>
-        <Stack>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
           {/* Main App Entry */}
-          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="index" />
 
           {/* Tab Navigation */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" />
 
           {/* Authentication */}
-          <Stack.Screen name="auth/index" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
-
-          {/* Onboarding */}
-          <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-
-          {/* Logging Screens */}
-          <Stack.Screen name="log-meal" options={{ headerShown: false }} />
-          <Stack.Screen name="log-exercise" options={{ headerShown: false }} />
-          <Stack.Screen name="log-water" options={{ headerShown: false }} />
-
-          <Stack.Screen name="log-mood" options={{ headerShown: false }} />
-          <Stack.Screen name="log-period" options={{ headerShown: false }} />
-          <Stack.Screen name="log-flow" options={{ headerShown: false }} />
-          <Stack.Screen name="log-symptoms" options={{ headerShown: false }} />
-          <Stack.Screen name="log-supplements" options={{ headerShown: false }} />
-
-          {/* Scanning Screens */}
-          <Stack.Screen name="scan-food" options={{ headerShown: false }} />
-
-          {/* Cycle Tracking */}
-
-          <Stack.Screen name="cycle-history" options={{ headerShown: false }} />
-          <Stack.Screen name="edit-period" options={{ headerShown: false }} />
+          <Stack.Screen name="auth/index" />
+          <Stack.Screen name="auth/callback" />
 
           {/* Monetization */}
-          <Stack.Screen name="paywall" options={{ headerShown: false }} />
+          <Stack.Screen name="paywall" />
 
           {/* Error Handling */}
-          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
         </Stack>
       </RootProvider>
     </ErrorBoundary>

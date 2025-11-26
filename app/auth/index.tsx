@@ -8,7 +8,6 @@ import { toast } from 'sonner-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Eye, EyeOff } from 'lucide-react-native';
-import { OnboardingStorage } from '@/lib/utils/onboarding-storage';
 import { useRevenueCat } from '@/context/revenuecat-provider';
 import { useTheme } from '@/context/theme-provider';
 import { CosmicBackground } from '@/components/ui/cosmic-background';
@@ -58,23 +57,6 @@ export default function AuthScreen() {
 
   const canSignUp = mode === 'signup';
 
-  // Check for onboarding data and pre-fill name
-  useEffect(() => {
-    const checkOnboardingData = async () => {
-      const storedData = await OnboardingStorage.load();
-      if (storedData?.name) {
-        const nameParts = storedData.name.split(' ');
-        setFirstName(nameParts[0] || '');
-        setLastName(nameParts.slice(1).join(' ') || '');
-        setHasOnboardingData(true);
-      } else {
-        setHasOnboardingData(false);
-      }
-    };
-
-    checkOnboardingData();
-  }, []);
-
   // Handle automatic auth method triggering from chat onboarding
   useEffect(() => {
     if (method && isSignUp && hasOnboardingData) {
@@ -90,7 +72,7 @@ export default function AuthScreen() {
     if (shouldShowPaywall) {
       router.replace('/paywall');
     } else {
-      router.replace('/(tabs)/nutrition');
+      router.replace('/(tabs)/home');
     }
   };
   const handleEmailAuth = async () => {
@@ -586,14 +568,14 @@ export default function AuthScreen() {
               By continuing, you agree to our{' '}
               <Text
                 className="text-pink-500 underline"
-                onPress={() => openLink('https://www.lunasync.app/terms')}
+                onPress={() => openLink('https://www.debt-free.app/terms')}
               >
                 Terms
               </Text>{' '}
               and{' '}
               <Text
                 className="text-pink-500 underline"
-                onPress={() => openLink('https://www.lunasync.app/privacy')}
+                onPress={() => openLink('https://www.debt-free.app/privacy')}
               >
                 Privacy Policy
               </Text>

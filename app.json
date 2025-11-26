@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "LunaSync",
-    "slug": "lunasync",
+    "name": "Debt Free",
+    "slug": "debt-free",
     "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "lunasync",
+    "scheme": "debt-free",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
@@ -16,10 +16,10 @@
     "ios": {
       "supportsTablet": false,
       "userInterfaceStyle": "light",
-      "bundleIdentifier": "com.lunasync.app",
+      "bundleIdentifier": "com.debt-free.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "LunaSync uses your camera to capture meal photos for nutrition tracking, take profile avatar pictures to personalize your experience, and add progress pictures for your insights.",
-        "NSPhotoLibraryUsageDescription": "LunaSync accesses your photo library to upload meal photos for nutrition tracking, choose profile avatar pictures, and add progress pictures for your insights.",
+        "NSCameraUsageDescription": "Debt Free uses your camera to capture meal photos for nutrition tracking, take profile avatar pictures to personalize your experience, and add progress pictures for your insights.",
+        "NSPhotoLibraryUsageDescription": "Debt Free accesses your photo library to upload meal photos for nutrition tracking, choose profile avatar pictures, and add progress pictures for your insights.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "buildNumber": "25"
@@ -31,7 +31,7 @@
         "backgroundColor": "#FEF9F9"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.lunasync.app",
+      "package": "com.debt-free.app",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -48,10 +48,7 @@
               "pathPrefix": "/auth/v1/callback"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },

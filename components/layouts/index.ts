@@ -1,2 +1,1 @@
-export * from './page-layout';
-export * from './sub-page';
+export { PageLayout, GlassCard, SectionHeader } from './page-layout';

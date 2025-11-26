@@ -1,8 +1,8 @@
 require "jwt"
 
-key_file = "/Users/josephinegyamera/gyamera-org/hair-deets/lunasync/AuthKey_7CC96MDFC4.p8"
+key_file = "/Users/josephinegyamera/gyamera-org/hair-deets/debt-free/AuthKey_7CC96MDFC4.p8"
 team_id = "2AFY6WW292"
-client_id = "com.lunasync.app"
+client_id = "com.debt-free.app"
 key_id = "7CC96MDFC4"
 validity_period = 180 # In days. Max 180 (6 months) according to Apple docs.
 

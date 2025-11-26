@@ -1,105 +1,196 @@
-import { View, Image, Dimensions } from 'react-native';
-import { Text } from '@/components/ui/text';
-import WeeklyCalendar from '@/components/nutrition/weekly-calendar';
-import { NavigableAvatar } from '@/components/ui/avatar';
-import { NavigationErrorBoundary } from '@/components/ui/navigation-error-boundary';
-import { useTheme } from '@/context/theme-provider';
-import { CosmicBackground } from '@/components/ui/cosmic-background';
-import { PeriodLog } from '@/lib/utils/cycle-utils';
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  StatusBar,
+  Pressable,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
-interface Props {
+interface PageLayoutProps {
   children: React.ReactNode;
-  title: string;
-  extraSubtitle?: string;
-  image?: string;
-  btn?: React.ReactNode;
-  theme?: 'nutrition' | 'cycle' | 'exercise' | 'settings' | 'progress';
-  // Calendar props - only required when theme is not 'settings'
-  selectedDate?: Date;
-  onDateSelect?: (date: Date) => void;
-  loggedDates?: string[];
-  periodLogs?: PeriodLog[];
-  cycleSettings?: { cycle_length?: number; period_length?: number } | null;
+  title?: string;
+  showBackButton?: boolean;
+  rightAction?: React.ReactNode;
+  headerStyle?: 'default' | 'transparent' | 'glass';
 }
 
-const PageLayout = ({
+export function PageLayout({
   children,
   title,
-  extraSubtitle,
-  image,
-  btn,
-  theme = 'settings',
-  selectedDate,
-  onDateSelect,
-  loggedDates,
-  periodLogs,
-  cycleSettings,
-}: Props) => {
-  const { width: screenWidth } = Dimensions.get('window');
-  const isTablet = screenWidth >= 768;
-  const { isDark } = useTheme();
-  
-  // Removed gradient colors logic - now handled by CosmicBackground
-  const shouldShowCalendar =
-    theme !== 'settings' && 
-    theme !== 'progress' && 
-    selectedDate && 
-    !isNaN(selectedDate.getTime()) && 
-    onDateSelect;
+  showBackButton = false,
+  rightAction,
+  headerStyle = 'default',
+}: PageLayoutProps) {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
 
-  return (
-    <CosmicBackground theme={theme} isDark={isDark}>
-      <View className="flex-1 pt-5">
-      <View 
-        className={`flex-row items-center justify-between pb-4 pt-12 ${isTablet ? 'px-8' : 'px-4'}`}
-        style={isTablet ? { maxWidth: 1024, marginHorizontal: 'auto', width: '100%' } : undefined}
-      >
-        <View className="flex-row items-center flex-1">
-          {theme !== 'settings' && (
-            <NavigationErrorBoundary size={isTablet ? 56 : 48}>
-              <NavigableAvatar size={isTablet ? 56 : 48} />
-            </NavigationErrorBoundary>
-          )}
-          <View className={theme !== 'settings' ? 'ml-3 flex-1' : 'flex-1'}>
-            <Text className={`${isTablet ? 'text-4xl' : 'text-3xl'} font-bold ${isDark ? 'text-white' : 'text-black'}`}>{title}</Text>
-            {extraSubtitle && (
-              <Text className={`${isTablet ? 'text-base' : 'text-sm'} ${isDark ? 'text-gray-300' : 'text-gray-600'} mt-1`}>
-                {extraSubtitle}
-              </Text>
+  const renderHeader = () => {
+    if (!title && !showBackButton && !rightAction) return null;
+
+    return (
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        {headerStyle === 'glass' && (
+          <>
+            <LinearGradient
+              colors={['rgba(31, 41, 55, 0.9)', 'rgba(17, 24, 39, 0.85)']}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.headerGlassBorder} />
+          </>
+        )}
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            {showBackButton && (
+              <Pressable
+                onPress={() => router.back()}
+                style={styles.backButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
+              </Pressable>
             )}
           </View>
-        </View>
-        {image && (
-          <Image
-            source={require('@/assets/images/avatar.png')}
-            className={`${isTablet ? 'w-16 h-16' : 'w-14 h-14'} rounded-full mr-4`}
-          />
-        )}
-        {btn}
-      </View>
-
-      {/* Only show WeeklyCalendar for non-settings themes */}
-      {shouldShowCalendar && (
-        <NavigationErrorBoundary fallback={<View />}>
-          <View style={isTablet ? { maxWidth: 1024, marginHorizontal: 'auto', width: '100%' } : undefined}>
-            <WeeklyCalendar
-              selectedDate={selectedDate!}
-              onDateSelect={onDateSelect!}
-              loggedDates={loggedDates || []}
-              theme={theme}
-              periodLogs={periodLogs}
-              cycleSettings={cycleSettings}
-            />
+          <View style={styles.headerCenter}>
+            {title && <Text style={styles.headerTitle}>{title}</Text>}
           </View>
-        </NavigationErrorBoundary>
-      )}
+          <View style={styles.headerRight}>{rightAction}</View>
+        </View>
+      </View>
+    );
+  };
 
-      <View style={isTablet ? { maxWidth: 1024, marginHorizontal: 'auto', width: '100%', flex: 1 } : { flex: 1 }}>
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      {renderHeader()}
+      <View style={[styles.content, { paddingBottom: insets.bottom + 100 }]}>
         {children}
       </View>
-      </View>
-    </CosmicBackground>
+    </View>
   );
-};
+}
+
+interface GlassCardProps {
+  children: React.ReactNode;
+  style?: object;
+  className?: string;
+}
+
+export function GlassCard({ children, style }: GlassCardProps) {
+  return (
+    <View style={[styles.glassCard, style]}>
+      <LinearGradient
+        colors={['rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.03)']}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      <View style={styles.glassCardBorder} />
+      <View style={styles.glassCardContent}>{children}</View>
+    </View>
+  );
+}
+
+interface SectionHeaderProps {
+  title: string;
+  action?: React.ReactNode;
+}
+
+export function SectionHeader({ title, action }: SectionHeaderProps) {
+  return (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {action}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 44,
+  },
+  headerLeft: {
+    width: 44,
+    alignItems: 'flex-start',
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerRight: {
+    width: 44,
+    alignItems: 'flex-end',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  headerGlassBorder: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  backButton: {
+    padding: 4,
+    marginLeft: -4,
+  },
+  content: {
+    flex: 1,
+  },
+  glassCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    position: 'relative',
+  },
+  glassCardBorder: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  glassCardContent: {
+    padding: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
+  },
+});
 
 export default PageLayout;

@@ -5,7 +5,6 @@ import { router } from 'expo-router';
 import { toast } from 'sonner-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
-import { OnboardingStorage } from '@/lib/utils/onboarding-storage';
 import { emailService } from '@/lib/services/email-service';
 
 interface AuthContextType {

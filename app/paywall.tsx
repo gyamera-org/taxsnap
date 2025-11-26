@@ -261,7 +261,7 @@ export default function PaywallScreen() {
                   isDark ? 'text-gray-300' : 'text-slate-600'
                 }`}
               >
-                Your body changes every month, LunaSync adapts with you.
+                Your body changes every month, Debt Free adapts with you.
               </Text>
             </View>
 
@@ -449,7 +449,7 @@ export default function PaywallScreen() {
                 {/* Terms and Privacy Links */}
                 <View className="flex-row justify-center items-center">
                   <TouchableOpacity
-                    onPress={() => Linking.openURL('https://lunasync.app/terms')}
+                    onPress={() => Linking.openURL('https://debt-free.app/terms')}
                     className="mr-4"
                   >
                     <Text
@@ -460,7 +460,9 @@ export default function PaywallScreen() {
                       Terms
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => Linking.openURL('https://lunasync.app/privacy')}>
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL('https://debt-free.app/privacy')}
+                  >
                     <Text
                       className={`${isTablet ? 'text-sm' : 'text-xs'} underline ${
                         isDark ? 'text-gray-400' : 'text-slate-500'
