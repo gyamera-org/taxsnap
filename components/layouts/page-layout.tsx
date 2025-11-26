@@ -109,7 +109,7 @@ export function SectionHeader({ title, action }: SectionHeaderProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#0F0F0F',
   },
   header: {
     paddingHorizontal: 16,

@@ -32,7 +32,7 @@ export const RootProvider = ({ children }: PropsWithChildren) => {
               <BottomSheetModalProvider>
                 <TabBarProvider>
                   {children}
-                  <Toaster />
+                  <Toaster theme="dark" />
                 </TabBarProvider>
               </BottomSheetModalProvider>
             </GestureHandlerRootView>

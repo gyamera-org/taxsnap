@@ -1,20 +1,14 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   Linking,
-  TextInput,
-  StyleSheet,
-  Keyboard,
-  Alert,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { PageLayout, GlassCard } from '@/components/layouts';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
-import { GlassBottomSheet, GlassBottomSheetRef } from '@/components/ui/glass-bottom-sheet';
+import { showConfirmAlert } from '@/lib/utils/alert';
 import {
   User,
   Bell,
@@ -86,9 +80,6 @@ function SettingsGroup({
 export default function SettingsScreen() {
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [feedback, setFeedback] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const feedbackSheetRef = useRef<GlassBottomSheetRef>(null);
 
   const handleLogout = async () => {
     setShowLogoutModal(false);
@@ -101,42 +92,14 @@ export default function SettingsScreen() {
   };
 
   const showDeleteAlert = () => {
-    Alert.alert(
-      'Delete Account',
-      'This action cannot be undone. All your data will be permanently deleted.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: handleDeleteAccount },
-      ]
-    );
+    showConfirmAlert({
+      title: 'Delete Account',
+      message: 'This action cannot be undone. All your data will be permanently deleted.',
+      confirmText: 'Delete',
+      onConfirm: handleDeleteAccount,
+      destructive: true,
+    });
   };
-
-  const openFeedbackSheet = useCallback(() => {
-    Keyboard.dismiss();
-    feedbackSheetRef.current?.expand();
-  }, []);
-
-  const closeFeedbackSheet = useCallback(() => {
-    Keyboard.dismiss();
-    feedbackSheetRef.current?.close();
-  }, []);
-
-  const handleFeedbackClose = useCallback(() => {
-    setTimeout(() => {
-      setFeedback('');
-      setSubmitted(false);
-    }, 300);
-  }, []);
-
-  const handleSubmitFeedback = useCallback(() => {
-    if (feedback.trim()) {
-      // TODO: Send feedback to backend
-      setSubmitted(true);
-      setTimeout(() => {
-        closeFeedbackSheet();
-      }, 1500);
-    }
-  }, [feedback, closeFeedbackSheet]);
 
   return (
     <PageLayout title="Settings">
@@ -147,9 +110,9 @@ export default function SettingsScreen() {
       >
         {/* Account Section */}
         <SettingsGroup title="Account">
-          <SettingsItem icon={User} label="Profile" onPress={() => {}} />
+          <SettingsItem icon={User} label="Profile" onPress={() => router.push('/profile')} />
           <View className="h-px bg-white/10 mx-1" />
-          <SettingsItem icon={Bell} label="Notifications" onPress={() => {}} />
+          <SettingsItem icon={Bell} label="Notifications" onPress={() => router.push('/notifications')} />
         </SettingsGroup>
 
         {/* Support Section */}
@@ -157,7 +120,7 @@ export default function SettingsScreen() {
           <SettingsItem
             icon={MessageCircle}
             label="Give Feedback"
-            onPress={openFeedbackSheet}
+            onPress={() => router.push('/feedback')}
           />
           <View className="h-px bg-white/10 mx-1" />
           <SettingsItem icon={Star} label="Rate the App" onPress={() => {}} />
@@ -212,94 +175,6 @@ export default function SettingsScreen() {
         confirmText="Log Out"
         cancelText="Cancel"
       />
-
-      {/* Feedback Bottom Sheet */}
-      <GlassBottomSheet
-        ref={feedbackSheetRef}
-        snapPoints={['40%']}
-        onClose={handleFeedbackClose}
-      >
-        <View className="flex-1 px-6 pt-2">
-          <Text className="text-xl font-semibold text-white mb-2">
-            Give Feedback
-          </Text>
-
-          {submitted ? (
-            <View className="flex-1 items-center justify-center">
-              <Text className="text-emerald-400 text-lg font-medium">
-                Thank you for your feedback!
-              </Text>
-            </View>
-          ) : (
-            <>
-              <Text className="text-gray-400 mb-4">
-                We'd love to hear your thoughts on how we can improve.
-              </Text>
-
-              <View style={styles.textInputContainer}>
-                <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-                <View style={styles.textInputGlass} />
-                <TextInput
-                  value={feedback}
-                  onChangeText={setFeedback}
-                  placeholder="Share your feedback..."
-                  placeholderTextColor="#6B7280"
-                  multiline
-                  numberOfLines={4}
-                  className="text-white text-base p-4 flex-1"
-                  style={styles.textInput}
-                />
-              </View>
-            </>
-          )}
-        </View>
-
-        {!submitted && (
-          <View className="px-6 pb-4">
-            <Pressable
-              onPress={handleSubmitFeedback}
-              style={[
-                styles.submitButton,
-                { opacity: feedback.trim() ? 1 : 0.5 },
-              ]}
-              disabled={!feedback.trim()}
-            >
-              <LinearGradient
-                colors={['#10B981', '#059669']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <Text className="text-white text-center font-semibold">
-                Send Feedback
-              </Text>
-            </Pressable>
-          </View>
-        )}
-      </GlassBottomSheet>
     </PageLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  textInputContainer: {
-    height: 100,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-  },
-  textInputGlass: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  textInput: {
-    textAlignVertical: 'top',
-  },
-  submitButton: {
-    paddingVertical: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-});

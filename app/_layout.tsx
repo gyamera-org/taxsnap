@@ -38,6 +38,11 @@ export default function Layout() {
           {/* Monetization */}
           <Stack.Screen name="paywall" />
 
+          {/* Settings Pages */}
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="feedback" />
+          <Stack.Screen name="notifications" />
+
           {/* Error Handling */}
           <Stack.Screen name="+not-found" />
         </Stack>
