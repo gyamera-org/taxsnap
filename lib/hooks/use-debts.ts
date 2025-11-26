@@ -2,22 +2,13 @@ import { useMutation, useQuery, useQueryClient, UseQueryOptions } from '@tanstac
 import { toast } from 'sonner-native';
 import { queryKeys } from './query-keys';
 import { handleError } from './utils';
+import { supabase } from '@/lib/supabase/client';
 import {
   Debt,
   DebtPayment,
   DebtSummary,
   DebtCategory,
 } from '@/lib/types/debt';
-import {
-  MOCK_DEBTS,
-  MOCK_PAYMENTS,
-  calculateDebtSummary,
-  simulateDelay,
-} from '@/lib/mock/debts';
-
-// In-memory store for mock data (simulates database)
-let mockDebts = [...MOCK_DEBTS];
-let mockPayments = [...MOCK_PAYMENTS];
 
 /**
  * Fetch all debts, optionally filtered by search query
@@ -30,22 +21,19 @@ export function useDebts(
   return useQuery({
     queryKey: queryKeys.debts.list(search),
     queryFn: async () => {
-      await simulateDelay(300);
+      let query = supabase
+        .from('debts')
+        .select('*')
+        .order('interest_rate', { ascending: false });
 
-      let debts = [...mockDebts];
-
-      // Filter by search if provided
       if (search && search.trim()) {
-        const searchLower = search.toLowerCase();
-        debts = debts.filter(
-          d =>
-            d.name.toLowerCase().includes(searchLower) ||
-            d.category.toLowerCase().includes(searchLower)
-        );
+        query = query.or(`name.ilike.%${search}%,category.ilike.%${search}%`);
       }
 
-      // Sort by interest rate (highest first - Avalanche method)
-      return debts.sort((a, b) => b.interest_rate - a.interest_rate);
+      const { data, error } = await query;
+
+      if (error) throw new Error(error.message);
+      return data as Debt[];
     },
     ...options,
   });
@@ -61,8 +49,14 @@ export function useDebt(
   return useQuery({
     queryKey: queryKeys.debts.detail(id),
     queryFn: async () => {
-      await simulateDelay(200);
-      return mockDebts.find(d => d.id === id) || null;
+      const { data, error } = await supabase
+        .from('debts')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw new Error(error.message);
+      return data as Debt;
     },
     enabled: !!id,
     ...options,
@@ -78,8 +72,38 @@ export function useDebtSummary(
   return useQuery({
     queryKey: queryKeys.debts.summary(),
     queryFn: async () => {
-      await simulateDelay(200);
-      return calculateDebtSummary(mockDebts);
+      const { data: debts, error } = await supabase
+        .from('debts')
+        .select('*')
+        .eq('status', 'active');
+
+      if (error) throw new Error(error.message);
+
+      const summary: DebtSummary = {
+        total_balance: 0,
+        total_original_balance: 0,
+        total_minimum_payment: 0,
+        total_interest_paid: 0,
+        debt_count: debts?.length || 0,
+        highest_rate_debt: null,
+      };
+
+      if (debts && debts.length > 0) {
+        let highestRate = -1;
+
+        for (const debt of debts) {
+          summary.total_balance += Number(debt.current_balance);
+          summary.total_original_balance += Number(debt.original_balance);
+          summary.total_minimum_payment += Number(debt.minimum_payment);
+
+          if (Number(debt.interest_rate) > highestRate) {
+            highestRate = Number(debt.interest_rate);
+            summary.highest_rate_debt = debt as Debt;
+          }
+        }
+      }
+
+      return summary;
     },
     ...options,
   });
@@ -95,10 +119,14 @@ export function useDebtPayments(
   return useQuery({
     queryKey: queryKeys.debts.payments(debtId),
     queryFn: async () => {
-      await simulateDelay(200);
-      return mockPayments
-        .filter(p => p.debt_id === debtId)
-        .sort((a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime());
+      const { data, error } = await supabase
+        .from('debt_payments')
+        .select('*')
+        .eq('debt_id', debtId)
+        .order('payment_date', { ascending: false });
+
+      if (error) throw new Error(error.message);
+      return data as DebtPayment[];
     },
     enabled: !!debtId,
     ...options,
@@ -122,24 +150,27 @@ export function useCreateDebt() {
 
   return useMutation({
     mutationFn: async (payload: CreateDebtPayload) => {
-      await simulateDelay(500);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-      const newDebt: Debt = {
-        id: String(Date.now()),
-        name: payload.name,
-        category: payload.category,
-        status: 'active',
-        current_balance: payload.current_balance,
-        original_balance: payload.current_balance,
-        interest_rate: payload.interest_rate,
-        minimum_payment: payload.minimum_payment,
-        due_date: payload.due_date || 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      const { data, error } = await supabase
+        .from('debts')
+        .insert({
+          account_id: user.id,
+          name: payload.name,
+          category: payload.category,
+          current_balance: payload.current_balance,
+          original_balance: payload.current_balance,
+          interest_rate: payload.interest_rate,
+          minimum_payment: payload.minimum_payment,
+          due_date: payload.due_date || 1,
+          status: 'active',
+        })
+        .select()
+        .single();
 
-      mockDebts.push(newDebt);
-      return newDebt;
+      if (error) throw new Error(error.message);
+      return data as Debt;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.debts.all });
@@ -166,19 +197,16 @@ export function useUpdateDebt() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: UpdateDebtPayload) => {
-      await simulateDelay(500);
+    mutationFn: async ({ id, ...updates }: UpdateDebtPayload) => {
+      const { data, error } = await supabase
+        .from('debts')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
 
-      const index = mockDebts.findIndex(d => d.id === payload.id);
-      if (index === -1) throw new Error('Debt not found');
-
-      mockDebts[index] = {
-        ...mockDebts[index],
-        ...payload,
-        updated_at: new Date().toISOString(),
-      };
-
-      return mockDebts[index];
+      if (error) throw new Error(error.message);
+      return data as Debt;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.debts.all });
@@ -197,14 +225,12 @@ export function useDeleteDebt() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await simulateDelay(500);
+      const { error } = await supabase
+        .from('debts')
+        .delete()
+        .eq('id', id);
 
-      const index = mockDebts.findIndex(d => d.id === id);
-      if (index === -1) throw new Error('Debt not found');
-
-      mockDebts.splice(index, 1);
-      mockPayments = mockPayments.filter(p => p.debt_id !== id);
-
+      if (error) throw new Error(error.message);
       return id;
     },
     onSuccess: () => {
@@ -222,48 +248,22 @@ interface RecordPaymentPayload {
 
 /**
  * Record a payment for a debt
+ * Uses edge function for atomic transaction (updates payment + debt balance)
  */
 export function useRecordPayment() {
   const qc = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: RecordPaymentPayload) => {
-      await simulateDelay(500);
+      // Use edge function for atomic operation
+      const { data, error } = await supabase.functions.invoke('record-payment', {
+        body: payload,
+      });
 
-      const debt = mockDebts.find(d => d.id === payload.debt_id);
-      if (!debt) throw new Error('Debt not found');
+      if (error) throw new Error(error.message);
+      if (!data.success) throw new Error(data.error || 'Failed to record payment');
 
-      // Calculate interest/principal split (simplified)
-      const monthlyInterest = (debt.current_balance * debt.interest_rate) / 12;
-      const interestPaid = Math.min(monthlyInterest, payload.amount);
-      const principalPaid = payload.amount - interestPaid;
-
-      const newPayment: DebtPayment = {
-        id: String(Date.now()),
-        debt_id: payload.debt_id,
-        amount: payload.amount,
-        principal_paid: principalPaid,
-        interest_paid: interestPaid,
-        payment_date: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      };
-
-      mockPayments.push(newPayment);
-
-      // Update debt balance
-      const debtIndex = mockDebts.findIndex(d => d.id === payload.debt_id);
-      const newBalance = Math.max(0, debt.current_balance - principalPaid);
-      mockDebts[debtIndex].current_balance = newBalance;
-      mockDebts[debtIndex].updated_at = new Date().toISOString();
-
-      // Auto mark as paid off when balance reaches 0
-      if (newBalance === 0) {
-        mockDebts[debtIndex].status = 'paid_off';
-        mockDebts[debtIndex].paid_off_date = new Date().toISOString();
-        mockDebts[debtIndex].minimum_payment = 0;
-      }
-
-      return newPayment;
+      return data.data as DebtPayment;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.debts.all });

@@ -10,25 +10,35 @@ export default function ProfileScreen() {
   const updateAccount = useUpdateAccount();
 
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    if (account?.name) {
-      setName(account.name);
+    if (account) {
+      setName(account.name || '');
+      setUsername(account.username || '');
     }
-  }, [account?.name]);
+  }, [account]);
 
   useEffect(() => {
-    if (account?.name) {
-      setHasChanges(name !== account.name);
+    if (account) {
+      const nameChanged = name !== (account.name || '');
+      const usernameChanged = username !== (account.username || '');
+      setHasChanges(nameChanged || usernameChanged);
     }
-  }, [name, account?.name]);
+  }, [name, username, account]);
 
   const handleSave = async () => {
     if (!hasChanges) return;
 
+    // Validate username
+    if (username && !/^[a-zA-Z0-9_]+$/.test(username)) {
+      toast.error('Username can only contain letters, numbers, and underscores');
+      return;
+    }
+
     try {
-      await updateAccount.mutateAsync({ name });
+      await updateAccount.mutateAsync({ name, username });
       toast.success('Profile updated successfully');
       setHasChanges(false);
     } catch (error) {
@@ -36,8 +46,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const email = user?.email || '';
-  const username = email.split('@')[0] || '';
+  const email = account?.email || user?.email || '';
 
   return (
     <FormPage
@@ -53,16 +62,17 @@ export default function ProfileScreen() {
       }
     >
       <FormField
-        label="Username"
-        value={username}
-        editable={false}
-      />
-
-      <FormField
         label="Name"
         value={name}
         onChangeText={setName}
         placeholder="Enter your name"
+      />
+
+      <FormField
+        label="Username"
+        value={username}
+        onChangeText={(text) => setUsername(text.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+        placeholder="Enter username"
       />
 
       <FormField

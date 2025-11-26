@@ -1,52 +1,42 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Platform, StatusBar } from 'react-native';
+import { View, Text, Pressable, Platform, StatusBar, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '@/context/auth-provider';
 
 export default function AuthScreen() {
   const router = useRouter();
   const { mode } = useLocalSearchParams<{ mode?: 'signin' | 'signup' }>();
-  const [isLoading, setIsLoading] = useState(false);
+  const { signInWithApple, signInWithGoogle, loading } = useAuth();
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const isSignUp = mode === 'signup';
 
   const handleAppleAuth = async () => {
-    setIsLoading(true);
+    setIsAuthenticating(true);
     try {
-      // TODO: Implement Apple authentication
-      // For now, navigate to paywall or home
-      setTimeout(() => {
-        if (isSignUp) {
-          router.replace('/paywall');
-        } else {
-          router.replace('/(tabs)/home');
-        }
-      }, 500);
+      await signInWithApple();
+      // Navigation is handled by auth state change listener
     } catch (error) {
       console.error('Apple auth error:', error);
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
   const handleGoogleAuth = async () => {
-    setIsLoading(true);
+    setIsAuthenticating(true);
     try {
-      // TODO: Implement Google authentication
-      // For now, navigate to paywall or home
-      setTimeout(() => {
-        if (isSignUp) {
-          router.replace('/paywall');
-        } else {
-          router.replace('/(tabs)/home');
-        }
-      }, 500);
+      await signInWithGoogle();
+      // Navigation is handled by auth state change listener
     } catch (error) {
       console.error('Google auth error:', error);
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
+
+  const isLoading = loading || isAuthenticating;
 
   return (
     <View className="flex-1 bg-[#0F0F0F]">
@@ -77,10 +67,16 @@ export default function AuthScreen() {
                 }`}
               >
                 <View className="bg-white py-4 px-6 flex-row items-center justify-center">
-                  <Text className="text-black text-xl mr-3"></Text>
-                  <Text className="text-black font-semibold text-lg">
-                    Continue with Apple
-                  </Text>
+                  {isLoading ? (
+                    <ActivityIndicator color="#000" />
+                  ) : (
+                    <>
+                      <Text className="text-black text-xl mr-3"></Text>
+                      <Text className="text-black font-semibold text-lg">
+                        Continue with Apple
+                      </Text>
+                    </>
+                  )}
                 </View>
               </Pressable>
             )}
@@ -94,10 +90,16 @@ export default function AuthScreen() {
               }`}
             >
               <View className="bg-white/10 border border-white/20 rounded-2xl py-4 px-6 flex-row items-center justify-center">
-                <Text className="text-white text-xl mr-3">G</Text>
-                <Text className="text-white font-semibold text-lg">
-                  Continue with Google
-                </Text>
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Text className="text-white text-xl mr-3">G</Text>
+                    <Text className="text-white font-semibold text-lg">
+                      Continue with Google
+                    </Text>
+                  </>
+                )}
               </View>
             </Pressable>
           </View>

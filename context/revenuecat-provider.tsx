@@ -6,31 +6,25 @@ import Purchases, {
   CustomerInfo,
 } from 'react-native-purchases';
 import { useAuth } from './auth-provider';
-import { supabase } from '@/lib/supabase/client';
 
 const APIKeys = {
   apple: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+  android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
 };
 
 interface SubscriptionState {
   isSubscribed: boolean;
+  isTrialing: boolean;
   loading: boolean;
   customerInfo: CustomerInfo | null;
   error: string | null;
   offerings: PurchasesOfferings | null;
-  // Grace period logic
-  isInGracePeriod: boolean;
-  daysRemainingInGrace: number;
-  shouldShowPaywall: boolean;
 }
 
 interface SubscriptionContextValue extends SubscriptionState {
   refreshSubscriptionStatus: () => Promise<void>;
   restorePurchases: () => Promise<CustomerInfo>;
-  // Core RevenueCat functionality
   purchasePackage: (pack: PurchasesPackage) => Promise<{ success: boolean; error?: string }>;
-  // Feature-specific paywall checks
-  requiresSubscriptionForFeature: (feature: 'workout-generation' | 'scan-food' | 'meal-plan-generation' | 'progress-filters') => boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(undefined);
@@ -39,13 +33,11 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [state, setState] = useState<SubscriptionState>({
     isSubscribed: false,
-    loading: false,
+    isTrialing: false,
+    loading: true,
     customerInfo: null,
     error: null,
     offerings: null,
-    isInGracePeriod: false,
-    daysRemainingInGrace: 0,
-    shouldShowPaywall: false,
   });
 
   // Initialize RevenueCat on mount
@@ -61,18 +53,15 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
           return loadSubscriptionStatus();
         })
         .catch((error) => {
-          console.error('❌ Error setting RevenueCat user ID:', error);
-          // Still try to load subscription status
+          console.error('Error setting RevenueCat user ID:', error);
           loadSubscriptionStatus();
         });
     } else {
       setState((prev) => ({
         ...prev,
         isSubscribed: false,
+        isTrialing: false,
         customerInfo: null,
-        isInGracePeriod: false,
-        daysRemainingInGrace: 0,
-        shouldShowPaywall: false,
         loading: false,
       }));
     }
@@ -80,31 +69,36 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
 
   const initializeRevenueCat = async () => {
     try {
-      if (Platform.OS === 'ios' && APIKeys.apple) {
-        await Purchases.configure({ apiKey: APIKeys.apple });
-        if (__DEV__) {
-          Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
-        }
-      } else {
-        const errorMsg = 'RevenueCat configuration failed';
-        setState((prev) => ({ ...prev, error: errorMsg }));
+      const apiKey = Platform.OS === 'ios' ? APIKeys.apple : APIKeys.android;
+
+      if (!apiKey) {
+        console.error('RevenueCat API key not configured');
+        setState((prev) => ({ ...prev, error: 'RevenueCat not configured', loading: false }));
         return;
       }
 
-      // Load offerings with retry logic
+      await Purchases.configure({ apiKey });
+
+      if (__DEV__) {
+        Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+      }
+
       await loadOfferingsWithRetry();
     } catch (error) {
+      console.error('Failed to initialize RevenueCat:', error);
       setState((prev) => ({
         ...prev,
-        error: 'Failed to initialize RevenueCat',
+        error: 'Failed to initialize subscriptions',
+        loading: false,
       }));
     }
   };
 
-  const loadOfferingsWithRetry = async (retries = 2) => {
+  const loadOfferingsWithRetry = async (retries = 3) => {
     for (let i = 0; i < retries; i++) {
       try {
         const offerings = await Purchases.getOfferings();
+
         if (!offerings?.current) {
           throw new Error('No current offering available');
         }
@@ -112,10 +106,11 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         setState((prev) => ({ ...prev, offerings, error: null }));
         return;
       } catch (error) {
+        console.error(`Offerings load attempt ${i + 1} failed:`, error);
         if (i === retries - 1) {
           setState((prev) => ({
             ...prev,
-            error: 'Unable to load subscription plans.',
+            error: 'Unable to load subscription plans',
           }));
         } else {
           await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -126,14 +121,22 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
 
   const purchasePackage = async (pack: PurchasesPackage) => {
     try {
+      setState((prev) => ({ ...prev, loading: true }));
+
       const purchaseInfo = await Purchases.purchasePackage(pack);
       setState((prev) => ({ ...prev, customerInfo: purchaseInfo.customerInfo }));
+
       await loadSubscriptionStatus();
+
       return { success: true };
     } catch (error: any) {
+      setState((prev) => ({ ...prev, loading: false }));
+
       if (error?.userCancelled) {
         return { success: false, error: 'Purchase was cancelled' };
       }
+
+      console.error('Purchase error:', error);
       return { success: false, error: 'Purchase failed. Please try again.' };
     }
   };
@@ -143,47 +146,29 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
       const customerInfo = await Purchases.getCustomerInfo();
+
+      // Check for active entitlements
       const hasActiveSubscription = Object.keys(customerInfo.entitlements.active).length > 0;
 
-      // Grace period logic - ONLY for new users without subscriptions
-      const GRACE_PERIOD_DAYS = 7;
-      let isInGracePeriod = false;
-      let daysRemainingInGrace = 0;
-
-      if (!hasActiveSubscription && user) {
-        const { data: accountData } = await supabase
-          .from('accounts')
-          .select('created_at')
-          .eq('id', user.id)
-          .single();
-
-        if (accountData) {
-          const accountCreationDate = new Date(accountData.created_at);
-          const daysSinceCreation = Math.floor(
-            (Date.now() - accountCreationDate.getTime()) / (1000 * 60 * 60 * 24)
-          );
-
-          isInGracePeriod = daysSinceCreation < GRACE_PERIOD_DAYS;
-          daysRemainingInGrace = Math.max(0, GRACE_PERIOD_DAYS - daysSinceCreation);
+      // Check if user is in trial period
+      let isTrialing = false;
+      if (hasActiveSubscription) {
+        const activeEntitlement = Object.values(customerInfo.entitlements.active)[0];
+        if (activeEntitlement?.periodType === 'TRIAL') {
+          isTrialing = true;
         }
       }
-
-      // PayWall decision: Show paywall ONLY if no active subscription AND not in grace period
-      // Changed: Now we allow free access to most features, only restrict workout generation and scan food
-      const shouldShowPaywall = false; // Always allow app access
 
       setState((prev) => ({
         ...prev,
         isSubscribed: hasActiveSubscription,
+        isTrialing,
         customerInfo,
-        isInGracePeriod,
-        daysRemainingInGrace,
-        shouldShowPaywall,
         loading: false,
         error: null,
       }));
     } catch (error: any) {
-      console.error('❌ Failed to load subscription status:', error);
+      console.error('Failed to load subscription status:', error);
       setState((prev) => ({
         ...prev,
         loading: false,
@@ -204,19 +189,10 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
       await loadSubscriptionStatus();
       return customerInfo;
     } catch (error: any) {
+      console.error('Failed to restore purchases:', error);
       setState((prev) => ({ ...prev, loading: false, error: 'Failed to restore purchases' }));
       throw error;
     }
-  };
-
-  const requiresSubscriptionForFeature = (feature: 'workout-generation' | 'scan-food' | 'meal-plan-generation' | 'progress-filters'): boolean => {
-    // If user has active subscription or is in grace period, allow all features
-    if (state.isSubscribed || state.isInGracePeriod) {
-      return false;
-    }
-    
-    // Only require subscription for workout generation, scan food, meal plan generation, and progress filters
-    return feature === 'workout-generation' || feature === 'scan-food' || feature === 'meal-plan-generation' || feature === 'progress-filters';
   };
 
   const value: SubscriptionContextValue = {
@@ -224,7 +200,6 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
     refreshSubscriptionStatus,
     restorePurchases,
     purchasePackage,
-    requiresSubscriptionForFeature,
   };
 
   return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;

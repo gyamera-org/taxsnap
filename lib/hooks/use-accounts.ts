@@ -8,54 +8,88 @@ import { handleError } from './utils';
 export interface Account {
   id: string;
   name: string;
-  avatar: string | null;
+  email: string;
+  username: string;
+  avatar: string;
   onboarding_completed: boolean;
+  date_of_birth: string | null;
   subscription_status: string;
   subscription_plan: string;
   subscription_platform: string;
-  subscription_expires: string | null;
-  subscription_billing_frequency: string | null;
-  subscription_receipt_id: string | null;
-  subscription_original_purchase: string | null;
-  subscription_product: string | null;
-  subscription_last_verified_at: string | null;
+  subscription_expires_at: string | null;
+  subscription_billing: string | null;
   created_at: string;
   updated_at: string;
-  date_of_birth: string | null;
 }
 
 export function useAccount(
-  options?: Omit<UseQueryOptions<Account, Error, Account>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Account | null, Error>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: queryKeys.accounts.detail(),
     queryFn: async () => {
-      const { data, error } = (await supabase.rpc('get_account_for_user')) as {
-        data: Account | null;
-        error: Error | null;
-      };
-      if (error) throw error;
-      return data!;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Not found
+        throw error;
+      }
+
+      return data as Account;
     },
     ...options,
   });
 }
 
+interface UpdateAccountPayload {
+  name?: string;
+  username?: string;
+  onboarding_completed?: boolean;
+  date_of_birth?: string;
+  avatar?: string;
+}
+
 export function useUpdateAccount() {
   const qc = useQueryClient();
+
   return useMutation({
-    mutationFn: async (payload: {
-      name?: string;
-      onboarding_completed?: boolean;
-      date_of_birth?: string;
-    }) => {
-      const { error } = await supabase.rpc('update_account_profile', {
-        p_name: payload.name ?? undefined,
-        p_avatar: undefined,
-        p_onboarding_done: payload.onboarding_completed ?? undefined,
-        p_date_of_birth: payload.date_of_birth ?? undefined,
-      });
+    mutationFn: async (payload: UpdateAccountPayload) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // If updating username, check if it's unique
+      if (payload.username) {
+        const { data: existing } = await supabase
+          .from('accounts')
+          .select('id')
+          .eq('username', payload.username)
+          .neq('id', user.id)
+          .single();
+
+        if (existing) {
+          throw new Error('Username is already taken');
+        }
+      }
+
+      const { data, error } = await supabase
+        .from('accounts')
+        .update({
+          ...payload,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
+
       if (error) throw error;
+      return data as Account;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.accounts.detail() });
@@ -66,49 +100,32 @@ export function useUpdateAccount() {
 
 export function useDeleteAccount() {
   const qc = useQueryClient();
+
   return useMutation({
-    mutationFn: async (feedback: { reason: string; additional_comments?: string }) => {
-      // Get current session for authorization
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+    mutationFn: async (feedback?: { reason: string; additional_comments?: string }) => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
         throw new Error('Not authenticated');
       }
 
-      // Call the delete account edge function with feedback
+      // Call the delete account edge function
       const { data, error } = await supabase.functions.invoke('delete-account', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: {
-          reason: feedback.reason,
-          additional_comments: feedback.additional_comments,
-        },
+        body: feedback || {},
       });
 
-      if (error) {
-        throw new Error(error.message || 'Failed to delete account');
-      }
+      if (error) throw new Error(error.message || 'Failed to delete account');
+      if (data?.error) throw new Error(data.error);
 
-      // If the function returns an error response
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      // After successful server-side deletion, sign out locally to clear session
-      const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) {
-        console.warn('Failed to sign out locally after account deletion:', signOutError);
-        // Don't throw here since the account was already deleted successfully
-      }
+      // Sign out locally
+      await supabase.auth.signOut();
 
       return data;
     },
     onSuccess: () => {
       qc.clear();
-      // Navigate to auth page with signup mode after account deletion
       router.replace('/auth?mode=signup');
     },
     onError: (err: any) => handleError(err, 'Failed to delete account'),
@@ -119,35 +136,36 @@ export interface Subscription {
   status: string;
   plan: string;
   platform: string;
-  expires: string | null;
-  billing_frequency: string | null;
-  receipt_id: string | null;
-  original_purchase: string | null;
-  product: string | null;
-  last_verified_at: string | null;
+  expires_at: string | null;
+  billing: string | null;
 }
 
 export function useSubscription(
-  options?: Omit<UseQueryOptions<Subscription, Error, Subscription>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Subscription | null, Error>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: queryKeys.accounts.subscription(),
     queryFn: async () => {
-      const { data, error } = (await supabase.rpc('get_account_for_user')) as {
-        data: Account | null;
-        error: Error | null;
-      };
-      if (error) throw error;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('subscription_status, subscription_plan, subscription_platform, subscription_expires_at, subscription_billing')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw error;
+      }
+
       return {
-        status: data!.subscription_status,
-        plan: data!.subscription_plan,
-        platform: data!.subscription_platform,
-        expires: data!.subscription_expires,
-        billing_frequency: data!.subscription_billing_frequency,
-        receipt_id: data!.subscription_receipt_id,
-        original_purchase: data!.subscription_original_purchase,
-        product: data!.subscription_product,
-        last_verified_at: data!.subscription_last_verified_at,
+        status: data.subscription_status,
+        plan: data.subscription_plan,
+        platform: data.subscription_platform,
+        expires_at: data.subscription_expires_at,
+        billing: data.subscription_billing,
       };
     },
     ...options,

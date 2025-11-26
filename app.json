@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Debt Free",
-    "slug": "debt-free",
+    "slug": "debtfree",
     "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "debt-free",
+    "scheme": "debtfree",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "userInterfaceStyle": "light",
-      "bundleIdentifier": "com.debt-free.app",
+      "bundleIdentifier": "com.debtfree.app",
       "infoPlist": {
         "NSCameraUsageDescription": "Debt Free uses your camera to capture meal photos for nutrition tracking, take profile avatar pictures to personalize your experience, and add progress pictures for your insights.",
         "NSPhotoLibraryUsageDescription": "Debt Free accesses your photo library to upload meal photos for nutrition tracking, choose profile avatar pictures, and add progress pictures for your insights.",
@@ -31,7 +31,7 @@
         "backgroundColor": "#FEF9F9"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.debt-free.app",
+      "package": "com.debtfree.app",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
