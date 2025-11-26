@@ -1,89 +1,185 @@
-import { View, Text, ScrollView } from 'react-native';
-import { PageLayout, GlassCard, SectionHeader } from '@/components/layouts';
-import { TrendingDown, Target, Calendar } from 'lucide-react-native';
+import { useState, useRef } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronDown, ChevronRight, Target, Check } from 'lucide-react-native';
+import { PageLayout, SectionHeader } from '@/components/layouts';
+import { GlassBottomSheet, GlassBottomSheetRef } from '@/components/ui/glass-bottom-sheet';
+import {
+  OverviewCard,
+  PriorityDebtCard,
+  UpcomingPayments,
+  QuickStats,
+} from '@/components/home';
+import { useDebts, useDebtSummary } from '@/lib/hooks/use-debts';
+import {
+  formatDate,
+  calculatePayoffMonths,
+  calculatePayoffDate,
+} from '@/lib/utils/debt-calculator';
+
+const currentYear = new Date().getFullYear();
+const yearOptions = [currentYear, currentYear - 1, currentYear - 2];
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const bottomSheetRef = useRef<GlassBottomSheetRef>(null);
+
+  const { data: debts, isLoading: debtsLoading } = useDebts();
+  const { data: summary, isLoading: summaryLoading } = useDebtSummary();
+
+  const isLoading = debtsLoading || summaryLoading;
+
+  const activeDebts = debts?.filter(d => d.status === 'active') || [];
+  const paidOffDebts = debts?.filter(d => d.status === 'paid_off') || [];
+
+  // Calculate stats
+  const totalOriginal = summary?.total_original_balance || 0;
+  const totalBalance = summary?.total_balance || 0;
+  const totalPaid = totalOriginal - totalBalance;
+
+  // Average interest rate for payoff calculation
+  const avgRate = activeDebts.length > 0
+    ? activeDebts.reduce((sum, d) => sum + d.interest_rate, 0) / activeDebts.length
+    : 0;
+
+  // Calculate interest saved by paying extra
+  const interestSaved = activeDebts.reduce((saved, debt) => {
+    const paidPrincipal = debt.original_balance - debt.current_balance;
+    if (paidPrincipal <= 0) return saved;
+    // Estimate interest avoided by paying down principal faster
+    const monthsAhead = paidPrincipal / debt.minimum_payment;
+    const avgMonthlyInterest = (debt.interest_rate / 12) * debt.original_balance;
+    return saved + Math.max(0, monthsAhead * avgMonthlyInterest * 0.5);
+  }, 0);
+
+  // Payoff date estimate
+  const totalMonths = totalBalance && summary?.total_minimum_payment
+    ? calculatePayoffMonths(totalBalance, avgRate || 0.15, summary.total_minimum_payment)
+    : 0;
+  const payoffDate = calculatePayoffDate(totalMonths);
+  const debtFreeDate = payoffDate ? formatDate(payoffDate) : '--';
+
+  const hasDebts = activeDebts.length > 0;
+
+  const handleYearSelect = (year: number) => {
+    setSelectedYear(year);
+    bottomSheetRef.current?.close();
+  };
+
+  // Year selector button
+  const yearSelector = (
+    <Pressable
+      onPress={() => bottomSheetRef.current?.expand()}
+      className="flex-row items-center px-3 py-2 rounded-xl overflow-hidden"
+    >
+      <LinearGradient
+        colors={['#1a1a1f', '#141418']}
+        style={StyleSheet.absoluteFill}
+      />
+      <View className="absolute inset-0 rounded-xl border border-white/[0.08]" />
+      <Text className="text-white font-semibold mr-1">{selectedYear}</Text>
+      <ChevronDown size={16} color="#6B7280" />
+    </Pressable>
+  );
+
+  // View all action for section header
+  const viewAllAction = (
+    <Pressable
+      onPress={() => router.push('/(tabs)/debts')}
+      className="flex-row items-center"
+    >
+      <Text className="text-emerald-400 text-sm font-medium mr-0.5">View All</Text>
+      <ChevronRight size={14} color="#10B981" />
+    </Pressable>
+  );
+
   return (
-    <PageLayout title="Home">
+    <PageLayout title="Overview" rightAction={yearSelector}>
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
       >
-        {/* Welcome Section */}
-        <View className="px-5 pt-4 pb-2">
-          <Text className="text-3xl font-bold text-white">
-            Welcome back
-          </Text>
-          <Text className="text-gray-400 mt-1">
-            Track your journey to financial freedom
-          </Text>
-        </View>
+        {/* Overview */}
+        <OverviewCard
+          totalBalance={totalBalance}
+          totalOriginal={totalOriginal}
+          monthlyPayment={summary?.total_minimum_payment || 0}
+          debtFreeDate={debtFreeDate}
+          isLoading={isLoading}
+        />
 
-        {/* Overview Card */}
-        <GlassCard>
-          <View className="flex-row items-center mb-4">
-            <View className="w-10 h-10 rounded-full bg-emerald-500/20 items-center justify-center mr-3">
-              <TrendingDown size={20} color="#10B981" />
-            </View>
-            <View>
-              <Text className="text-gray-400 text-sm">Total Debt</Text>
-              <Text className="text-white text-2xl font-bold">$0.00</Text>
-            </View>
-          </View>
-          <View className="h-px bg-white/10 my-3" />
-          <View className="flex-row justify-between">
-            <View>
-              <Text className="text-gray-400 text-xs">Monthly Payment</Text>
-              <Text className="text-white font-semibold">$0.00</Text>
-            </View>
-            <View>
-              <Text className="text-gray-400 text-xs">Debt Free Date</Text>
-              <Text className="text-white font-semibold">--</Text>
-            </View>
-          </View>
-        </GlassCard>
+        {/* Stats Grid */}
+        <QuickStats
+          activeCount={activeDebts.length}
+          paidOffCount={paidOffDebts.length}
+          totalPaid={totalPaid}
+          interestSaved={interestSaved}
+          isLoading={isLoading}
+        />
 
-        {/* Quick Stats */}
-        <SectionHeader title="Quick Stats" />
+        {/* Priority */}
+        {summary?.highest_rate_debt && (
+          <>
+            <SectionHeader title="Priority" />
+            <PriorityDebtCard debt={summary.highest_rate_debt} />
+          </>
+        )}
 
-        <View className="flex-row px-4">
-          <View className="flex-1 mr-2">
-            <GlassCard style={{ marginHorizontal: 0 }}>
-              <View className="items-center">
-                <View className="w-12 h-12 rounded-full bg-blue-500/20 items-center justify-center mb-2">
-                  <Target size={24} color="#3B82F6" />
+        {/* Upcoming */}
+        {hasDebts && (
+          <>
+            <SectionHeader title="Upcoming" action={viewAllAction} />
+            <UpcomingPayments debts={activeDebts} />
+          </>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !hasDebts && (
+          <Pressable onPress={() => router.push('/debt/add')} className="mx-4 mt-6">
+            <View className="rounded-2xl overflow-hidden">
+              <LinearGradient
+                colors={['#1a1a1f', '#141418']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View className="absolute inset-0 rounded-2xl border border-white/[0.08]" />
+              <View className="p-5 flex-row items-center">
+                <View className="w-12 h-12 rounded-2xl bg-emerald-500/15 items-center justify-center mr-4">
+                  <Target size={24} color="#10B981" />
                 </View>
-                <Text className="text-gray-400 text-xs">Active Debts</Text>
-                <Text className="text-white text-xl font-bold">0</Text>
-              </View>
-            </GlassCard>
-          </View>
-          <View className="flex-1 ml-2">
-            <GlassCard style={{ marginHorizontal: 0 }}>
-              <View className="items-center">
-                <View className="w-12 h-12 rounded-full bg-purple-500/20 items-center justify-center mb-2">
-                  <Calendar size={24} color="#A855F7" />
+                <View className="flex-1">
+                  <Text className="text-white font-semibold">Add your first debt</Text>
+                  <Text className="text-gray-600 text-sm">Start your debt-free journey</Text>
                 </View>
-                <Text className="text-gray-400 text-xs">Payments Due</Text>
-                <Text className="text-white text-xl font-bold">0</Text>
+                <ChevronRight size={20} color="#4B5563" />
               </View>
-            </GlassCard>
-          </View>
-        </View>
-
-        {/* Getting Started */}
-        <SectionHeader title="Getting Started" />
-
-        <GlassCard>
-          <Text className="text-white font-semibold mb-2">
-            Add your first debt
-          </Text>
-          <Text className="text-gray-400 text-sm">
-            Start by adding your debts to track your progress towards financial freedom.
-          </Text>
-        </GlassCard>
+            </View>
+          </Pressable>
+        )}
       </ScrollView>
+
+      {/* Year Picker Bottom Sheet */}
+      <GlassBottomSheet ref={bottomSheetRef} snapPoints={['30%']}>
+        <View className="px-5 pt-2">
+          <Text className="text-white text-lg font-semibold mb-4">Select Year</Text>
+          {yearOptions.map((year) => (
+            <Pressable
+              key={year}
+              onPress={() => handleYearSelect(year)}
+              className="flex-row items-center justify-between py-4 border-b border-white/[0.06]"
+            >
+              <Text className={`text-lg ${selectedYear === year ? 'text-emerald-400 font-semibold' : 'text-white'}`}>
+                {year}
+              </Text>
+              {selectedYear === year && (
+                <Check size={20} color="#10B981" />
+              )}
+            </Pressable>
+          ))}
+        </View>
+      </GlassBottomSheet>
     </PageLayout>
   );
 }

@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform, StatusBar, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { ChevronLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
@@ -79,14 +78,12 @@ interface GlassCardProps {
 export function GlassCard({ children, style }: GlassCardProps) {
   return (
     <View style={[styles.glassCard, style]}>
-      <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill}>
-        <View
-          style={{
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          }}
-        />
-      </BlurView>
+      <LinearGradient
+        colors={['rgba(30, 30, 35, 0.95)', 'rgba(20, 20, 25, 0.98)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       <View style={styles.glassCardBorder} />
       <View style={styles.glassCardContent}>{children}</View>
     </View>

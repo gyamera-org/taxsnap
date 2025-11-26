@@ -115,9 +115,12 @@ export const MOCK_PAYMENTS: DebtPayment[] = [
   },
 ];
 
-// Calculate debt summary from mock data
+// Calculate debt summary from mock data (only active debts)
 export function calculateDebtSummary(debts: Debt[]): DebtSummary {
-  if (debts.length === 0) {
+  // Only count active debts for summary
+  const activeDebts = debts.filter(d => d.status === 'active');
+
+  if (activeDebts.length === 0) {
     return {
       total_balance: 0,
       total_original_balance: 0,
@@ -128,18 +131,18 @@ export function calculateDebtSummary(debts: Debt[]): DebtSummary {
     };
   }
 
-  const total_balance = debts.reduce((sum, d) => sum + d.current_balance, 0);
-  const total_original_balance = debts.reduce((sum, d) => sum + d.original_balance, 0);
-  const total_minimum_payment = debts.reduce((sum, d) => sum + d.minimum_payment, 0);
+  const total_balance = activeDebts.reduce((sum, d) => sum + d.current_balance, 0);
+  const total_original_balance = activeDebts.reduce((sum, d) => sum + d.original_balance, 0);
+  const total_minimum_payment = activeDebts.reduce((sum, d) => sum + d.minimum_payment, 0);
   const total_interest_paid = total_original_balance - total_balance; // Simplified
-  const highest_rate_debt = [...debts].sort((a, b) => b.interest_rate - a.interest_rate)[0];
+  const highest_rate_debt = [...activeDebts].sort((a, b) => b.interest_rate - a.interest_rate)[0];
 
   return {
     total_balance,
     total_original_balance,
     total_minimum_payment,
     total_interest_paid,
-    debt_count: debts.length,
+    debt_count: activeDebts.length,
     highest_rate_debt,
   };
 }
