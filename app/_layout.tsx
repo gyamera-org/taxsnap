@@ -31,6 +31,10 @@ export default function Layout() {
           {/* Tab Navigation */}
           <Stack.Screen name="(tabs)" />
 
+          {/* Onboarding */}
+          <Stack.Screen name="welcome" />
+          <Stack.Screen name="onboarding" />
+
           {/* Authentication */}
           <Stack.Screen name="auth/index" />
           <Stack.Screen name="auth/callback" />

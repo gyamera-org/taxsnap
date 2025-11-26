@@ -1,121 +1,100 @@
-import { useState } from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
-import { useCallback } from 'react';
-import { Text } from '../ui/text';
-import { Button } from '@/components/ui/button';
-import Animated, { FadeIn } from 'react-native-reanimated';
-import { Image } from 'expo-image';
-import { useTheme } from '@/context/theme-provider';
-import { CosmicBackground } from '@/components/ui/cosmic-background';
-import { ChevronRight } from 'lucide-react-native';
+import { View, Text, Pressable, StyleSheet, StatusBar } from 'react-native';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { TrendingDown, ChevronRight } from 'lucide-react-native';
 
 export function WelcomeScreen() {
-  // No automatic redirection logic - handled by main app index now
-  const { isDark } = useTheme();
+  const router = useRouter();
 
-  const [isNavigating, setIsNavigating] = useState(false);
+  const handleGetStarted = () => {
+    router.push('/onboarding');
+  };
 
-  const onSignIn = useCallback(() => {
-    setIsNavigating(true);
-    setTimeout(() => {
-      router.push('/auth?mode=signin');
-      setIsNavigating(false); // Reset state after navigation
-    }, 150);
-  }, []);
-
-  const onGetStarted = useCallback(() => {
-    setIsNavigating(true);
-    setTimeout(() => {
-      router.push('/onboarding');
-      setIsNavigating(false); // Reset state after navigation
-    }, 150);
-  }, []);
+  const handleSignIn = () => {
+    router.push('/auth?mode=signin');
+  };
 
   return (
-    <View className="flex-1">
-      {/* Full screen background image */}
-      <Image
-        source={{
-          uri: 'https://res.cloudinary.com/josephine19001/image/upload/v1757763415/welcome_screen_yxk5ks.png',
-        }}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        }}
-        contentFit="contain"
-        contentPosition="top"
-      />
-
-      {/* Light overlay for better image visibility */}
-      <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)',
-        }}
-      />
-
-      {/* Content */}
-      <View className="flex-1 justify-end">
-        {/* Solid bottom container with rounded top corners - extends to screen bottom */}
-        <View
-          style={{
-            backgroundColor: isDark ? '#240A34' : '#ffffff',
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            paddingHorizontal: 24,
-            paddingTop: 40,
-            paddingBottom: 60, // Account for home indicator
-          }}
-        >
-          <Animated.View entering={FadeIn.delay(300).duration(800)}>
-            <Text
-              className={`text-5xl font-bold mb-6 leading-tight ${
-                isDark ? 'text-white' : 'text-black'
-              }`}
-            >
-              Wellness, but make it personal
-            </Text>
-            <Text
-              className={`text-2xl mb-8 leading-relaxed ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }`}
-            >
-              Your body, your energy, your rules.
-            </Text>
-
-            {/* Action buttons */}
-            <View className="space-y-4">
-              <Button
-                title="Get Started"
-                onPress={onGetStarted}
-                variant="primary"
-                size="large"
-                className="bg-pink-500 justify-between"
-                postIcon={<ChevronRight size={24} color="white" />}
-                disabled={isNavigating}
-              />
-              <TouchableOpacity onPress={onSignIn} className="py-3">
-                <Text
-                  className={`text-center text-base ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                >
-                  Part of the community?{' '}
-                  <Text className={`font-semibold ${isDark ? 'text-white' : 'text-black'}`}>
-                    Sign In
-                  </Text>
-                </Text>
-              </TouchableOpacity>
+    <View className="flex-1 bg-[#0F0F0F]">
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView className="flex-1">
+        <View className="flex-1 px-6">
+          {/* Top Section with Logo/Brand */}
+          <Animated.View
+            entering={FadeIn.delay(200).duration(800)}
+            className="flex-1 justify-center items-center"
+          >
+            {/* App Icon */}
+            <View className="w-28 h-28 rounded-3xl bg-emerald-500/20 items-center justify-center mb-8">
+              <TrendingDown size={56} color="#10B981" />
             </View>
+
+            {/* App Name */}
+            <Text className="text-white text-4xl font-bold text-center mb-3">
+              DebtFree
+            </Text>
+
+            {/* Tagline */}
+            <Text className="text-gray-400 text-lg text-center px-8">
+              Turn your debt into your greatest savings opportunity
+            </Text>
+          </Animated.View>
+
+          {/* Bottom Section with Actions */}
+          <Animated.View
+            entering={FadeInDown.delay(500).duration(800)}
+            className="pb-8"
+          >
+            {/* Stats Preview */}
+            <View className="rounded-2xl overflow-hidden mb-8">
+              <LinearGradient
+                colors={['#1a1a1f', '#141418']}
+                style={StyleSheet.absoluteFill}
+              />
+              <View className="absolute inset-0 rounded-2xl border border-white/[0.08]" />
+              <View className="p-5 flex-row">
+                <View className="flex-1 items-center border-r border-white/10">
+                  <Text className="text-emerald-400 text-2xl font-bold">$5,000+</Text>
+                  <Text className="text-gray-500 text-xs mt-1">Avg. Interest Saved</Text>
+                </View>
+                <View className="flex-1 items-center">
+                  <Text className="text-emerald-400 text-2xl font-bold">3+ Years</Text>
+                  <Text className="text-gray-500 text-xs mt-1">Earlier Debt Freedom</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Get Started Button */}
+            <Pressable
+              onPress={handleGetStarted}
+              className="rounded-2xl overflow-hidden mb-4"
+            >
+              <LinearGradient
+                colors={['#10B981', '#059669']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View className="py-4 px-6 flex-row items-center justify-center">
+                <Text className="text-white font-bold text-lg mr-2">
+                  Get Started
+                </Text>
+                <ChevronRight size={20} color="#ffffff" />
+              </View>
+            </Pressable>
+
+            {/* Sign In Link */}
+            <Pressable onPress={handleSignIn} className="py-3">
+              <Text className="text-gray-400 text-center">
+                Already have an account?{' '}
+                <Text className="text-emerald-400 font-semibold">Sign In</Text>
+              </Text>
+            </Pressable>
           </Animated.View>
         </View>
-      </View>
+      </SafeAreaView>
     </View>
   );
 }

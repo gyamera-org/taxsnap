@@ -5,7 +5,9 @@ import {
   ScrollView,
   Pressable,
   Linking,
+  StyleSheet,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { PageLayout, GlassCard } from '@/components/layouts';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { showConfirmAlert } from '@/lib/utils/alert';
@@ -19,6 +21,7 @@ import {
   LogOut,
   Trash2,
   ChevronRight,
+  Gift,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
@@ -108,6 +111,31 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120, paddingTop: 8 }}
       >
+        {/* Refer and Earn Banner */}
+        <Pressable onPress={() => router.push('/referral')} className="mx-4 mb-4">
+          <View className="rounded-2xl overflow-hidden">
+            <LinearGradient
+              colors={['#064e3b', '#065f46', '#047857']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View className="absolute inset-0 rounded-2xl border border-emerald-400/20" />
+            <View className="p-4 flex-row items-center">
+              <View className="w-12 h-12 rounded-2xl bg-white/15 items-center justify-center mr-4">
+                <Gift size={24} color="#ffffff" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-white font-bold text-base">Refer & Earn</Text>
+                <Text className="text-emerald-100/80 text-sm">
+                  Invite friends and get 1 month free
+                </Text>
+              </View>
+              <ChevronRight size={20} color="rgba(255,255,255,0.7)" />
+            </View>
+          </View>
+        </Pressable>
+
         {/* Account Section */}
         <SettingsGroup title="Account">
           <SettingsItem icon={User} label="Profile" onPress={() => router.push('/profile')} />
