@@ -26,6 +26,7 @@ export function SearchBar({
             onChangeText={onChangeText}
             placeholder={placeholder}
             placeholderTextColor="#6B7280"
+            keyboardAppearance="dark"
             className="flex-1 text-white text-base ml-3"
             autoCapitalize="none"
             autoCorrect={false}

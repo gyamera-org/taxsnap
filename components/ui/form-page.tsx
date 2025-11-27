@@ -56,6 +56,7 @@ export function FormField({
           multiline={multiline}
           numberOfLines={numberOfLines}
           keyboardType={keyboardType}
+          keyboardAppearance="dark"
           textAlignVertical={multiline ? 'top' : 'center'}
           className={`flex-1 text-base px-4 ${multiline ? 'py-4' : ''} ${editable ? 'text-white' : 'text-gray-500'}`}
         />

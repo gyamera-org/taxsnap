@@ -144,6 +144,7 @@ export default function DebtsScreen() {
                 placeholder="Search debts..."
                 placeholderTextColor="#6B7280"
                 autoFocus
+                keyboardAppearance="dark"
                 className="flex-1 ml-3 text-white text-base"
               />
               {searchQuery.length > 0 && (

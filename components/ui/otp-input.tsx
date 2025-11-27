@@ -61,6 +61,7 @@ export function OTPInput({ value, onChange, length = 6, disabled = false }: OTPI
             onChangeText={(text) => handleChange(text, index)}
             onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
             keyboardType="numeric"
+            keyboardAppearance="dark"
             maxLength={1}
             textAlign="center"
             editable={!disabled}

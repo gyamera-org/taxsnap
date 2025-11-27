@@ -52,12 +52,8 @@ export default function Index() {
     }
 
     // Case 3: User logged in but not subscribed -> Paywall
-    // Note: You can adjust this logic based on your business model
-    // Currently showing paywall for non-subscribers after login
     if (user && !isSubscribed) {
-      // Check if they've completed a trial or should see paywall
-      // For now, let them into the app (soft paywall approach)
-      router.replace('/(tabs)/home');
+      router.replace('/paywall');
       return;
     }
 

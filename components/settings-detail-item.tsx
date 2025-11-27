@@ -50,6 +50,7 @@ const SettingsDetailItem = ({
               autoFocus
               multiline={false}
               placeholderTextColor={isDark ? '#9ca3af' : '#999'}
+              keyboardAppearance="dark"
             />
             <Pressable
               onPress={onSave}

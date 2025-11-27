@@ -171,8 +171,8 @@ export default function Questionnaire({
       return (
         <TextInput
           className={`p-6 rounded-2xl mb-4 text-xl ${
-            theme === 'dark' 
-              ? 'bg-gray-700 text-white placeholder-gray-400' 
+            theme === 'dark'
+              ? 'bg-gray-700 text-white placeholder-gray-400'
               : 'bg-white text-gray-900 placeholder-gray-500'
           }`}
           placeholder={step.placeholder}
@@ -184,6 +184,7 @@ export default function Questionnaire({
           }}
           placeholderTextColor={theme === 'dark' ? '#9CA3AF' : '#6B7280'}
           keyboardType={(step.key === 'birthday' || step.key === 'cycle-start-date' || step.key === 'body-height' || step.key === 'body-weight' || step.key === 'body-goal-weight-input') ? 'numeric' : 'default'}
+          keyboardAppearance="dark"
           maxLength={(step.key === 'birthday' || step.key === 'cycle-start-date') ? 10 : undefined}
         />
       );

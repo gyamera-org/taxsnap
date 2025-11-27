@@ -83,4 +83,8 @@ export const queryKeys = {
     dietaryPreferences: ['nutrition', 'dietary-preferences'] as const,
     existingIngredients: ['nutrition', 'existing-ingredients'] as const,
   },
+  chat: {
+    all: ['chat'] as const,
+    messages: () => [...queryKeys.chat.all, 'messages'] as const,
+  },
 } as const;

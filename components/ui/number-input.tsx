@@ -51,6 +51,7 @@ export function NumberInput({
           placeholder={placeholder}
           placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
           keyboardType={keyboardType}
+          keyboardAppearance="dark"
           className={themed(
             'flex-1 text-base text-gray-900',
             'flex-1 text-base text-white'

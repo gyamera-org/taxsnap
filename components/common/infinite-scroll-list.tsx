@@ -191,6 +191,7 @@ export function SearchBar({
           autoFocus={autoFocus}
           autoCorrect={false}
           autoCapitalize="none"
+          keyboardAppearance="dark"
         />
         {value.length > 0 && (
           <TouchableOpacity onPress={() => onChangeText('')}>

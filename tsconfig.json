@@ -17,7 +17,7 @@
     "**/*.ts",
     "**/*.tsx",
     "nativewind-env.d.ts",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-, "app/onboarding/step-10tsx", "app/onboarding/step-8tsx"  ]
+    "app/onboarding/step-10tsx",
+    "app/onboarding/step-8tsx"
+  ]
 }

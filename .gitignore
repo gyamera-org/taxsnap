@@ -61,7 +61,7 @@ yarn-error.*
 
 .cursorß
 
-.secret_gen.rb
+secret_gen.rb
 
 # Build files
 build/

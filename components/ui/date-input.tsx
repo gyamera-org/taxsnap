@@ -72,6 +72,7 @@ export function DateInput({
           placeholder={placeholder}
           placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
           keyboardType="numeric"
+          keyboardAppearance="dark"
           maxLength={8} // MM/DD/YY = 8 characters
           className={themed(
             'flex-1 text-base text-gray-900',

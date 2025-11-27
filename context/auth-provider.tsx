@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
 
-      const { data, error } = await supabase.auth.signInWithIdToken({
+      const { error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: appleCredential.identityToken!,
         nonce,
@@ -176,10 +176,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) throw error;
-
-      if (data.user) {
-        toast.success('Signed in successfully');
-      }
     } catch (error: any) {
       if (error.code === 'ERR_REQUEST_CANCELED') {
         return;
@@ -230,7 +226,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
 
             if (sessionError) throw sessionError;
-            toast.success('Signed in successfully');
           }
         }
       }

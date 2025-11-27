@@ -18,9 +18,11 @@ import {
   PiggyBank,
   Check,
 } from 'lucide-react-native';
+import { useRevenueCat } from '@/context/revenuecat-provider';
 
-const MONTHLY_PRICE = 6.99;
-const YEARLY_PRICE = 49.99;
+// Fallback prices if RevenueCat fails to load
+const FALLBACK_MONTHLY_PRICE = 4.99;
+const FALLBACK_YEARLY_PRICE = 39.99;
 const TRIAL_DAYS = 7;
 
 type PlanType = 'monthly' | 'yearly';
@@ -47,17 +49,35 @@ export default function PaywallScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
+  const { offerings, purchasePackage } = useRevenueCat();
 
-  const currentPrice = selectedPlan === 'yearly' ? YEARLY_PRICE : MONTHLY_PRICE;
-  const savingsPercent = Math.round((1 - (YEARLY_PRICE / 12) / MONTHLY_PRICE) * 100);
+  // Get packages from RevenueCat offerings
+  const monthlyPackage = offerings?.current?.monthly;
+  const yearlyPackage = offerings?.current?.annual;
+
+  // Use RevenueCat prices or fallbacks
+  const monthlyPrice = monthlyPackage?.product.price ?? FALLBACK_MONTHLY_PRICE;
+  const yearlyPrice = yearlyPackage?.product.price ?? FALLBACK_YEARLY_PRICE;
+
+  const currentPrice = selectedPlan === 'yearly' ? yearlyPrice : monthlyPrice;
+  const savingsPercent = Math.round((1 - (yearlyPrice / 12) / monthlyPrice) * 100);
 
   const handleStartTrial = async () => {
-    setIsLoading(true);
-    // TODO: Implement RevenueCat purchase with selectedPlan
-    // For now, simulate and navigate to app
-    setTimeout(() => {
+    const packageToPurchase = selectedPlan === 'yearly' ? yearlyPackage : monthlyPackage;
+
+    if (!packageToPurchase) {
+      // Fallback if RevenueCat not loaded
       router.replace('/(tabs)/home');
-    }, 500);
+      return;
+    }
+
+    setIsLoading(true);
+    const result = await purchasePackage(packageToPurchase);
+    setIsLoading(false);
+
+    if (result.success) {
+      router.replace('/(tabs)/home');
+    }
   };
 
   return (
@@ -66,7 +86,7 @@ export default function PaywallScreen() {
       <SafeAreaView className="flex-1">
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
         >
           <View className="px-6 pt-4">
@@ -143,8 +163,8 @@ export default function PaywallScreen() {
                       {selectedPlan === 'yearly' && <Check size={12} color="#fff" />}
                     </View>
                     <Text className="text-white font-bold text-lg mb-1">Yearly</Text>
-                    <Text className="text-white font-bold text-2xl">${YEARLY_PRICE}</Text>
-                    <Text className="text-gray-500 text-sm">${(YEARLY_PRICE / 12).toFixed(2)}/mo</Text>
+                    <Text className="text-white font-bold text-2xl">${yearlyPrice.toFixed(2)}</Text>
+                    <Text className="text-gray-500 text-sm">${(yearlyPrice / 12).toFixed(2)}/mo</Text>
                   </View>
                 </View>
               </Pressable>
@@ -169,7 +189,7 @@ export default function PaywallScreen() {
                       {selectedPlan === 'monthly' && <Check size={12} color="#fff" />}
                     </View>
                     <Text className="text-white font-bold text-lg mb-1">Monthly</Text>
-                    <Text className="text-white font-bold text-2xl">${MONTHLY_PRICE}</Text>
+                    <Text className="text-white font-bold text-2xl">${monthlyPrice.toFixed(2)}</Text>
                     <Text className="text-gray-500 text-sm">/month</Text>
                   </View>
                 </View>
@@ -194,71 +214,74 @@ export default function PaywallScreen() {
                 </View>
               </View>
             )}
-
-            {/* CTA Button */}
-            <Pressable
-              onPress={handleStartTrial}
-              disabled={isLoading}
-              className={`rounded-2xl overflow-hidden mb-6 ${
-                isLoading ? 'opacity-70' : ''
-              }`}
-            >
-              <LinearGradient
-                colors={['#10B981', '#059669']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <View className="py-4 px-6 items-center">
-                <Text className="text-white font-bold text-lg">
-                  {isLoading
-                    ? 'Processing...'
-                    : selectedPlan === 'yearly'
-                      ? 'Start 7-Day Free Trial'
-                      : 'Subscribe Now'}
-                </Text>
-                {selectedPlan === 'yearly' ? (
-                  <Text className="text-emerald-200 text-sm mt-1">
-                    Then ${currentPrice}/year
-                  </Text>
-                ) : (
-                  <Text className="text-emerald-200 text-sm mt-1">
-                    ${currentPrice}/month
-                  </Text>
-                )}
-              </View>
-            </Pressable>
-
-            {/* Secondary Actions */}
-            <View className="items-center pb-4">
-              <View className="flex-row items-center">
-                <Pressable
-                  onPress={() =>
-                    Linking.openURL('https://debt-free.app/terms')
-                  }
-                >
-                  <Text className="text-gray-600 text-xs underline">Terms</Text>
-                </Pressable>
-                <Text className="text-gray-600 mx-2">|</Text>
-                <Pressable
-                  onPress={() =>
-                    Linking.openURL('https://debt-free.app/privacy')
-                  }
-                >
-                  <Text className="text-gray-600 text-xs underline">
-                    Privacy
-                  </Text>
-                </Pressable>
-                <Text className="text-gray-600 mx-2">|</Text>
-                <Pressable onPress={() => {}}>
-                  <Text className="text-gray-600 text-xs underline">
-                    Restore Purchases
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
           </View>
         </ScrollView>
+
+        {/* Fixed Bottom Section */}
+        <View className="px-6 pb-4">
+          {/* CTA Button */}
+          <Pressable
+            onPress={handleStartTrial}
+            disabled={isLoading}
+            className={`rounded-2xl overflow-hidden mb-4 ${
+              isLoading ? 'opacity-70' : ''
+            }`}
+          >
+            <LinearGradient
+              colors={['#10B981', '#059669']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View className="py-4 px-6 items-center">
+              <Text className="text-white font-bold text-lg">
+                {isLoading
+                  ? 'Processing...'
+                  : selectedPlan === 'yearly'
+                    ? 'Start 7-Day Free Trial'
+                    : 'Subscribe Now'}
+              </Text>
+              {selectedPlan === 'yearly' ? (
+                <Text className="text-emerald-200 text-sm mt-1">
+                  Then ${currentPrice.toFixed(2)}/year
+                </Text>
+              ) : (
+                <Text className="text-emerald-200 text-sm mt-1">
+                  ${currentPrice.toFixed(2)}/month
+                </Text>
+              )}
+            </View>
+          </Pressable>
+
+          {/* Secondary Actions */}
+          <View className="items-center">
+            <View className="flex-row items-center">
+              <Pressable
+                onPress={() =>
+                  Linking.openURL('https://debt-free.app/terms')
+                }
+              >
+                <Text className="text-gray-600 text-xs underline">Terms</Text>
+              </Pressable>
+              <Text className="text-gray-600 mx-2">|</Text>
+              <Pressable
+                onPress={() =>
+                  Linking.openURL('https://debt-free.app/privacy')
+                }
+              >
+                <Text className="text-gray-600 text-xs underline">
+                  Privacy
+                </Text>
+              </Pressable>
+              <Text className="text-gray-600 mx-2">|</Text>
+              <Pressable onPress={() => {}}>
+                <Text className="text-gray-600 text-xs underline">
+                  Restore Purchases
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       </SafeAreaView>
     </View>
   );

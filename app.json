@@ -11,46 +11,16 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FEF9F9"
+      "backgroundColor": "#004162"
     },
     "ios": {
       "supportsTablet": false,
       "userInterfaceStyle": "light",
-      "bundleIdentifier": "com.debtfree.app",
+      "bundleIdentifier": "com.debt-free.app",
+      "usesAppleSignIn": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "Debt Free uses your camera to capture meal photos for nutrition tracking, take profile avatar pictures to personalize your experience, and add progress pictures for your insights.",
-        "NSPhotoLibraryUsageDescription": "Debt Free accesses your photo library to upload meal photos for nutrition tracking, choose profile avatar pictures, and add progress pictures for your insights.",
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "buildNumber": "25"
-    },
-    "android": {
-      "userInterfaceStyle": "light",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#FEF9F9"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.debtfree.app",
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO"
-      ],
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "hehnaewpukivifwgvtpc.supabase.co",
-              "pathPrefix": "/auth/v1/callback"
-            }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
-        }
-      ]
+      }
     },
     "web": {
       "bundler": "metro",
@@ -59,28 +29,23 @@
     },
     "plugins": [
       "expo-router",
-      "expo-camera",
-      "expo-image-picker",
       "expo-apple-authentication",
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#FEF9F9"
+          "backgroundColor": "#004162"
         }
       ]
     ],
-    "experiments": {
-      "typedRoutes": true
+    "android": {
+      "package": "com.debt-free.app"
     },
     "extra": {
-      "router": {},
       "eas": {
-        "projectId": "634500bb-609b-498d-9c74-6c7ae742a54a"
+        "projectId": "33893c8a-e548-48d9-9b9e-09465e7e233a"
       }
-    },
-    "owner": "josephine19001"
+    }
   }
 }
