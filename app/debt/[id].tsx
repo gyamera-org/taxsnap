@@ -10,7 +10,6 @@ import { useDebt, useDeleteDebt, useRecordPayment, useDebtPayments } from '@/lib
 import * as Haptics from 'expo-haptics';
 import { showConfirmAlert } from '@/lib/utils/alert';
 import {
-  formatCurrency,
   formatPercentage,
   calculateDebtProgress,
   calculatePayoffMonths,
@@ -19,6 +18,7 @@ import {
   formatDuration,
   calculatePayoffDate,
 } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 import { DEBT_CATEGORY_CONFIG } from '@/lib/types/debt';
 import {
   DebtDetailSkeleton,
@@ -28,13 +28,22 @@ import {
   MetricCard,
   StatRow,
 } from '@/components/debts';
+import { MOCK_DATA, MOCK_PAYMENTS, DEMO_MODE } from '@/lib/config/mock-data';
 
 export default function DebtDetailScreen() {
+  const { formatCurrency } = useCurrency();
   const params = useLocalSearchParams();
   const id = typeof params.id === 'string' ? params.id : params.id?.[0] ?? '';
   const router = useRouter();
-  const { data: debt, isLoading } = useDebt(id);
-  const { data: payments } = useDebtPayments(id);
+  const { data: realDebt, isLoading: realLoading } = useDebt(id);
+  const { data: realPayments } = useDebtPayments(id);
+
+  // Use mock data in demo mode
+  const debt = DEMO_MODE
+    ? MOCK_DATA.debts.find((d) => d.id === id) || MOCK_DATA.debts[0]
+    : realDebt;
+  const payments = DEMO_MODE ? MOCK_PAYMENTS : realPayments;
+  const isLoading = DEMO_MODE ? false : realLoading;
   const deleteDebt = useDeleteDebt();
   const recordPayment = useRecordPayment();
   const paymentSheetRef = useRef<GlassBottomSheetRef>(null);

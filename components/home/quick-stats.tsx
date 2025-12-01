@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Target, Trophy, TrendingUp, PiggyBank } from 'lucide-react-native';
-import { formatCurrency } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 
 interface QuickStatsProps {
   activeCount: number;
@@ -18,6 +18,7 @@ export function QuickStats({
   interestSaved,
   isLoading,
 }: QuickStatsProps) {
+  const { formatCurrency } = useCurrency();
   const stats = [
     { icon: Target, color: '#3B82F6', label: 'Active', value: String(activeCount) },
     { icon: Trophy, color: '#A855F7', label: 'Paid Off', value: String(paidOffCount) },

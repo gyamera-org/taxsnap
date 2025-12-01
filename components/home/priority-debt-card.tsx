@@ -3,7 +3,8 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Flame, ChevronRight } from 'lucide-react-native';
 import { Debt, DEBT_CATEGORY_CONFIG } from '@/lib/types/debt';
-import { formatCurrency, formatPercentage } from '@/lib/utils/debt-calculator';
+import { formatPercentage } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 
 interface PriorityDebtCardProps {
   debt: Debt;
@@ -11,6 +12,7 @@ interface PriorityDebtCardProps {
 
 export function PriorityDebtCard({ debt }: PriorityDebtCardProps) {
   const router = useRouter();
+  const { formatCurrency } = useCurrency();
   const categoryConfig = DEBT_CATEGORY_CONFIG[debt.category];
 
   return (

@@ -3,11 +3,11 @@ import { ChevronRight } from 'lucide-react-native';
 import { GlassCard } from '@/components/layouts';
 import { Debt, DEBT_CATEGORY_CONFIG } from '@/lib/types/debt';
 import {
-  formatCurrency,
   formatPercentage,
   calculateDebtProgress,
   calculateTotalInterest,
 } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 
 interface DebtListItemProps {
   debt: Debt;
@@ -17,6 +17,7 @@ interface DebtListItemProps {
 }
 
 export function DebtListItem({ debt, onPress, showRank, rank }: DebtListItemProps) {
+  const { formatCurrency } = useCurrency();
   const progress = calculateDebtProgress(debt);
   const categoryConfig = DEBT_CATEGORY_CONFIG[debt.category];
   const capitalPaid = debt.original_balance - debt.current_balance;

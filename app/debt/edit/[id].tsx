@@ -7,6 +7,7 @@ import { useDebt, useUpdateDebt } from '@/lib/hooks/use-debts';
 import { DebtCategory, DEBT_CATEGORY_CONFIG } from '@/lib/types/debt';
 import { Check } from 'lucide-react-native';
 import { DebtDetailSkeleton } from '@/components/debts';
+import { useCurrency } from '@/context/currency-provider';
 
 const CATEGORIES: DebtCategory[] = [
   'credit_card',
@@ -21,6 +22,7 @@ const CATEGORIES: DebtCategory[] = [
 const DUE_DATE_OPTIONS = Array.from({ length: 31 }, (_, i) => i + 1);
 
 export default function EditDebtScreen() {
+  const { currency } = useCurrency();
   const params = useLocalSearchParams();
   const id = typeof params.id === 'string' ? params.id : params.id?.[0] ?? '';
   const router = useRouter();
@@ -160,7 +162,7 @@ export default function EditDebtScreen() {
 
           {/* Current Balance */}
           <FormField
-            label="Current Balance ($)"
+            label={`Current Balance (${currency.symbol})`}
             value={balance}
             onChangeText={setBalance}
             placeholder="0.00"
@@ -178,7 +180,7 @@ export default function EditDebtScreen() {
 
           {/* Minimum Payment */}
           <FormField
-            label="Minimum Monthly Payment ($)"
+            label={`Minimum Monthly Payment (${currency.symbol})`}
             value={minimumPayment}
             onChangeText={setMinimumPayment}
             placeholder="0.00"

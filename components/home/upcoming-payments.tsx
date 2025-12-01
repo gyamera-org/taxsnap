@@ -4,8 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Clock, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Debt } from '@/lib/types/debt';
-import { formatCurrency } from '@/lib/utils/debt-calculator';
 import { useRecordPayment } from '@/lib/hooks/use-debts';
+import { useCurrency } from '@/context/currency-provider';
 
 interface UpcomingPaymentsProps {
   debts: Debt[];
@@ -14,6 +14,7 @@ interface UpcomingPaymentsProps {
 
 export function UpcomingPayments({ debts, paidDebtIds = new Set() }: UpcomingPaymentsProps) {
   const router = useRouter();
+  const { formatCurrency } = useCurrency();
   const { mutate: recordPayment, isPending } = useRecordPayment();
   const today = new Date();
   const currentDay = today.getDate();

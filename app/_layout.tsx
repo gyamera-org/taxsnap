@@ -46,6 +46,7 @@ export default function Layout() {
           <Stack.Screen name="profile" />
           <Stack.Screen name="feedback" />
           <Stack.Screen name="notifications" />
+          <Stack.Screen name="currency" />
 
           {/* Debt Pages */}
           <Stack.Screen name="debt" />

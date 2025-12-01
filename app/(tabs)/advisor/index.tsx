@@ -23,8 +23,9 @@ import { useChat, ChatMessage, useUnreadMessages } from '@/lib/hooks/use-chat';
 import { useDebts, useDebtSummary } from '@/lib/hooks/use-debts';
 import { useTabBar } from '@/context/tab-bar-provider';
 import { AdvisorIcon } from '@/components/icons/tab-icons';
-import { formatCurrency } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 import * as Haptics from 'expo-haptics';
+import { MOCK_DATA, DEMO_MODE } from '@/lib/config/mock-data';
 
 const QUICK_PROMPTS = [
   'Should I consolidate my debts?',
@@ -37,26 +38,14 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
 
   return (
-    <View
-      style={[
-        styles.messageBubble,
-        isUser ? styles.userBubble : styles.assistantBubble,
-      ]}
-    >
+    <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
       {!isUser && (
         <View style={styles.assistantIcon}>
           <AdvisorIcon size={16} color="#10B981" />
         </View>
       )}
-      <View
-        style={[
-          styles.messageContent,
-          isUser ? styles.userContent : styles.assistantContent,
-        ]}
-      >
-        <Text style={[styles.messageText, isUser && styles.userText]}>
-          {message.content}
-        </Text>
+      <View style={[styles.messageContent, isUser ? styles.userContent : styles.assistantContent]}>
+        <Text style={[styles.messageText, isUser && styles.userText]}>{message.content}</Text>
       </View>
     </View>
   );
@@ -80,13 +69,7 @@ function TypingIndicator() {
       <View style={[styles.messageContent, styles.assistantContent, styles.typingContent]}>
         <View style={styles.dotsContainer}>
           {[0, 1, 2].map((i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                { opacity: activeDot === i ? 1 : 0.3 },
-              ]}
-            />
+            <View key={i} style={[styles.dot, { opacity: activeDot === i ? 1 : 0.3 }]} />
           ))}
         </View>
       </View>
@@ -106,11 +89,7 @@ function EmptyState({ onPromptPress }: { onPromptPress: (prompt: string) => void
       </Text>
       <View style={styles.promptsContainer}>
         {QUICK_PROMPTS.map((prompt) => (
-          <Pressable
-            key={prompt}
-            style={styles.promptButton}
-            onPress={() => onPromptPress(prompt)}
-          >
+          <Pressable key={prompt} style={styles.promptButton} onPress={() => onPromptPress(prompt)}>
             <Text style={styles.promptText}>{prompt}</Text>
           </Pressable>
         ))}
@@ -120,6 +99,7 @@ function EmptyState({ onPromptPress }: { onPromptPress: (prompt: string) => void
 }
 
 export default function AdvisorScreen() {
+  const { formatCurrency } = useCurrency();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
@@ -130,8 +110,8 @@ export default function AdvisorScreen() {
   const { hideTabBar, showTabBar } = useTabBar();
   const { markAsRead } = useUnreadMessages();
   const {
-    messages,
-    isLoading,
+    messages: realMessages,
+    isLoading: realLoading,
     isSending,
     sendMessage,
     clearChat,
@@ -140,8 +120,14 @@ export default function AdvisorScreen() {
     isFetchingMore,
     fetchMore,
   } = useChat(selectedDebtId);
-  const { data: summary } = useDebtSummary();
-  const { data: debts } = useDebts();
+  const { data: realSummary } = useDebtSummary();
+  const { data: realDebts } = useDebts();
+
+  // Use mock data in demo mode
+  const messages = DEMO_MODE ? MOCK_DATA.chatMessages : realMessages;
+  const isLoading = DEMO_MODE ? false : realLoading;
+  const summary = DEMO_MODE ? { total_balance: MOCK_DATA.totalBalance } : realSummary;
+  const debts = DEMO_MODE ? MOCK_DATA.debts : realDebts;
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const selectedDebt = selectedDebtId ? debts?.find((d) => d.id === selectedDebtId) : null;
@@ -149,8 +135,8 @@ export default function AdvisorScreen() {
   const displayAmount = selectedDebt
     ? formatCurrency(selectedDebt.current_balance)
     : summary
-      ? formatCurrency(summary.total_balance)
-      : null;
+    ? formatCurrency(summary.total_balance)
+    : null;
 
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -238,9 +224,7 @@ export default function AdvisorScreen() {
     await clearChat();
   };
 
-  const renderMessage = ({ item }: { item: ChatMessage }) => (
-    <MessageBubble message={item} />
-  );
+  const renderMessage = ({ item }: { item: ChatMessage }) => <MessageBubble message={item} />;
 
   const hasMessages = messages.length > 0;
 
@@ -270,11 +254,7 @@ export default function AdvisorScreen() {
         </Pressable>
         <View style={styles.headerRight}>
           {hasMessages && (
-            <Pressable
-              onPress={handleClearChat}
-              disabled={isClearing}
-              style={styles.clearButton}
-            >
+            <Pressable onPress={handleClearChat} disabled={isClearing} style={styles.clearButton}>
               {isClearing ? (
                 <ActivityIndicator size="small" color="#6B7280" />
               ) : (
@@ -292,10 +272,7 @@ export default function AdvisorScreen() {
         animationType="fade"
         onRequestClose={() => setShowDebtPicker(false)}
       >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setShowDebtPicker(false)}
-        >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowDebtPicker(false)}>
           <View style={[styles.modalContent, { paddingBottom: insets.bottom + 16 }]}>
             <Text style={styles.modalTitle}>Focus on</Text>
 
@@ -379,12 +356,14 @@ export default function AdvisorScreen() {
         )}
 
         {/* Input */}
-        <View style={[styles.inputContainer, { paddingBottom: keyboardVisible ? 8 : insets.bottom + 8 }]}>
+        <View
+          style={[
+            styles.inputContainer,
+            { paddingBottom: keyboardVisible ? 8 : insets.bottom + 8 },
+          ]}
+        >
           <View style={styles.inputWrapper}>
-            <LinearGradient
-              colors={['#1a1a1f', '#141418']}
-              style={StyleSheet.absoluteFill}
-            />
+            <LinearGradient colors={['#1a1a1f', '#141418']} style={StyleSheet.absoluteFill} />
             <View style={styles.inputBorder} />
             <TextInput
               style={styles.input}

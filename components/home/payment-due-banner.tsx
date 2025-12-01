@@ -1,10 +1,10 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, ChevronRight, Check, X } from 'lucide-react-native';
+import { Bell, ChevronRight, Check } from 'lucide-react-native';
 import { Debt } from '@/lib/types/debt';
-import { formatCurrency } from '@/lib/utils/debt-calculator';
 import { useRecordPayment } from '@/lib/hooks/use-debts';
+import { useCurrency } from '@/context/currency-provider';
 import * as Haptics from 'expo-haptics';
 
 interface PaymentDueBannerProps {
@@ -13,6 +13,7 @@ interface PaymentDueBannerProps {
 
 export function PaymentDueBanner({ debts }: PaymentDueBannerProps) {
   const router = useRouter();
+  const { formatCurrency } = useCurrency();
   const { mutate: recordPayment, isPending } = useRecordPayment();
 
   if (debts.length === 0) return null;

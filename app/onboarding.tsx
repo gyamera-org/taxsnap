@@ -26,13 +26,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ChevronLeft, CreditCard, Layers, TrendingDown, Zap } from 'lucide-react-native';
 import { useAuth } from '@/context/auth-provider';
+import { useCurrency, CurrencyConfig } from '@/context/currency-provider';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { AppleIcon, GoogleIcon } from '@/components/icons/tab-icons';
 import {
   useOptimizedDebtCalculations,
   useCurrencyInput,
-  formatMoney,
   formatDuration,
 } from '@/lib/hooks';
 import {
@@ -42,15 +42,17 @@ import {
   OptionCard,
   StrategyCard,
   GradientButton,
+  CurrencySelector,
 } from '@/components/onboarding';
 
-type Step = 'debt' | 'rate' | 'payment' | 'type' | 'reveal' | 'signup';
+type Step = 'currency' | 'debt' | 'rate' | 'payment' | 'type' | 'reveal' | 'signup';
 type DebtType = 'single' | 'multiple';
 type Strategy = 'avalanche' | 'snowball';
 
 const ONBOARDING_DATA_KEY = '@debt_free_onboarding_data';
 
 interface OnboardingData {
+  currencyCode: string;
   totalDebt: number;
   interestRate: number;
   monthlyPayment: number;
@@ -68,9 +70,11 @@ interface OnboardingData {
 export default function OnboardingScreen() {
   const router = useRouter();
   const { signInWithApple, signInWithGoogle, loading: authLoading } = useAuth();
+  const { currency, setCurrency, formatCurrency: formatMoney } = useCurrency();
 
   // Step state
-  const [step, setStep] = useState<Step>('debt');
+  const [step, setStep] = useState<Step>('currency');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyConfig>(currency);
 
   // Input states
   const debtInput = useCurrencyInput();
@@ -117,8 +121,14 @@ export default function OnboardingScreen() {
   const canProceedFromType = debtType !== null;
 
   // Progress
-  const steps: Step[] = ['debt', 'rate', 'payment', 'type', 'reveal', 'signup'];
+  const steps: Step[] = ['currency', 'debt', 'rate', 'payment', 'type', 'reveal', 'signup'];
   const progress = steps.indexOf(step);
+
+  // Handle currency selection and save
+  const handleCurrencyNext = async () => {
+    await setCurrency(selectedCurrency);
+    goToStep('debt');
+  };
 
   const goBack = () => {
     const i = steps.indexOf(step);
@@ -146,6 +156,7 @@ export default function OnboardingScreen() {
   const saveOnboardingData = async () => {
     try {
       const data: OnboardingData = {
+        currencyCode: selectedCurrency.code,
         totalDebt: debtInput.numericValue,
         interestRate: rate,
         monthlyPayment: paymentInput.numericValue,
@@ -217,7 +228,18 @@ export default function OnboardingScreen() {
             </View>
           </View>
 
-          {/* Step 1: Total Debt */}
+          {/* Step 1: Currency Selection */}
+          {step === 'currency' && (
+            <OnboardingStep
+              title="Select your currency"
+              subtitle="Choose the currency you use for your debts"
+              footer={<GradientButton onPress={handleCurrencyNext} />}
+            >
+              <CurrencySelector selected={selectedCurrency} onSelect={setSelectedCurrency} />
+            </OnboardingStep>
+          )}
+
+          {/* Step 2: Total Debt */}
           {step === 'debt' && (
             <OnboardingStep
               title="What's your total debt?"
@@ -231,6 +253,7 @@ export default function OnboardingScreen() {
                 value={debtInput.value}
                 onChangeText={(text) => debtInput.setValue(text)}
                 autoFocus
+                prefix={selectedCurrency.symbol}
               />
             </OnboardingStep>
           )}
@@ -276,9 +299,10 @@ export default function OnboardingScreen() {
                 value={paymentInput.value}
                 onChangeText={(text) => paymentInput.setValue(text)}
                 autoFocus
+                prefix={selectedCurrency.symbol}
                 hint={
                   debtInput.numericValue > 0 && rate > 0
-                    ? `Minimum to cover interest: ${formatMoney(Math.ceil(minPaymentRequired + 1))}`
+                    ? `Minimum to cover interest: ${formatMoney(Math.ceil(minPaymentRequired + 1), { decimals: false })}`
                     : 'per month'
                 }
               />

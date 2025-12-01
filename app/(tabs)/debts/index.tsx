@@ -1,37 +1,68 @@
 import { useState, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search, SlidersHorizontal, X, Check } from 'lucide-react-native';
+import { Plus, Search, SlidersHorizontal, X, Check, ChevronDown } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { PageLayout } from '@/components/layouts';
 import { GlassBottomSheet, GlassBottomSheetRef } from '@/components/ui/glass-bottom-sheet';
-import {
-  DebtListItem,
-  EmptyState,
-  DebtListSkeleton,
-} from '@/components/debts';
+import { DebtListItem, EmptyState, DebtListSkeleton } from '@/components/debts';
 import { PaymentDueBanner } from '@/components/home';
 import { useDebts, usePaymentsDue } from '@/lib/hooks/use-debts';
 import { useDebouncedValue } from '@/lib/hooks/utils';
 import { DebtCategory, DebtStatus, DEBT_CATEGORY_CONFIG } from '@/lib/types/debt';
+import { MOCK_DATA, DEMO_MODE } from '@/lib/config/mock-data';
 
+type Strategy = 'avalanche' | 'snowball';
 type SortOption = 'interest_rate' | 'balance' | 'name';
 type StatusFilter = DebtStatus | 'all';
+
+const STRATEGIES: { value: Strategy; label: string; description: string }[] = [
+  {
+    value: 'avalanche',
+    label: 'Avalanche',
+    description: 'Pay highest interest first - saves the most money',
+  },
+  {
+    value: 'snowball',
+    label: 'Snowball',
+    description: 'Pay smallest balance first - quick wins for motivation',
+  },
+];
 
 export default function DebtsScreen() {
   const router = useRouter();
   const filterSheetRef = useRef<GlassBottomSheetRef>(null);
+  const strategySheetRef = useRef<GlassBottomSheetRef>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [strategy, setStrategy] = useState<Strategy>('avalanche');
   const [sortBy, setSortBy] = useState<SortOption>('interest_rate');
   const [categoryFilter, setCategoryFilter] = useState<DebtCategory | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
   const hasActiveFilters = categoryFilter !== null || statusFilter !== 'active';
+  const currentStrategy = STRATEGIES.find((s) => s.value === strategy)!;
 
-  const { data: debts, isLoading } = useDebts(debouncedSearch);
+  const handleStrategySelect = (newStrategy: Strategy) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setStrategy(newStrategy);
+    // Update sort based on strategy
+    if (newStrategy === 'avalanche') {
+      setSortBy('interest_rate');
+    } else {
+      setSortBy('balance');
+    }
+    strategySheetRef.current?.close();
+  };
+
+  const { data: realDebts, isLoading: realLoading } = useDebts(debouncedSearch);
   const { data: paymentsDue } = usePaymentsDue();
+
+  // Use mock data in demo mode
+  const debts = DEMO_MODE ? MOCK_DATA.debts : realDebts;
+  const isLoading = DEMO_MODE ? false : realLoading;
 
   const handleAddDebt = () => {
     router.push('/debt/add');
@@ -53,9 +84,11 @@ export default function DebtsScreen() {
     .sort((a, b) => {
       switch (sortBy) {
         case 'interest_rate':
-          return b.interest_rate - a.interest_rate;
+          return b.interest_rate - a.interest_rate; // Highest first (Avalanche)
         case 'balance':
-          return b.current_balance - a.current_balance;
+          return strategy === 'snowball'
+            ? a.current_balance - b.current_balance // Lowest first (Snowball)
+            : b.current_balance - a.current_balance; // Highest first
         case 'name':
           return a.name.localeCompare(b.name);
         default:
@@ -92,6 +125,19 @@ export default function DebtsScreen() {
     setStatusFilter('active');
   };
 
+  const titleWithStrategy = (
+    <View className="flex-row items-center">
+      <Text className="text-white text-2xl font-bold mr-2">Debts</Text>
+      <Pressable
+        onPress={() => strategySheetRef.current?.expand()}
+        className="flex-row items-center px-3 py-1.5 rounded-full bg-white/5 border border-white/10"
+      >
+        <Text className="text-emerald-400 text-sm font-medium mr-1">{currentStrategy.label}</Text>
+        <ChevronDown size={14} color="#10B981" />
+      </Pressable>
+    </View>
+  );
+
   const headerActions = (
     <View className="flex-row items-center">
       <Pressable
@@ -103,11 +149,7 @@ export default function DebtsScreen() {
       >
         <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
         <View className="absolute inset-0 rounded-full border border-white/10 bg-white/[0.03]" />
-        {showSearch ? (
-          <X size={18} color="#9CA3AF" />
-        ) : (
-          <Search size={18} color="#9CA3AF" />
-        )}
+        {showSearch ? <X size={18} color="#9CA3AF" /> : <Search size={18} color="#9CA3AF" />}
       </Pressable>
       <Pressable
         onPress={handleOpenFilters}
@@ -121,10 +163,7 @@ export default function DebtsScreen() {
               : 'border-white/10 bg-white/[0.03]'
           }`}
         />
-        <SlidersHorizontal
-          size={18}
-          color={hasActiveFilters ? '#10B981' : '#9CA3AF'}
-        />
+        <SlidersHorizontal size={18} color={hasActiveFilters ? '#10B981' : '#9CA3AF'} />
       </Pressable>
       <Pressable
         onPress={handleAddDebt}
@@ -138,14 +177,13 @@ export default function DebtsScreen() {
   );
 
   return (
-    <PageLayout title="Debts" rightAction={headerActions}>
+    <PageLayout title={titleWithStrategy} rightAction={headerActions}>
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
         keyboardShouldPersistTaps="handled"
       >
-
         {/* Payment Due Banner */}
         {paymentsDue && paymentsDue.length > 0 && !showSearch && (
           <PaymentDueBanner debts={paymentsDue} />
@@ -176,15 +214,12 @@ export default function DebtsScreen() {
           </View>
         )}
 
-
-        {/* Priority Info Banner */}
-        {!isLoading && hasDebts && !debouncedSearch && sortBy === 'interest_rate' && (
+        {/* Strategy Info Banner */}
+        {!isLoading && hasDebts && !debouncedSearch && (sortBy === 'interest_rate' || sortBy === 'balance') && (
           <View className="mx-4 mb-4 bg-emerald-500/10 rounded-2xl p-4 border border-emerald-500/20">
-            <Text className="text-emerald-400 font-semibold mb-1">
-              Avalanche Strategy
-            </Text>
+            <Text className="text-emerald-400 font-semibold mb-1">{currentStrategy.label} Strategy</Text>
             <Text className="text-gray-400 text-sm">
-              Focus extra payments on the top debt to save the most money.
+              {currentStrategy.description}
             </Text>
           </View>
         )}
@@ -193,20 +228,26 @@ export default function DebtsScreen() {
         {isLoading && <DebtListSkeleton count={4} />}
 
         {/* Empty State */}
-        {!isLoading && !hasDebts && !debouncedSearch && !categoryFilter && statusFilter === 'active' && (
-          <EmptyState onAddDebt={handleAddDebt} />
-        )}
+        {!isLoading &&
+          !hasDebts &&
+          !debouncedSearch &&
+          !categoryFilter &&
+          statusFilter === 'active' && <EmptyState onAddDebt={handleAddDebt} />}
 
         {/* No Search/Filter Results */}
-        {!isLoading && !hasDebts && (debouncedSearch || categoryFilter || statusFilter !== 'active') && (
-          <View className="items-center py-8 px-4">
-            <Text className="text-gray-400 text-center">
-              No {statusFilter === 'paid_off' ? 'paid off' : statusFilter === 'all' ? '' : 'active '}debts found
-              {debouncedSearch ? ` matching "${debouncedSearch}"` : ''}
-              {categoryFilter ? ` in ${DEBT_CATEGORY_CONFIG[categoryFilter].label}` : ''}
-            </Text>
-          </View>
-        )}
+        {!isLoading &&
+          !hasDebts &&
+          (debouncedSearch || categoryFilter || statusFilter !== 'active') && (
+            <View className="items-center py-8 px-4">
+              <Text className="text-gray-400 text-center">
+                No{' '}
+                {statusFilter === 'paid_off' ? 'paid off' : statusFilter === 'all' ? '' : 'active '}
+                debts found
+                {debouncedSearch ? ` matching "${debouncedSearch}"` : ''}
+                {categoryFilter ? ` in ${DEBT_CATEGORY_CONFIG[categoryFilter].label}` : ''}
+              </Text>
+            </View>
+          )}
 
         {/* Debt List */}
         {!isLoading && hasDebts && (
@@ -216,7 +257,7 @@ export default function DebtsScreen() {
                 key={debt.id}
                 debt={debt}
                 onPress={() => handleDebtPress(debt.id)}
-                showRank={!debouncedSearch && sortBy === 'interest_rate'}
+                showRank={!debouncedSearch && (sortBy === 'interest_rate' || sortBy === 'balance')}
                 rank={index + 1}
               />
             ))}
@@ -245,9 +286,7 @@ export default function DebtsScreen() {
                 key={option.value}
                 onPress={() => setStatusFilter(option.value)}
                 className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
-                  statusFilter === option.value
-                    ? 'bg-emerald-500'
-                    : 'bg-white/10'
+                  statusFilter === option.value ? 'bg-emerald-500' : 'bg-white/10'
                 }`}
               >
                 {statusFilter === option.value && (
@@ -272,9 +311,7 @@ export default function DebtsScreen() {
                 key={option.value}
                 onPress={() => setSortBy(option.value)}
                 className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
-                  sortBy === option.value
-                    ? 'bg-emerald-500'
-                    : 'bg-white/10'
+                  sortBy === option.value ? 'bg-emerald-500' : 'bg-white/10'
                 }`}
               >
                 {sortBy === option.value && (
@@ -316,9 +353,7 @@ export default function DebtsScreen() {
                 key={cat.value}
                 onPress={() => setCategoryFilter(cat.value)}
                 className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
-                  categoryFilter === cat.value
-                    ? 'bg-emerald-500'
-                    : 'bg-white/10'
+                  categoryFilter === cat.value ? 'bg-emerald-500' : 'bg-white/10'
                 }`}
               >
                 {categoryFilter === cat.value && (
@@ -326,9 +361,7 @@ export default function DebtsScreen() {
                 )}
                 <Text
                   className={`text-sm ${
-                    categoryFilter === cat.value
-                      ? 'text-white font-semibold'
-                      : 'text-gray-400'
+                    categoryFilter === cat.value ? 'text-white font-semibold' : 'text-gray-400'
                   }`}
                 >
                   {cat.label}
@@ -336,6 +369,40 @@ export default function DebtsScreen() {
               </Pressable>
             ))}
           </View>
+        </View>
+      </GlassBottomSheet>
+
+      {/* Strategy Selection Bottom Sheet */}
+      <GlassBottomSheet ref={strategySheetRef} snapPoints={['35%']}>
+        <View className="px-5 pt-2 pb-4">
+          <Text className="text-white text-xl font-semibold mb-2">Payment Strategy</Text>
+          <Text className="text-gray-400 text-sm mb-6">
+            Choose how to prioritize your debt payments
+          </Text>
+
+          {STRATEGIES.map((strat) => (
+            <Pressable
+              key={strat.value}
+              onPress={() => handleStrategySelect(strat.value)}
+              className={`flex-row items-center p-4 rounded-2xl mb-3 ${
+                strategy === strat.value
+                  ? 'bg-emerald-500/20 border border-emerald-500/30'
+                  : 'bg-white/5 border border-white/10'
+              }`}
+            >
+              <View className="flex-1">
+                <Text
+                  className={`font-semibold mb-1 ${
+                    strategy === strat.value ? 'text-emerald-400' : 'text-white'
+                  }`}
+                >
+                  {strat.label}
+                </Text>
+                <Text className="text-gray-400 text-sm">{strat.description}</Text>
+              </View>
+              {strategy === strat.value && <Check size={20} color="#10B981" />}
+            </Pressable>
+          ))}
         </View>
       </GlassBottomSheet>
     </PageLayout>

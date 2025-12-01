@@ -10,6 +10,7 @@ import { RevenueCatProvider } from './revenuecat-provider';
 import { NotificationProvider } from './notification-provider';
 import { ThemeProvider } from './theme-provider';
 import { TabBarProvider } from './tab-bar-provider';
+import { CurrencyProvider } from './currency-provider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,20 +28,22 @@ export const RootProvider = ({ children }: PropsWithChildren) => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
-          <RevenueCatProvider>
-            <NotificationProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <BottomSheetModalProvider>
-                  <TabBarProvider>
-                    {children}
-                    <Toaster theme="dark" />
-                  </TabBarProvider>
-                </BottomSheetModalProvider>
-              </GestureHandlerRootView>
-            </NotificationProvider>
-          </RevenueCatProvider>
-        </AuthProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            <RevenueCatProvider>
+              <NotificationProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <BottomSheetModalProvider>
+                    <TabBarProvider>
+                      {children}
+                      <Toaster theme="dark" />
+                    </TabBarProvider>
+                  </BottomSheetModalProvider>
+                </GestureHandlerRootView>
+              </NotificationProvider>
+            </RevenueCatProvider>
+          </AuthProvider>
+        </CurrencyProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

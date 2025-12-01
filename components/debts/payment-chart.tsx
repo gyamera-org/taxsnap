@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Debt } from '@/lib/types/debt';
 import {
-  formatCurrency,
   calculatePayoffMonths,
   calculateTotalInterest,
 } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 
 interface PaymentChartProps {
   debt: Debt;
@@ -44,6 +44,7 @@ function calculatePaymentSchedule(debt: Debt, maxMonths: number = 12): PaymentMo
 type DurationOption = 6 | 12 | 24 | 'all';
 
 export function PaymentChart({ debt }: PaymentChartProps) {
+  const { formatCurrency } = useCurrency();
   const [duration, setDuration] = useState<DurationOption>(12);
 
   const totalMonths = calculatePayoffMonths(
@@ -218,6 +219,7 @@ interface AmortizationProgressProps {
 }
 
 export function AmortizationProgress({ debt }: AmortizationProgressProps) {
+  const { formatCurrency } = useCurrency();
   const totalMonths = calculatePayoffMonths(
     debt.current_balance,
     debt.interest_rate,

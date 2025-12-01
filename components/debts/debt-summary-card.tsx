@@ -2,13 +2,15 @@ import { View, Text } from 'react-native';
 import { TrendingDown, Target, Wallet } from 'lucide-react-native';
 import { GlassCard } from '@/components/layouts';
 import { DebtSummary } from '@/lib/types/debt';
-import { formatCurrency, formatPercentage } from '@/lib/utils/debt-calculator';
+import { formatPercentage } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 
 interface DebtSummaryCardProps {
   summary: DebtSummary;
 }
 
 export function DebtSummaryCard({ summary }: DebtSummaryCardProps) {
+  const { formatCurrency } = useCurrency();
   const totalProgress = summary.total_original_balance > 0
     ? Math.round(((summary.total_original_balance - summary.total_balance) / summary.total_original_balance) * 100)
     : 0;

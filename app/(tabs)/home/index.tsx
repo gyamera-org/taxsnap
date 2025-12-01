@@ -12,10 +12,7 @@ import {
   calculatePayoffMonths,
   calculatePayoffDate,
 } from '@/lib/utils/debt-calculator';
-import { MOCK_DATA } from '@/lib/config/mock-data';
-
-// ⚠️ SET TO TRUE FOR DEMO/SCREENSHOTS
-const DEMO_MODE = false;
+import { MOCK_DATA, DEMO_MODE } from '@/lib/config/mock-data';
 
 const currentYear = new Date().getFullYear();
 const yearOptions = [currentYear, currentYear - 1, currentYear - 2];

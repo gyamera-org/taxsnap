@@ -6,6 +6,7 @@ import { FormField, SaveButton } from '@/components/ui/form-page';
 import { useCreateDebt } from '@/lib/hooks/use-debts';
 import { DebtCategory, DEBT_CATEGORY_CONFIG } from '@/lib/types/debt';
 import { Check } from 'lucide-react-native';
+import { useCurrency } from '@/context/currency-provider';
 
 const CATEGORIES: DebtCategory[] = [
   'credit_card',
@@ -22,6 +23,7 @@ const DUE_DATE_OPTIONS = Array.from({ length: 31 }, (_, i) => i + 1);
 export default function AddDebtScreen() {
   const router = useRouter();
   const createDebt = useCreateDebt();
+  const { currency } = useCurrency();
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<DebtCategory>('credit_card');
@@ -116,7 +118,7 @@ export default function AddDebtScreen() {
 
           {/* Current Balance */}
           <FormField
-            label="Current Balance ($)"
+            label={`Current Balance (${currency.symbol})`}
             value={balance}
             onChangeText={setBalance}
             placeholder="0.00"
@@ -134,7 +136,7 @@ export default function AddDebtScreen() {
 
           {/* Minimum Payment */}
           <FormField
-            label="Minimum Monthly Payment ($)"
+            label={`Minimum Monthly Payment (${currency.symbol})`}
             value={minimumPayment}
             onChangeText={setMinimumPayment}
             placeholder="0.00"
@@ -165,9 +167,7 @@ export default function AddDebtScreen() {
                   >
                     <View
                       className={`w-12 h-12 rounded-full items-center justify-center ${
-                        isSelected
-                          ? 'bg-emerald-500'
-                          : 'bg-white/[0.03] border border-white/10'
+                        isSelected ? 'bg-emerald-500' : 'bg-white/[0.03] border border-white/10'
                       }`}
                     >
                       <Text
@@ -175,7 +175,8 @@ export default function AddDebtScreen() {
                           isSelected ? 'text-white' : 'text-gray-400'
                         }`}
                       >
-                        {day}{getDueDateSuffix(day)}
+                        {day}
+                        {getDueDateSuffix(day)}
                       </Text>
                     </View>
                   </Pressable>

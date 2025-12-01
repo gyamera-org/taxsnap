@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 
 interface PageLayoutProps {
   children: React.ReactNode;
-  title?: string;
+  title?: string | React.ReactNode;
   showBackButton?: boolean;
   rightAction?: React.ReactNode;
   headerStyle?: 'default' | 'transparent' | 'glass';
@@ -48,10 +48,18 @@ export function PageLayout({
                 <ChevronLeft size={28} color="#FFFFFF" strokeWidth={2} />
               </Pressable>
             )}
-            {title && !showBackButton && <Text style={styles.headerTitle}>{title}</Text>}
+            {title && !showBackButton && (
+              typeof title === 'string'
+                ? <Text style={styles.headerTitle}>{title}</Text>
+                : title
+            )}
           </View>
           <View style={styles.headerCenter}>
-            {title && showBackButton && <Text style={styles.headerTitle}>{title}</Text>}
+            {title && showBackButton && (
+              typeof title === 'string'
+                ? <Text style={styles.headerTitle}>{title}</Text>
+                : title
+            )}
           </View>
           <View style={styles.headerRight}>{rightAction}</View>
         </View>

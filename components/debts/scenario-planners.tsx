@@ -4,12 +4,12 @@ import Slider from '@react-native-community/slider';
 import { GlassCard } from '@/components/layouts';
 import { Debt } from '@/lib/types/debt';
 import {
-  formatCurrency,
   formatDate,
   calculateExtraPaymentScenario,
   calculateRefinanceScenario,
   calculateTotalInterest,
 } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 import { TrendingDown, Calendar, DollarSign, Percent } from 'lucide-react-native';
 
 interface ExtraPaymentSliderProps {
@@ -23,6 +23,7 @@ export function ExtraPaymentSlider({
   extraPayment,
   onExtraPaymentChange,
 }: ExtraPaymentSliderProps) {
+  const { formatCurrency } = useCurrency();
   // Local state for smooth slider movement
   const [localValue, setLocalValue] = useState(extraPayment);
 
@@ -126,6 +127,7 @@ export function RefinanceSlider({
   newRate,
   onNewRateChange,
 }: RefinanceSliderProps) {
+  const { formatCurrency } = useCurrency();
   const currentRatePercent = debt.interest_rate * 100;
   const minRate = Math.max(0.01, currentRatePercent - 15);
 
@@ -214,6 +216,7 @@ interface PrincipalInterestChartProps {
 }
 
 export function PrincipalInterestChart({ debt }: PrincipalInterestChartProps) {
+  const { formatCurrency } = useCurrency();
   const totalInterest = calculateTotalInterest(
     debt.current_balance,
     debt.interest_rate,

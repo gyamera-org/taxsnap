@@ -16,6 +16,7 @@ import { BlurView } from 'expo-blur';
 import { PageLayout, GlassCard } from '@/components/layouts';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { useAuth } from '@/context/auth-provider';
+import { useCurrency } from '@/context/currency-provider';
 import { APP_URLS } from '@/lib/config/urls';
 import {
   User,
@@ -28,6 +29,7 @@ import {
   Trash2,
   ChevronRight,
   Gift,
+  Coins,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
@@ -85,6 +87,7 @@ const DELETE_REASONS = [
 export default function SettingsScreen() {
   const router = useRouter();
   const { deleteAccount, signOut } = useAuth();
+  const { currency } = useCurrency();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteReason, setDeleteReason] = useState('');
@@ -167,6 +170,18 @@ export default function SettingsScreen() {
             label="Notifications"
             onPress={() => router.push('/notifications')}
           />
+          <View className="h-px bg-white/10 mx-1" />
+          <Pressable
+            onPress={() => router.push('/currency')}
+            className="flex-row items-center py-4 px-1"
+          >
+            <View className="w-9 h-9 rounded-full items-center justify-center mr-3 bg-white/5">
+              <Coins size={18} color="#9CA3AF" />
+            </View>
+            <Text className="flex-1 text-base text-white">Currency</Text>
+            <Text className="text-gray-400 mr-2">{currency.flag} {currency.code}</Text>
+            <ChevronRight size={20} color="#6B7280" />
+          </Pressable>
         </SettingsGroup>
 
         {/* Support Section */}

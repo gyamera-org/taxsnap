@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingDown } from 'lucide-react-native';
-import { formatCurrency } from '@/lib/utils/debt-calculator';
+import { useCurrency } from '@/context/currency-provider';
 
 interface OverviewCardProps {
   totalBalance: number;
@@ -18,6 +18,7 @@ export function OverviewCard({
   debtFreeDate,
   isLoading,
 }: OverviewCardProps) {
+  const { formatCurrency } = useCurrency();
   const progress = totalOriginal > 0
     ? Math.round(((totalOriginal - totalBalance) / totalOriginal) * 100)
     : 0;
