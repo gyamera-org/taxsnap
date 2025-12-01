@@ -151,8 +151,12 @@ export default function HomeScreen() {
                   <Target size={24} color="#10B981" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-white font-semibold">Add your first debt</Text>
-                  <Text className="text-gray-600 text-sm">Start your debt-free journey</Text>
+                  <Text className="text-white font-semibold">
+                    {paidOffDebts.length > 0 ? 'Add another debt' : 'Add your first debt'}
+                  </Text>
+                  <Text className="text-gray-600 text-sm">
+                    {paidOffDebts.length > 0 ? 'Keep the momentum going!' : 'Start your debt-free journey'}
+                  </Text>
                 </View>
                 <ChevronRight size={20} color="#4B5563" />
               </View>

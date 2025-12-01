@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Search, SlidersHorizontal, X } from 'lucide-react-native';
+import { Plus, Search, SlidersHorizontal, X, Check } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { PageLayout } from '@/components/layouts';
+import { GlassBottomSheet, GlassBottomSheetRef } from '@/components/ui/glass-bottom-sheet';
 import {
   DebtListItem,
   EmptyState,
@@ -19,13 +20,15 @@ type StatusFilter = DebtStatus | 'all';
 
 export default function DebtsScreen() {
   const router = useRouter();
+  const filterSheetRef = useRef<GlassBottomSheetRef>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('interest_rate');
   const [categoryFilter, setCategoryFilter] = useState<DebtCategory | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
+
+  const hasActiveFilters = categoryFilter !== null || statusFilter !== 'active';
 
   const { data: debts, isLoading } = useDebts(debouncedSearch);
   const { data: paymentsDue } = usePaymentsDue();
@@ -79,6 +82,16 @@ export default function DebtsScreen() {
     { value: 'all', label: 'All' },
   ];
 
+  const handleOpenFilters = () => {
+    filterSheetRef.current?.expand();
+  };
+
+  const handleResetFilters = () => {
+    setSortBy('interest_rate');
+    setCategoryFilter(null);
+    setStatusFilter('active');
+  };
+
   const headerActions = (
     <View className="flex-row items-center">
       <Pressable
@@ -97,20 +110,20 @@ export default function DebtsScreen() {
         )}
       </Pressable>
       <Pressable
-        onPress={() => setShowFilters(!showFilters)}
+        onPress={handleOpenFilters}
         className="w-9 h-9 rounded-full overflow-hidden items-center justify-center mr-2"
       >
         <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
         <View
           className={`absolute inset-0 rounded-full border ${
-            showFilters || categoryFilter || statusFilter !== 'active'
+            hasActiveFilters
               ? 'border-emerald-500/30 bg-emerald-500/10'
               : 'border-white/10 bg-white/[0.03]'
           }`}
         />
         <SlidersHorizontal
           size={18}
-          color={showFilters || categoryFilter || statusFilter !== 'active' ? '#10B981' : '#9CA3AF'}
+          color={hasActiveFilters ? '#10B981' : '#9CA3AF'}
         />
       </Pressable>
       <Pressable
@@ -134,7 +147,7 @@ export default function DebtsScreen() {
       >
 
         {/* Payment Due Banner */}
-        {paymentsDue && paymentsDue.length > 0 && !showSearch && !showFilters && (
+        {paymentsDue && paymentsDue.length > 0 && !showSearch && (
           <PaymentDueBanner debts={paymentsDue} />
         )}
 
@@ -163,102 +176,6 @@ export default function DebtsScreen() {
           </View>
         )}
 
-        {/* Filters Panel (expandable) */}
-        {showFilters && (
-          <View className={`mx-4 ${showSearch ? '' : 'mt-2'} mb-4 rounded-2xl overflow-hidden bg-white/[0.03]`}>
-            <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-            <View className="absolute inset-0 rounded-2xl border border-white/10" />
-            <View className="p-4">
-              {/* Status Filter */}
-              <Text className="text-gray-400 text-sm mb-2">Status</Text>
-              <View className="flex-row flex-wrap mb-4">
-                {statusOptions.map((option) => (
-                  <Pressable
-                    key={option.value}
-                    onPress={() => setStatusFilter(option.value)}
-                    className={`px-3 py-1.5 rounded-full mr-2 mb-2 ${
-                      statusFilter === option.value
-                        ? 'bg-emerald-500'
-                        : 'bg-white/10'
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm ${
-                        statusFilter === option.value ? 'text-white font-semibold' : 'text-gray-400'
-                      }`}
-                    >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              {/* Sort Options */}
-              <Text className="text-gray-400 text-sm mb-2">Sort by</Text>
-              <View className="flex-row flex-wrap mb-4">
-                {sortOptions.map((option) => (
-                  <Pressable
-                    key={option.value}
-                    onPress={() => setSortBy(option.value)}
-                    className={`px-3 py-1.5 rounded-full mr-2 mb-2 ${
-                      sortBy === option.value
-                        ? 'bg-emerald-500'
-                        : 'bg-white/10'
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm ${
-                        sortBy === option.value ? 'text-white font-semibold' : 'text-gray-400'
-                      }`}
-                    >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              {/* Category Filter */}
-              <Text className="text-gray-400 text-sm mb-2">Category</Text>
-              <View className="flex-row flex-wrap">
-                <Pressable
-                  onPress={() => setCategoryFilter(null)}
-                  className={`px-3 py-1.5 rounded-full mr-2 mb-2 ${
-                    categoryFilter === null ? 'bg-emerald-500' : 'bg-white/10'
-                  }`}
-                >
-                  <Text
-                    className={`text-sm ${
-                      categoryFilter === null ? 'text-white font-semibold' : 'text-gray-400'
-                    }`}
-                  >
-                    All
-                  </Text>
-                </Pressable>
-                {categories.map((cat) => (
-                  <Pressable
-                    key={cat.value}
-                    onPress={() => setCategoryFilter(cat.value)}
-                    className={`px-3 py-1.5 rounded-full mr-2 mb-2 ${
-                      categoryFilter === cat.value
-                        ? 'bg-emerald-500'
-                        : 'bg-white/10'
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm ${
-                        categoryFilter === cat.value
-                          ? 'text-white font-semibold'
-                          : 'text-gray-400'
-                      }`}
-                    >
-                      {cat.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          </View>
-        )}
 
         {/* Priority Info Banner */}
         {!isLoading && hasDebts && !debouncedSearch && sortBy === 'interest_rate' && (
@@ -306,6 +223,121 @@ export default function DebtsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Filter Bottom Sheet */}
+      <GlassBottomSheet ref={filterSheetRef} snapPoints={['55%']}>
+        <View className="px-5 pt-2 pb-4">
+          {/* Header */}
+          <View className="flex-row items-center justify-between mb-6">
+            <Text className="text-white text-xl font-semibold">Filter & Sort</Text>
+            {hasActiveFilters && (
+              <Pressable onPress={handleResetFilters}>
+                <Text className="text-emerald-400 text-sm font-medium">Reset</Text>
+              </Pressable>
+            )}
+          </View>
+
+          {/* Status Filter */}
+          <Text className="text-gray-400 text-sm mb-3">Status</Text>
+          <View className="flex-row flex-wrap mb-5">
+            {statusOptions.map((option) => (
+              <Pressable
+                key={option.value}
+                onPress={() => setStatusFilter(option.value)}
+                className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
+                  statusFilter === option.value
+                    ? 'bg-emerald-500'
+                    : 'bg-white/10'
+                }`}
+              >
+                {statusFilter === option.value && (
+                  <Check size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                )}
+                <Text
+                  className={`text-sm ${
+                    statusFilter === option.value ? 'text-white font-semibold' : 'text-gray-400'
+                  }`}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Sort Options */}
+          <Text className="text-gray-400 text-sm mb-3">Sort by</Text>
+          <View className="flex-row flex-wrap mb-5">
+            {sortOptions.map((option) => (
+              <Pressable
+                key={option.value}
+                onPress={() => setSortBy(option.value)}
+                className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
+                  sortBy === option.value
+                    ? 'bg-emerald-500'
+                    : 'bg-white/10'
+                }`}
+              >
+                {sortBy === option.value && (
+                  <Check size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                )}
+                <Text
+                  className={`text-sm ${
+                    sortBy === option.value ? 'text-white font-semibold' : 'text-gray-400'
+                  }`}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Category Filter */}
+          <Text className="text-gray-400 text-sm mb-3">Category</Text>
+          <View className="flex-row flex-wrap">
+            <Pressable
+              onPress={() => setCategoryFilter(null)}
+              className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
+                categoryFilter === null ? 'bg-emerald-500' : 'bg-white/10'
+              }`}
+            >
+              {categoryFilter === null && (
+                <Check size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+              )}
+              <Text
+                className={`text-sm ${
+                  categoryFilter === null ? 'text-white font-semibold' : 'text-gray-400'
+                }`}
+              >
+                All
+              </Text>
+            </Pressable>
+            {categories.map((cat) => (
+              <Pressable
+                key={cat.value}
+                onPress={() => setCategoryFilter(cat.value)}
+                className={`flex-row items-center px-4 py-2 rounded-full mr-2 mb-2 ${
+                  categoryFilter === cat.value
+                    ? 'bg-emerald-500'
+                    : 'bg-white/10'
+                }`}
+              >
+                {categoryFilter === cat.value && (
+                  <Check size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                )}
+                <Text
+                  className={`text-sm ${
+                    categoryFilter === cat.value
+                      ? 'text-white font-semibold'
+                      : 'text-gray-400'
+                  }`}
+                >
+                  {cat.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </GlassBottomSheet>
     </PageLayout>
   );
 }

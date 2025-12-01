@@ -72,9 +72,21 @@ Deno.serve(async (req) => {
     }
 
     // Calculate interest/principal split
-    const monthlyInterest = (Number(debt.current_balance) * Number(debt.interest_rate)) / 12;
-    const interestPaid = Math.min(monthlyInterest, amount);
-    const principalPaid = amount - interestPaid;
+    // If paying full balance or more, treat as full payoff
+    const currentBalance = Number(debt.current_balance);
+    let principalPaid: number;
+    let interestPaid: number;
+
+    if (amount >= currentBalance) {
+      // Full payoff - all of current balance is principal, rest is interest
+      principalPaid = currentBalance;
+      interestPaid = amount - currentBalance;
+    } else {
+      // Partial payment - calculate interest first, then principal
+      const monthlyInterest = (currentBalance * Number(debt.interest_rate)) / 100 / 12;
+      interestPaid = Math.min(monthlyInterest, amount);
+      principalPaid = amount - interestPaid;
+    }
 
     // Insert payment record
     const { data: payment, error: paymentError } = await supabase
@@ -91,7 +103,7 @@ Deno.serve(async (req) => {
     if (paymentError) throw paymentError;
 
     // Update debt balance
-    const newBalance = Math.max(0, Number(debt.current_balance) - principalPaid);
+    const newBalance = Math.max(0, currentBalance - principalPaid);
     const updateData: any = {
       current_balance: newBalance,
     };
@@ -110,7 +122,11 @@ Deno.serve(async (req) => {
 
     if (updateError) throw updateError;
 
-    return new Response(JSON.stringify({ success: true, data: payment }), {
+    return new Response(JSON.stringify({
+      success: true,
+      data: payment,
+      debt_paid_off: newBalance === 0,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {

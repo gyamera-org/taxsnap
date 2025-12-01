@@ -1,10 +1,19 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Platform, StatusBar, ActivityIndicator, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  Platform,
+  StatusBar,
+  ActivityIndicator,
+  Linking,
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/auth-provider';
 import * as Haptics from 'expo-haptics';
 import { AppleIcon, GoogleIcon } from '@/components/icons/tab-icons';
+import { APP_URLS } from '@/lib/config/urls';
 
 export default function AuthScreen() {
   const router = useRouter();
@@ -67,9 +76,7 @@ export default function AuthScreen() {
                 <Pressable
                   onPress={handleAppleAuth}
                   disabled={isLoading}
-                  className={`rounded-2xl overflow-hidden mb-3 ${
-                    isLoading ? 'opacity-70' : ''
-                  }`}
+                  className={`rounded-2xl overflow-hidden mb-3 ${isLoading ? 'opacity-70' : ''}`}
                 >
                   <View className="bg-white py-4 px-6 flex-row items-center justify-center">
                     {appleLoading ? (
@@ -86,8 +93,8 @@ export default function AuthScreen() {
                 </Pressable>
               )}
 
-              {/* Google Sign In */}
-              <Pressable
+              {/* Google Sign In - temporarily disabled */}
+              {/* <Pressable
                 onPress={handleGoogleAuth}
                 disabled={isLoading}
                 className={`rounded-2xl overflow-hidden ${
@@ -106,7 +113,7 @@ export default function AuthScreen() {
                     </>
                   )}
                 </View>
-              </Pressable>
+              </Pressable> */}
             </View>
 
             {/* Toggle Auth Mode */}
@@ -129,9 +136,7 @@ export default function AuthScreen() {
                 ) : (
                   <>
                     Don't have an account?{' '}
-                    <Text className="text-emerald-400 font-semibold">
-                      Get Started
-                    </Text>
+                    <Text className="text-emerald-400 font-semibold">Get Started</Text>
                   </>
                 )}
               </Text>
@@ -143,14 +148,14 @@ export default function AuthScreen() {
             By continuing, you agree to our{' '}
             <Text
               className="text-gray-500 underline"
-              onPress={() => Linking.openURL('https://debt-free.app/terms')}
+              onPress={() => Linking.openURL(APP_URLS.terms)}
             >
               Terms
             </Text>
             {' & '}
             <Text
               className="text-gray-500 underline"
-              onPress={() => Linking.openURL('https://debt-free.app/privacy')}
+              onPress={() => Linking.openURL(APP_URLS.privacy)}
             >
               Privacy Policy
             </Text>

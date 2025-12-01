@@ -2,13 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import {
-  Trash2,
-  Edit3,
-  Calendar,
-  CreditCard,
-  Check,
-} from 'lucide-react-native';
+import { Trash2, Edit3, Calendar, CreditCard, Check } from 'lucide-react-native';
+import { toast } from 'sonner-native';
 import { PageLayout, SectionHeader } from '@/components/layouts';
 import { GlassBottomSheet, GlassBottomSheetRef } from '@/components/ui/glass-bottom-sheet';
 import { useDebt, useDeleteDebt, useRecordPayment, useDebtPayments } from '@/lib/hooks/use-debts';
@@ -91,11 +86,17 @@ export default function DebtDetailScreen() {
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     paymentSheetRef.current?.close();
-    await recordPayment.mutateAsync({
+    const result = await recordPayment.mutateAsync({
       debt_id: debt.id,
       amount,
     });
     setPaymentAmount('');
+
+    if (result.debt_paid_off) {
+      setTimeout(() => {
+        toast.success(`🥳 ${debt.name} is paid off! You're crushing it! 🙌`);
+      }, 500);
+    }
   };
 
   const handleQuickPay = (amount: number) => {
@@ -169,7 +170,12 @@ export default function DebtDetailScreen() {
         {/* Hero Card - Balance & Progress */}
         <View className="mx-4 mt-2 rounded-2xl overflow-hidden">
           <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill}>
-            <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.05)' }} />
+            <View
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                backgroundColor: 'rgba(255,255,255,0.05)',
+              }}
+            />
           </BlurView>
           <View className="absolute inset-0 rounded-2xl border border-white/10" />
 
@@ -210,7 +216,8 @@ export default function DebtDetailScreen() {
                   className="h-full rounded-full"
                   style={{
                     width: `${progress}%`,
-                    backgroundColor: progress >= 75 ? '#10B981' : progress >= 50 ? '#F59E0B' : '#3B82F6',
+                    backgroundColor:
+                      progress >= 75 ? '#10B981' : progress >= 50 ? '#F59E0B' : '#3B82F6',
                   }}
                 />
               </View>
@@ -233,7 +240,15 @@ export default function DebtDetailScreen() {
             iconColor="#10B981"
             iconBgColor="bg-emerald-500/20"
             label="Due Date"
-            value={`${debt.due_date}${debt.due_date === 1 ? 'st' : debt.due_date === 2 ? 'nd' : debt.due_date === 3 ? 'rd' : 'th'}`}
+            value={`${debt.due_date}${
+              debt.due_date === 1
+                ? 'st'
+                : debt.due_date === 2
+                ? 'nd'
+                : debt.due_date === 3
+                ? 'rd'
+                : 'th'
+            }`}
             subValue="of month"
           />
           <MetricCard
@@ -256,7 +271,11 @@ export default function DebtDetailScreen() {
         <StatRow
           items={[
             { label: 'Payoff Date', value: formatDate(payoffDate), valueColor: 'text-white' },
-            { label: 'Time Left', value: formatDuration(originalMonths), valueColor: 'text-gray-400' },
+            {
+              label: 'Time Left',
+              value: formatDuration(originalMonths),
+              valueColor: 'text-gray-400',
+            },
           ]}
         />
 
@@ -266,7 +285,12 @@ export default function DebtDetailScreen() {
             <SectionHeader title="Payment History" />
             <View className="mx-4 rounded-2xl overflow-hidden">
               <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill}>
-                <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.05)' }} />
+                <View
+                  style={{
+                    ...StyleSheet.absoluteFillObject,
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                  }}
+                />
               </BlurView>
               <View className="absolute inset-0 rounded-2xl border border-white/10" />
 
@@ -339,16 +363,18 @@ export default function DebtDetailScreen() {
       </ScrollView>
 
       {/* Record Payment Button */}
-      <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-4">
-        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
-        <Pressable
-          onPress={handleOpenPaymentSheet}
-          className="bg-emerald-500 rounded-2xl py-4 flex-row items-center justify-center"
-        >
-          <Check size={20} color="#FFFFFF" />
-          <Text className="text-white font-semibold text-lg ml-2">Record Payment</Text>
-        </Pressable>
-      </View>
+      {debt.status !== 'paid_off' && (
+        <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-4">
+          <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+          <Pressable
+            onPress={handleOpenPaymentSheet}
+            className="bg-emerald-500 rounded-2xl py-4 flex-row items-center justify-center"
+          >
+            <Check size={20} color="#FFFFFF" />
+            <Text className="text-white font-semibold text-lg ml-2">Record Payment</Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* Payment Bottom Sheet */}
       <GlassBottomSheet ref={paymentSheetRef} snapPoints={['45%']}>
@@ -418,9 +444,7 @@ export default function DebtDetailScreen() {
             onPress={handleRecordPayment}
             disabled={!paymentAmount || parseFloat(paymentAmount) <= 0 || recordPayment.isPending}
             className={`rounded-2xl py-4 ${
-              paymentAmount && parseFloat(paymentAmount) > 0
-                ? 'bg-emerald-500'
-                : 'bg-gray-700'
+              paymentAmount && parseFloat(paymentAmount) > 0 ? 'bg-emerald-500' : 'bg-gray-700'
             }`}
           >
             <Text className="text-white font-semibold text-lg text-center">

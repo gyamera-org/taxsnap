@@ -1,8 +1,20 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Keyboard, StatusBar, Platform, ActivityIndicator, Linking, TouchableWithoutFeedback } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Keyboard,
+  StatusBar,
+  Platform,
+  ActivityIndicator,
+  Linking,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { APP_URLS } from '@/lib/config/urls';
 import Animated, {
   SlideInRight,
   FadeInUp,
@@ -13,7 +25,6 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { ChevronLeft, CreditCard, Layers, TrendingDown, Zap } from 'lucide-react-native';
-import { markOnboardingComplete } from './index';
 import { useAuth } from '@/context/auth-provider';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -124,7 +135,10 @@ export default function OnboardingScreen() {
 
     if (nextStep === 'reveal') {
       setTimeout(() => {
-        revealScale.value = withDelay(200, withTiming(1, { duration: 600, easing: Easing.out(Easing.back(1.2)) }));
+        revealScale.value = withDelay(
+          200,
+          withTiming(1, { duration: 600, easing: Easing.out(Easing.back(1.2)) })
+        );
       }, 100);
     }
   };
@@ -157,7 +171,6 @@ export default function OnboardingScreen() {
     try {
       await saveOnboardingData();
       await signInWithApple();
-      await markOnboardingComplete();
     } catch (error) {
       console.error('Apple auth error:', error);
     } finally {
@@ -171,7 +184,6 @@ export default function OnboardingScreen() {
     try {
       await saveOnboardingData();
       await signInWithGoogle();
-      await markOnboardingComplete();
     } catch (error) {
       console.error('Google auth error:', error);
     } finally {
@@ -209,10 +221,7 @@ export default function OnboardingScreen() {
               subtitle="Include all credit cards, loans, etc."
               withKeyboardAvoid
               footer={
-                <GradientButton
-                  onPress={() => goToStep('rate')}
-                  disabled={!canProceedFromDebt}
-                />
+                <GradientButton onPress={() => goToStep('rate')} disabled={!canProceedFromDebt} />
               }
             >
               <CurrencyInput
@@ -292,7 +301,9 @@ export default function OnboardingScreen() {
                   <OptionCard
                     selected={debtType === 'single'}
                     onSelect={() => setDebtType('single')}
-                    icon={<CreditCard size={24} color={debtType === 'single' ? '#10B981' : '#9CA3AF'} />}
+                    icon={
+                      <CreditCard size={24} color={debtType === 'single' ? '#10B981' : '#9CA3AF'} />
+                    }
                     title="Single debt"
                     subtitle="One loan or credit card"
                   />
@@ -300,7 +311,9 @@ export default function OnboardingScreen() {
                 <OptionCard
                   selected={debtType === 'multiple'}
                   onSelect={() => setDebtType('multiple')}
-                  icon={<Layers size={24} color={debtType === 'multiple' ? '#10B981' : '#9CA3AF'} />}
+                  icon={
+                    <Layers size={24} color={debtType === 'multiple' ? '#10B981' : '#9CA3AF'} />
+                  }
                   title="Multiple debts"
                   subtitle="Several cards or loans to manage"
                 />
@@ -310,13 +323,17 @@ export default function OnboardingScreen() {
 
           {/* Step 5: Reveal */}
           {step === 'reveal' && (
-            <Animated.View entering={SlideInRight.duration(300)} className="flex-1 px-6 justify-between pb-8">
+            <Animated.View
+              entering={SlideInRight.duration(300)}
+              className="flex-1 px-6 justify-between pb-8"
+            >
               <View className="flex-1 justify-center">
                 <Animated.Text
                   entering={FadeInUp.duration(400)}
                   className="text-gray-400 text-center mb-1 mt-4"
                 >
-                  {formatMoney(debtInput.numericValue)} at {rate}% paying {formatMoney(paymentInput.numericValue)}/mo
+                  {formatMoney(debtInput.numericValue)} at {rate}% paying{' '}
+                  {formatMoney(paymentInput.numericValue)}/mo
                 </Animated.Text>
                 <Animated.Text
                   entering={FadeInUp.delay(100).duration(400)}
@@ -346,7 +363,12 @@ export default function OnboardingScreen() {
                       <StrategyCard
                         selected={selectedStrategy === 'avalanche'}
                         onSelect={() => setSelectedStrategy('avalanche')}
-                        icon={<TrendingDown size={20} color={selectedStrategy === 'avalanche' ? '#10B981' : '#9CA3AF'} />}
+                        icon={
+                          <TrendingDown
+                            size={20}
+                            color={selectedStrategy === 'avalanche' ? '#10B981' : '#9CA3AF'}
+                          />
+                        }
                         title="Avalanche Method"
                         subtitle="Pay highest interest first"
                         metricLabel="Saves most money"
@@ -358,7 +380,12 @@ export default function OnboardingScreen() {
                     <StrategyCard
                       selected={selectedStrategy === 'snowball'}
                       onSelect={() => setSelectedStrategy('snowball')}
-                      icon={<Zap size={20} color={selectedStrategy === 'snowball' ? '#3B82F6' : '#9CA3AF'} />}
+                      icon={
+                        <Zap
+                          size={20}
+                          color={selectedStrategy === 'snowball' ? '#3B82F6' : '#9CA3AF'}
+                        />
+                      }
                       title="Snowball Method"
                       subtitle="Pay smallest balance first"
                       metricLabel="Faster wins, more motivation"
@@ -382,15 +409,21 @@ export default function OnboardingScreen() {
                         </Text>
                         <View className="flex-row justify-between mb-2">
                           <Text className="text-gray-400">New payment</Text>
-                          <Text className="text-white font-bold">{formatMoney(optimizedPayment)}/mo</Text>
+                          <Text className="text-white font-bold">
+                            {formatMoney(optimizedPayment)}/mo
+                          </Text>
                         </View>
                         <View className="flex-row justify-between mb-2">
                           <Text className="text-gray-400">Interest saved</Text>
-                          <Text className="text-emerald-400 font-bold">{formatMoney(interestSaved)}</Text>
+                          <Text className="text-emerald-400 font-bold">
+                            {formatMoney(interestSaved)}
+                          </Text>
                         </View>
                         <View className="flex-row justify-between">
                           <Text className="text-gray-400">Time saved</Text>
-                          <Text className="text-white font-bold">{formatDuration(monthsSaved)}</Text>
+                          <Text className="text-white font-bold">
+                            {formatDuration(monthsSaved)}
+                          </Text>
                         </View>
                       </View>
                     </View>
@@ -408,7 +441,10 @@ export default function OnboardingScreen() {
 
           {/* Step 6: Signup */}
           {step === 'signup' && (
-            <Animated.View entering={SlideInRight.duration(300)} className="flex-1 px-6 justify-between pb-8">
+            <Animated.View
+              entering={SlideInRight.duration(300)}
+              className="flex-1 px-6 justify-between pb-8"
+            >
               <View className="flex-1 justify-center">
                 <Animated.View
                   entering={FadeInUp.delay(100).duration(500)}
@@ -429,7 +465,9 @@ export default function OnboardingScreen() {
                 >
                   <View className="flex-row justify-between mb-3">
                     <Text className="text-gray-400">Total debt</Text>
-                    <Text className="text-white font-bold">{formatMoney(debtInput.numericValue)}</Text>
+                    <Text className="text-white font-bold">
+                      {formatMoney(debtInput.numericValue)}
+                    </Text>
                   </View>
                   <View className="flex-row justify-between mb-3">
                     <Text className="text-gray-400">Interest rate</Text>
@@ -437,7 +475,9 @@ export default function OnboardingScreen() {
                   </View>
                   <View className="flex-row justify-between mb-3">
                     <Text className="text-gray-400">Your payment</Text>
-                    <Text className="text-white font-bold">{formatMoney(paymentInput.numericValue)}/mo</Text>
+                    <Text className="text-white font-bold">
+                      {formatMoney(paymentInput.numericValue)}/mo
+                    </Text>
                   </View>
                   <View className="flex-row justify-between">
                     <Text className="text-gray-400">Interest you'll save</Text>
@@ -450,7 +490,9 @@ export default function OnboardingScreen() {
                     <Pressable
                       onPress={handleAppleAuth}
                       disabled={isLoading}
-                      className={`rounded-2xl overflow-hidden mb-3 ${isLoading ? 'opacity-70' : ''}`}
+                      className={`rounded-2xl overflow-hidden mb-3 ${
+                        isLoading ? 'opacity-70' : ''
+                      }`}
                     >
                       <View className="bg-white py-4 flex-row items-center justify-center">
                         {appleLoading ? (
@@ -458,14 +500,17 @@ export default function OnboardingScreen() {
                         ) : (
                           <>
                             <AppleIcon size={20} color="#000" />
-                            <Text className="text-black font-semibold text-lg ml-3">Continue with Apple</Text>
+                            <Text className="text-black font-semibold text-lg ml-3">
+                              Continue with Apple
+                            </Text>
                           </>
                         )}
                       </View>
                     </Pressable>
                   )}
 
-                  <Pressable
+                  {/* Google Sign In - temporarily disabled */}
+                  {/* <Pressable
                     onPress={handleGoogleAuth}
                     disabled={isLoading}
                     className={`rounded-2xl border border-white/20 py-4 flex-row items-center justify-center ${isLoading ? 'opacity-70' : ''}`}
@@ -478,7 +523,7 @@ export default function OnboardingScreen() {
                         <Text className="text-white font-semibold text-lg ml-3">Continue with Google</Text>
                       </>
                     )}
-                  </Pressable>
+                  </Pressable> */}
                 </Animated.View>
               </View>
 
@@ -486,14 +531,14 @@ export default function OnboardingScreen() {
                 By continuing, you agree to our{' '}
                 <Text
                   className="text-gray-500 underline"
-                  onPress={() => Linking.openURL('https://debt-free.app/terms')}
+                  onPress={() => Linking.openURL(APP_URLS.terms)}
                 >
                   Terms
                 </Text>
                 {' & '}
                 <Text
                   className="text-gray-500 underline"
-                  onPress={() => Linking.openURL('https://debt-free.app/privacy')}
+                  onPress={() => Linking.openURL(APP_URLS.privacy)}
                 >
                   Privacy Policy
                 </Text>

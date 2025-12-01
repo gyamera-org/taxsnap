@@ -9,12 +9,14 @@ import {
   TextInput,
   ActivityIndicator,
   Modal,
+  Share,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { PageLayout, GlassCard } from '@/components/layouts';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { useAuth } from '@/context/auth-provider';
+import { APP_URLS } from '@/lib/config/urls';
 import {
   User,
   Bell,
@@ -53,29 +55,17 @@ function SettingsItem({
       >
         <Icon size={18} color={danger ? '#EF4444' : '#9CA3AF'} />
       </View>
-      <Text
-        className={`flex-1 text-base ${danger ? 'text-red-400' : 'text-white'}`}
-      >
-        {label}
-      </Text>
+      <Text className={`flex-1 text-base ${danger ? 'text-red-400' : 'text-white'}`}>{label}</Text>
       {showChevron && <ChevronRight size={20} color="#6B7280" />}
     </Pressable>
   );
 }
 
-function SettingsGroup({
-  children,
-  title,
-}: {
-  children: React.ReactNode;
-  title?: string;
-}) {
+function SettingsGroup({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
     <View className="mb-4">
       {title && (
-        <Text className="text-gray-500 text-xs uppercase tracking-wider px-5 mb-2">
-          {title}
-        </Text>
+        <Text className="text-gray-500 text-xs uppercase tracking-wider px-5 mb-2">{title}</Text>
       )}
       <GlassCard>
         <View className="-my-1">{children}</View>
@@ -106,6 +96,16 @@ export default function SettingsScreen() {
     await signOut();
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `I've been using Debt Free to crush my debt and it's actually working! If you're looking for a simple way to track your payments and stay motivated, check it out:\n\n${APP_URLS.appStore}`,
+      });
+    } catch {
+      // User cancelled or error
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (!deleteReason) return;
 
@@ -133,8 +133,8 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120, paddingTop: 8 }}
       >
-        {/* Refer and Earn Banner */}
-        <Pressable onPress={() => router.push('/referral')} className="mx-4 mb-4">
+        {/* Share with Friends Banner */}
+        <Pressable onPress={handleShare} className="mx-4 mb-4">
           <View className="rounded-2xl overflow-hidden">
             <LinearGradient
               colors={['#064e3b', '#065f46', '#047857']}
@@ -148,9 +148,9 @@ export default function SettingsScreen() {
                 <Gift size={24} color="#ffffff" />
               </View>
               <View className="flex-1">
-                <Text className="text-white font-bold text-base">Refer & Earn</Text>
+                <Text className="text-white font-bold text-base">Share with Friends</Text>
                 <Text className="text-emerald-100/80 text-sm">
-                  Invite friends and get 1 month free
+                  Help a friend start their debt-free journey
                 </Text>
               </View>
               <ChevronRight size={20} color="rgba(255,255,255,0.7)" />
@@ -162,7 +162,11 @@ export default function SettingsScreen() {
         <SettingsGroup title="Account">
           <SettingsItem icon={User} label="Profile" onPress={() => router.push('/profile')} />
           <View className="h-px bg-white/10 mx-1" />
-          <SettingsItem icon={Bell} label="Notifications" onPress={() => router.push('/notifications')} />
+          <SettingsItem
+            icon={Bell}
+            label="Notifications"
+            onPress={() => router.push('/notifications')}
+          />
         </SettingsGroup>
 
         {/* Support Section */}
@@ -181,13 +185,13 @@ export default function SettingsScreen() {
           <SettingsItem
             icon={FileText}
             label="Terms of Service"
-            onPress={() => Linking.openURL('https://www.debt-free.app/terms')}
+            onPress={() => Linking.openURL(APP_URLS.terms)}
           />
           <View className="h-px bg-white/10 mx-1" />
           <SettingsItem
             icon={Shield}
             label="Privacy Policy"
-            onPress={() => Linking.openURL('https://www.debt-free.app/privacy')}
+            onPress={() => Linking.openURL(APP_URLS.privacy)}
           />
         </SettingsGroup>
 

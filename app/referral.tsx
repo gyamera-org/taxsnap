@@ -4,9 +4,10 @@ import { toast } from 'sonner-native';
 import * as Clipboard from 'expo-clipboard';
 import { FormPage } from '@/components/ui/form-page';
 import { Gift, Copy, Share2, Users } from 'lucide-react-native';
+import { APP_URLS } from '@/lib/config/urls';
 
 const REFERRAL_CODE = 'DEBTFREE2024';
-const REFERRAL_LINK = `https://debt-free.app/invite/${REFERRAL_CODE}`;
+const REFERRAL_LINK = `${APP_URLS.baseUrl}/invite/${REFERRAL_CODE}`;
 
 export default function ReferralScreen() {
   const handleCopyCode = async () => {
@@ -31,9 +32,7 @@ export default function ReferralScreen() {
         <View className="w-20 h-20 rounded-3xl bg-emerald-500/20 items-center justify-center mb-4">
           <Gift size={40} color="#10B981" />
         </View>
-        <Text className="text-white text-2xl font-bold text-center">
-          Give 1 Month, Get 1 Month
-        </Text>
+        <Text className="text-white text-2xl font-bold text-center">Give 1 Month, Get 1 Month</Text>
         <Text className="text-gray-400 text-center mt-2 px-4">
           Share your referral code with friends. When they subscribe, you both get 1 month free!
         </Text>
@@ -53,9 +52,7 @@ export default function ReferralScreen() {
             Your Referral Code
           </Text>
           <View className="flex-row items-center justify-between">
-            <Text className="text-white text-2xl font-bold tracking-widest">
-              {REFERRAL_CODE}
-            </Text>
+            <Text className="text-white text-2xl font-bold tracking-widest">{REFERRAL_CODE}</Text>
             <Pressable
               onPress={handleCopyCode}
               className="w-10 h-10 rounded-xl bg-white/10 items-center justify-center"
@@ -109,9 +106,7 @@ export default function ReferralScreen() {
 
       {/* How it works */}
       <View className="mt-6">
-        <Text className="text-gray-500 text-xs uppercase tracking-wider mb-3">
-          How it Works
-        </Text>
+        <Text className="text-gray-500 text-xs uppercase tracking-wider mb-3">How it Works</Text>
         {[
           { step: '1', text: 'Share your unique referral code with friends' },
           { step: '2', text: 'They sign up and subscribe using your code' },

@@ -1,24 +1,11 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  Linking,
-  ScrollView,
-  StatusBar,
-} from 'react-native';
+import { View, Text, Pressable, StyleSheet, Linking, ScrollView, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  Unlock,
-  TrendingUp,
-  Calendar,
-  PiggyBank,
-  Check,
-} from 'lucide-react-native';
+import { Unlock, TrendingUp, Calendar, PiggyBank, Check } from 'lucide-react-native';
 import { useRevenueCat } from '@/context/revenuecat-provider';
+import { APP_URLS } from '@/lib/config/urls';
 
 // Fallback prices if RevenueCat fails to load
 const FALLBACK_MONTHLY_PRICE = 4.99;
@@ -58,14 +45,15 @@ export default function PaywallScreen() {
   // Use RevenueCat formatted price strings (includes currency symbol)
   const monthlyPriceString = monthlyPackage?.product.priceString ?? `$${FALLBACK_MONTHLY_PRICE}`;
   const yearlyPriceString = yearlyPackage?.product.priceString ?? `$${FALLBACK_YEARLY_PRICE}`;
-  const yearlyPerMonthString = yearlyPackage?.product.pricePerMonthString ?? `$${(FALLBACK_YEARLY_PRICE / 12).toFixed(2)}`;
+  const yearlyPerMonthString =
+    yearlyPackage?.product.pricePerMonthString ?? `$${(FALLBACK_YEARLY_PRICE / 12).toFixed(2)}`;
 
   // Numeric prices for calculations
   const monthlyPrice = monthlyPackage?.product.price ?? FALLBACK_MONTHLY_PRICE;
   const yearlyPrice = yearlyPackage?.product.price ?? FALLBACK_YEARLY_PRICE;
 
   const currentPriceString = selectedPlan === 'yearly' ? yearlyPriceString : monthlyPriceString;
-  const savingsPercent = Math.round((1 - (yearlyPrice / 12) / monthlyPrice) * 100);
+  const savingsPercent = Math.round((1 - yearlyPrice / 12 / monthlyPrice) * 100);
 
   const handleStartTrial = async () => {
     const packageToPurchase = selectedPlan === 'yearly' ? yearlyPackage : monthlyPackage;
@@ -103,38 +91,27 @@ export default function PaywallScreen() {
               <Text className="text-white text-2xl font-bold text-center mb-2">
                 Unlock Your Savings
               </Text>
-              <Text className="text-gray-400 text-center">
-                You're about to save thousands
-              </Text>
+              <Text className="text-gray-400 text-center">You're about to save thousands</Text>
             </View>
 
             {/* Features */}
             <View className="rounded-2xl overflow-hidden mb-6">
-              <LinearGradient
-                colors={['#1a1a1f', '#141418']}
-                style={StyleSheet.absoluteFill}
-              />
+              <LinearGradient colors={['#1a1a1f', '#141418']} style={StyleSheet.absoluteFill} />
               <View className="absolute inset-0 rounded-2xl border border-white/[0.08]" />
               <View className="p-5">
                 {features.map((feature, index) => (
                   <View
                     key={feature.title}
                     className={`flex-row items-center ${
-                      index < features.length - 1
-                        ? 'pb-4 mb-4 border-b border-white/10'
-                        : ''
+                      index < features.length - 1 ? 'pb-4 mb-4 border-b border-white/10' : ''
                     }`}
                   >
                     <View className="w-12 h-12 rounded-xl bg-emerald-500/15 items-center justify-center mr-4">
                       <feature.icon size={24} color="#10B981" />
                     </View>
                     <View className="flex-1">
-                      <Text className="text-white font-semibold text-base">
-                        {feature.title}
-                      </Text>
-                      <Text className="text-gray-500 text-sm">
-                        {feature.description}
-                      </Text>
+                      <Text className="text-white font-semibold text-base">{feature.title}</Text>
+                      <Text className="text-gray-500 text-sm">{feature.description}</Text>
                     </View>
                     <Check size={20} color="#10B981" />
                   </View>
@@ -145,26 +122,31 @@ export default function PaywallScreen() {
             {/* Plan Selection - Row Layout */}
             <View className="flex-row mb-6">
               {/* Yearly Plan */}
-              <Pressable
-                onPress={() => setSelectedPlan('yearly')}
-                className="flex-1 mr-2"
-              >
+              <Pressable onPress={() => setSelectedPlan('yearly')} className="flex-1 mr-2">
                 <View className="rounded-2xl overflow-hidden">
                   <LinearGradient
-                    colors={selectedPlan === 'yearly' ? ['#0f1f1a', '#0a1512'] : ['#1a1a1f', '#141418']}
+                    colors={
+                      selectedPlan === 'yearly' ? ['#0f1f1a', '#0a1512'] : ['#1a1a1f', '#141418']
+                    }
                     style={StyleSheet.absoluteFill}
                   />
-                  <View className={`absolute inset-0 rounded-2xl border-2 ${
-                    selectedPlan === 'yearly' ? 'border-emerald-500' : 'border-white/10'
-                  }`} />
+                  <View
+                    className={`absolute inset-0 rounded-2xl border-2 ${
+                      selectedPlan === 'yearly' ? 'border-emerald-500' : 'border-white/10'
+                    }`}
+                  />
                   {/* Save Badge */}
                   <View className="absolute top-0 right-0 bg-emerald-500 px-2 py-1 rounded-bl-xl rounded-tr-xl">
                     <Text className="text-white text-xs font-bold">-{savingsPercent}%</Text>
                   </View>
                   <View className="p-4 items-center">
-                    <View className={`w-5 h-5 rounded-full border-2 mb-3 items-center justify-center ${
-                      selectedPlan === 'yearly' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-500'
-                    }`}>
+                    <View
+                      className={`w-5 h-5 rounded-full border-2 mb-3 items-center justify-center ${
+                        selectedPlan === 'yearly'
+                          ? 'border-emerald-500 bg-emerald-500'
+                          : 'border-gray-500'
+                      }`}
+                    >
                       {selectedPlan === 'yearly' && <Check size={12} color="#fff" />}
                     </View>
                     <Text className="text-white font-bold text-lg mb-1">Yearly</Text>
@@ -175,22 +157,27 @@ export default function PaywallScreen() {
               </Pressable>
 
               {/* Monthly Plan */}
-              <Pressable
-                onPress={() => setSelectedPlan('monthly')}
-                className="flex-1 ml-2"
-              >
+              <Pressable onPress={() => setSelectedPlan('monthly')} className="flex-1 ml-2">
                 <View className="rounded-2xl overflow-hidden">
                   <LinearGradient
-                    colors={selectedPlan === 'monthly' ? ['#0f1f1a', '#0a1512'] : ['#1a1a1f', '#141418']}
+                    colors={
+                      selectedPlan === 'monthly' ? ['#0f1f1a', '#0a1512'] : ['#1a1a1f', '#141418']
+                    }
                     style={StyleSheet.absoluteFill}
                   />
-                  <View className={`absolute inset-0 rounded-2xl border-2 ${
-                    selectedPlan === 'monthly' ? 'border-emerald-500' : 'border-white/10'
-                  }`} />
+                  <View
+                    className={`absolute inset-0 rounded-2xl border-2 ${
+                      selectedPlan === 'monthly' ? 'border-emerald-500' : 'border-white/10'
+                    }`}
+                  />
                   <View className="p-4 items-center">
-                    <View className={`w-5 h-5 rounded-full border-2 mb-3 items-center justify-center ${
-                      selectedPlan === 'monthly' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-500'
-                    }`}>
+                    <View
+                      className={`w-5 h-5 rounded-full border-2 mb-3 items-center justify-center ${
+                        selectedPlan === 'monthly'
+                          ? 'border-emerald-500 bg-emerald-500'
+                          : 'border-gray-500'
+                      }`}
+                    >
                       {selectedPlan === 'monthly' && <Check size={12} color="#fff" />}
                     </View>
                     <Text className="text-white font-bold text-lg mb-1">Monthly</Text>
@@ -209,12 +196,8 @@ export default function PaywallScreen() {
                     <Text className="text-amber-400 font-bold">7</Text>
                   </View>
                   <View className="flex-1">
-                    <Text className="text-white font-medium">
-                      {TRIAL_DAYS}-Day Free Trial
-                    </Text>
-                    <Text className="text-gray-500 text-sm">
-                      Cancel anytime, no charge
-                    </Text>
+                    <Text className="text-white font-medium">{TRIAL_DAYS}-Day Free Trial</Text>
+                    <Text className="text-gray-500 text-sm">Cancel anytime, no charge</Text>
                   </View>
                 </View>
               </View>
@@ -228,9 +211,7 @@ export default function PaywallScreen() {
           <Pressable
             onPress={handleStartTrial}
             disabled={isLoading}
-            className={`rounded-2xl overflow-hidden mb-4 ${
-              isLoading ? 'opacity-70' : ''
-            }`}
+            className={`rounded-2xl overflow-hidden mb-4 ${isLoading ? 'opacity-70' : ''}`}
           >
             <LinearGradient
               colors={['#10B981', '#059669']}
@@ -243,17 +224,15 @@ export default function PaywallScreen() {
                 {isLoading
                   ? 'Processing...'
                   : selectedPlan === 'yearly'
-                    ? 'Start 7-Day Free Trial'
-                    : 'Subscribe Now'}
+                  ? 'Start 7-Day Free Trial'
+                  : 'Subscribe Now'}
               </Text>
               {selectedPlan === 'yearly' ? (
                 <Text className="text-emerald-200 text-sm mt-1">
                   Then {currentPriceString}/year
                 </Text>
               ) : (
-                <Text className="text-emerald-200 text-sm mt-1">
-                  {currentPriceString}/month
-                </Text>
+                <Text className="text-emerald-200 text-sm mt-1">{currentPriceString}/month</Text>
               )}
             </View>
           </Pressable>
@@ -261,28 +240,18 @@ export default function PaywallScreen() {
           {/* Secondary Actions */}
           <View className="items-center">
             <View className="flex-row items-center">
-              <Pressable
-                onPress={() =>
-                  Linking.openURL('https://debt-free.app/terms')
-                }
-              >
+              <Pressable onPress={() => Linking.openURL(APP_URLS.terms)}>
                 <Text className="text-gray-600 text-xs underline">Terms</Text>
               </Pressable>
               <Text className="text-gray-600 mx-2">|</Text>
               <Pressable
-                onPress={() =>
-                  Linking.openURL('https://debt-free.app/privacy')
-                }
+                onPress={() => Linking.openURL(APP_URLS.privacy)}
               >
-                <Text className="text-gray-600 text-xs underline">
-                  Privacy
-                </Text>
+                <Text className="text-gray-600 text-xs underline">Privacy</Text>
               </Pressable>
               <Text className="text-gray-600 mx-2">|</Text>
               <Pressable onPress={() => {}}>
-                <Text className="text-gray-600 text-xs underline">
-                  Restore Purchases
-                </Text>
+                <Text className="text-gray-600 text-xs underline">Restore Purchases</Text>
               </Pressable>
             </View>
           </View>

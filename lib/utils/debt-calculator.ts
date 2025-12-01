@@ -146,12 +146,12 @@ export function calculateDebtProgress(debt: Debt): number {
  * Format currency for display
  */
 export function formatCurrency(amount: number): string {
-  if (!isFinite(amount)) return '$0';
+  if (!isFinite(amount)) return '$0.00';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

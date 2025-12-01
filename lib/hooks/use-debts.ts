@@ -300,6 +300,11 @@ interface RecordPaymentPayload {
   amount: number;
 }
 
+interface RecordPaymentResult {
+  payment: DebtPayment;
+  debt_paid_off: boolean;
+}
+
 /**
  * Record a payment for a debt
  * Uses edge function for atomic transaction (updates payment + debt balance)
@@ -308,7 +313,7 @@ export function useRecordPayment() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: RecordPaymentPayload) => {
+    mutationFn: async (payload: RecordPaymentPayload): Promise<RecordPaymentResult> => {
       // Use edge function for atomic operation
       const { data, error } = await supabase.functions.invoke('record-payment', {
         body: payload,
@@ -317,13 +322,15 @@ export function useRecordPayment() {
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Failed to record payment');
 
-      return data.data as DebtPayment;
+      return {
+        payment: data.data as DebtPayment,
+        debt_paid_off: data.debt_paid_off ?? false,
+      };
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.debts.all });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.detail(data.debt_id) });
-      qc.invalidateQueries({ queryKey: queryKeys.debts.payments(data.debt_id) });
-      // toast.success('Payment recorded successfully');
+      qc.invalidateQueries({ queryKey: queryKeys.debts.detail(data.payment.debt_id) });
+      qc.invalidateQueries({ queryKey: queryKeys.debts.payments(data.payment.debt_id) });
     },
     onError: (err: any) => handleError(err, 'Failed to record payment'),
   });
