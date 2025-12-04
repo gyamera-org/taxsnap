@@ -1,11 +1,22 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Linking, ScrollView, StatusBar, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Linking,
+  ScrollView,
+  StatusBar,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { Scan, Sparkles, Heart, ShieldCheck, Check } from 'lucide-react-native';
 import { useRevenueCat } from '@/context/revenuecat-provider';
 import { APP_URLS } from '@/lib/config/urls';
+import { useTranslation } from 'react-i18next';
 
 // Fallback prices if RevenueCat fails to load
 const FALLBACK_MONTHLY_PRICE = 3.99;
@@ -14,35 +25,36 @@ const TRIAL_DAYS = 7;
 
 type PlanType = 'monthly' | 'yearly';
 
-const features = [
-  {
-    icon: Scan,
-    title: 'Unlimited Food Scans',
-    description: 'Scan any food item to check PCOS compatibility',
-  },
-  {
-    icon: Sparkles,
-    title: 'AI-Powered Analysis',
-    description: 'Get detailed ingredient breakdowns and health insights',
-  },
-  {
-    icon: Heart,
-    title: 'Personalized Recommendations',
-    description: 'Food suggestions tailored to your PCOS needs',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Science-Backed Results',
-    description: 'Analysis based on latest PCOS research',
-  },
-];
-
 export default function PaywallScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const { offerings, purchasePackage, restorePurchases } = useRevenueCat();
+
+  const features = [
+    {
+      icon: Scan,
+      title: t('paywall.features.unlimitedScans.title'),
+      description: t('paywall.features.unlimitedScans.description'),
+    },
+    {
+      icon: Sparkles,
+      title: t('paywall.features.aiAnalysis.title'),
+      description: t('paywall.features.aiAnalysis.description'),
+    },
+    {
+      icon: Heart,
+      title: t('paywall.features.personalized.title'),
+      description: t('paywall.features.personalized.description'),
+    },
+    {
+      icon: ShieldCheck,
+      title: t('paywall.features.scienceBacked.title'),
+      description: t('paywall.features.scienceBacked.description'),
+    },
+  ];
 
   // Get packages from RevenueCat offerings
   const monthlyPackage = offerings?.current?.monthly;
@@ -94,185 +106,196 @@ export default function PaywallScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView className="flex-1">
+
+      {/* Liquid Glass Background */}
+      <LinearGradient
+        colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
+        locations={[0, 0.3, 0.7, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Floating orbs */}
+      <Animated.View entering={FadeIn.duration(1000)} style={styles.orb1} />
+      <Animated.View entering={FadeIn.duration(1000).delay(200)} style={styles.orb2} />
+      <Animated.View entering={FadeIn.duration(1000).delay(400)} style={styles.orb3} />
+
+      <SafeAreaView style={styles.safeArea}>
         <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ flexGrow: 1 }}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View className="px-6 pt-6">
-            {/* Header */}
-            <View className="items-center mb-8">
-              <View className="w-20 h-20 rounded-3xl bg-primary-100 items-center justify-center mb-4">
-                <Scan size={40} color="#0D9488" />
+          {/* Header */}
+          <Animated.View entering={FadeInUp.duration(400)} style={styles.headerSection}>
+            <View style={styles.iconContainer}>
+              <LinearGradient
+                colors={['#14B8A6', '#0D9488', '#0F766E']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1}}
+                style={styles.iconGradient}
+              >
+                <Scan size={40} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.headerTitle}>{t('paywall.title')}</Text>
+            <Text style={styles.headerSubtitle}>
+              {t('paywall.subtitle')}
+            </Text>
+          </Animated.View>
+
+          {/* Features - Glass Card */}
+          <Animated.View entering={FadeInUp.delay(100).duration(400)} style={styles.glassCard}>
+            {features.map((feature, index) => (
+              <View
+                key={feature.title}
+                style={[
+                  styles.featureRow,
+                  index < features.length - 1 && styles.featureBorder,
+                ]}
+              >
+                <View style={styles.featureIconContainer}>
+                  <feature.icon size={24} color="#0D9488" />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>{feature.title}</Text>
+                  <Text style={styles.featureDescription}>{feature.description}</Text>
+                </View>
+                <Check size={20} color="#14B8A6" />
               </View>
-              <Text className="text-gray-900 text-2xl font-bold text-center mb-2">
-                Unlock Full Access
-              </Text>
-              <Text className="text-gray-500 text-center px-4">
-                Get unlimited scans and personalized PCOS dietary guidance
-              </Text>
-            </View>
+            ))}
+          </Animated.View>
 
-            {/* Features */}
-            <View className="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
-              {features.map((feature, index) => (
+          {/* Plan Selection */}
+          <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.plansContainer}>
+            {/* Yearly Plan */}
+            <Pressable onPress={() => setSelectedPlan('yearly')} style={styles.planWrapper}>
+              <View
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'yearly' && styles.planCardSelected,
+                ]}
+              >
+                {/* Save Badge */}
+                {savingsPercent > 0 && (
+                  <View style={styles.saveBadge}>
+                    <Text style={styles.saveBadgeText}>{t('paywall.plans.save', { percent: savingsPercent })}</Text>
+                  </View>
+                )}
                 <View
-                  key={feature.title}
-                  className={`flex-row items-center ${
-                    index < features.length - 1 ? 'pb-4 mb-4 border-b border-gray-200' : ''
-                  }`}
+                  style={[
+                    styles.radioButton,
+                    selectedPlan === 'yearly' && styles.radioButtonSelected,
+                  ]}
                 >
-                  <View className="w-12 h-12 rounded-xl bg-primary-100 items-center justify-center mr-4">
-                    <feature.icon size={24} color="#0D9488" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-gray-900 font-semibold text-base">{feature.title}</Text>
-                    <Text className="text-gray-500 text-sm">{feature.description}</Text>
-                  </View>
-                  <Check size={20} color="#0D9488" />
+                  {selectedPlan === 'yearly' && <Check size={12} color="#fff" />}
                 </View>
-              ))}
-            </View>
+                <Text style={styles.planName}>{t('paywall.plans.yearly')}</Text>
+                <Text style={styles.planPrice}>{yearlyPriceString}</Text>
+                <Text style={styles.planPeriod}>{yearlyPerMonthString}{t('paywall.plans.perMonth')}</Text>
+              </View>
+            </Pressable>
 
-            {/* Plan Selection */}
-            <View className="flex-row mb-6">
-              {/* Yearly Plan */}
-              <Pressable onPress={() => setSelectedPlan('yearly')} className="flex-1 mr-2">
+            {/* Monthly Plan */}
+            <Pressable onPress={() => setSelectedPlan('monthly')} style={styles.planWrapper}>
+              <View
+                style={[
+                  styles.planCard,
+                  selectedPlan === 'monthly' && styles.planCardSelected,
+                ]}
+              >
                 <View
-                  className={`rounded-2xl p-4 items-center border-2 ${
-                    selectedPlan === 'yearly'
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 bg-white'
-                  }`}
+                  style={[
+                    styles.radioButton,
+                    selectedPlan === 'monthly' && styles.radioButtonSelected,
+                  ]}
                 >
-                  {/* Save Badge */}
-                  {savingsPercent > 0 && (
-                    <View className="absolute -top-2 right-2 bg-primary-500 px-2 py-0.5 rounded-full">
-                      <Text className="text-white text-xs font-bold">SAVE {savingsPercent}%</Text>
-                    </View>
-                  )}
-                  <View
-                    className={`w-5 h-5 rounded-full border-2 mb-3 items-center justify-center ${
-                      selectedPlan === 'yearly'
-                        ? 'border-primary-500 bg-primary-500'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    {selectedPlan === 'yearly' && <Check size={12} color="#fff" />}
-                  </View>
-                  <Text className="text-gray-900 font-bold text-lg mb-1">Yearly</Text>
-                  <Text className="text-gray-900 font-bold text-2xl">{yearlyPriceString}</Text>
-                  <Text className="text-gray-500 text-sm">{yearlyPerMonthString}/mo</Text>
+                  {selectedPlan === 'monthly' && <Check size={12} color="#fff" />}
                 </View>
-              </Pressable>
+                <Text style={styles.planName}>{t('paywall.plans.monthly')}</Text>
+                <Text style={styles.planPrice}>{monthlyPriceString}</Text>
+                <Text style={styles.planPeriod}>{t('paywall.plans.perMonthFull')}</Text>
+              </View>
+            </Pressable>
+          </Animated.View>
 
-              {/* Monthly Plan */}
-              <Pressable onPress={() => setSelectedPlan('monthly')} className="flex-1 ml-2">
-                <View
-                  className={`rounded-2xl p-4 items-center border-2 ${
-                    selectedPlan === 'monthly'
-                      ? 'border-primary-500 bg-primary-50'
-                      : 'border-gray-200 bg-white'
-                  }`}
-                >
-                  <View
-                    className={`w-5 h-5 rounded-full border-2 mb-3 items-center justify-center ${
-                      selectedPlan === 'monthly'
-                        ? 'border-primary-500 bg-primary-500'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    {selectedPlan === 'monthly' && <Check size={12} color="#fff" />}
-                  </View>
-                  <Text className="text-gray-900 font-bold text-lg mb-1">Monthly</Text>
-                  <Text className="text-gray-900 font-bold text-2xl">{monthlyPriceString}</Text>
-                  <Text className="text-gray-500 text-sm">/month</Text>
+          {/* Trial Info - Only for Yearly */}
+          {selectedPlan === 'yearly' && (
+            <Animated.View entering={FadeInUp.delay(300).duration(400)} style={styles.trialCard}>
+              <View style={styles.trialContent}>
+                <View style={styles.trialBadge}>
+                  <Text style={styles.trialDays}>{TRIAL_DAYS}</Text>
                 </View>
-              </Pressable>
-            </View>
-
-            {/* Trial Info - Only for Yearly */}
-            {selectedPlan === 'yearly' && (
-              <View className="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-200">
-                <View className="flex-row items-center">
-                  <View className="w-10 h-10 rounded-lg bg-amber-100 items-center justify-center mr-3">
-                    <Text className="text-amber-600 font-bold text-lg">{TRIAL_DAYS}</Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-amber-800 font-semibold">{TRIAL_DAYS}-Day Free Trial</Text>
-                    <Text className="text-amber-600 text-sm">Try free, cancel anytime</Text>
-                  </View>
+                <View style={styles.trialTextContainer}>
+                  <Text style={styles.trialTitle}>{t('paywall.trial.days', { days: TRIAL_DAYS })}</Text>
+                  <Text style={styles.trialSubtitle}>{t('paywall.trial.subtitle')}</Text>
                 </View>
               </View>
-            )}
-          </View>
+            </Animated.View>
+          )}
         </ScrollView>
 
         {/* Fixed Bottom Section */}
-        <View className="px-6 pb-4 bg-white border-t border-gray-100 pt-4">
+        <View style={styles.bottomSection}>
           {/* CTA Button */}
-          <Pressable
-            onPress={handleSubscribe}
-            disabled={isLoading || isRestoring}
-            className={`rounded-2xl overflow-hidden mb-4 ${isLoading ? 'opacity-70' : ''}`}
-          >
-            <LinearGradient
-              colors={['#0D9488', '#0F766E']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-            <View className="py-4 px-6 items-center">
+          <Animated.View entering={FadeInUp.delay(400).duration(400)}>
+            <Pressable
+              onPress={handleSubscribe}
+              disabled={isLoading || isRestoring}
+              style={[styles.ctaButton, (isLoading || isRestoring) && styles.buttonDisabled]}
+            >
+              <LinearGradient
+                colors={['#14B8A6', '#0D9488', '#0F766E']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <>
-                  <Text className="text-white font-bold text-lg">
-                    {selectedPlan === 'yearly' ? 'Start Free Trial' : 'Subscribe Now'}
+                  <Text style={styles.ctaButtonText}>
+                    {selectedPlan === 'yearly' ? t('paywall.cta.startTrial') : t('paywall.cta.subscribeNow')}
                   </Text>
                   {selectedPlan === 'yearly' ? (
-                    <Text className="text-primary-200 text-sm mt-1">
-                      Then {currentPriceString}/year after trial
+                    <Text style={styles.ctaButtonSubtext}>
+                      {t('paywall.trial.then', { price: currentPriceString })}
                     </Text>
                   ) : (
-                    <Text className="text-primary-200 text-sm mt-1">{currentPriceString}/month</Text>
+                    <Text style={styles.ctaButtonSubtext}>{currentPriceString}{t('paywall.plans.perMonthFull')}</Text>
                   )}
                 </>
               )}
-            </View>
-          </Pressable>
+            </Pressable>
+          </Animated.View>
 
           {/* Restore Purchases */}
           <Pressable
             onPress={handleRestore}
             disabled={isLoading || isRestoring}
-            className="mb-4"
+            style={styles.restoreButton}
           >
             {isRestoring ? (
               <ActivityIndicator color="#6B7280" />
             ) : (
-              <Text className="text-gray-500 text-center text-base font-medium">
-                Restore Purchases
-              </Text>
+              <Text style={styles.restoreText}>{t('paywall.restore')}</Text>
             )}
           </Pressable>
 
           {/* Legal Links */}
-          <View className="items-center">
-            <View className="flex-row items-center">
+          <View style={styles.legalContainer}>
+            <View style={styles.legalLinks}>
               <Pressable onPress={() => Linking.openURL(APP_URLS.terms)}>
-                <Text className="text-gray-400 text-xs underline">Terms of Service</Text>
+                <Text style={styles.legalLink}>{t('paywall.legal.terms')}</Text>
               </Pressable>
-              <Text className="text-gray-300 mx-3">•</Text>
+              <Text style={styles.legalDot}>•</Text>
               <Pressable onPress={() => Linking.openURL(APP_URLS.privacy)}>
-                <Text className="text-gray-400 text-xs underline">Privacy Policy</Text>
+                <Text style={styles.legalLink}>{t('paywall.legal.privacy')}</Text>
               </Pressable>
             </View>
-            <Text className="text-gray-400 text-xs text-center mt-2 px-4">
-              Subscription automatically renews unless canceled at least 24 hours before the end of the current period.
+            <Text style={styles.legalDisclaimer}>
+              {t('paywall.legal.disclaimer')}
             </Text>
           </View>
         </View>
@@ -280,3 +303,305 @@ export default function PaywallScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 24,
+    paddingBottom: 32,
+  },
+  headerSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  iconContainer: {
+    marginBottom: 16,
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  iconGradient: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    paddingHorizontal: 16,
+  },
+  glassCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    padding: 20,
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  featureBorder: {
+    paddingBottom: 16,
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(209, 213, 219, 0.3)',
+  },
+  featureIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(20, 184, 166, 0.2)',
+  },
+  featureContent: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  featureDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  plansContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  planWrapper: {
+    flex: 1,
+  },
+  planCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(209, 213, 219, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    padding: 16,
+    alignItems: 'center',
+  },
+  planCardSelected: {
+    borderColor: '#14B8A6',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  saveBadge: {
+    position: 'absolute',
+    top: -2,
+    right: 8,
+    backgroundColor: '#14B8A6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  saveBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  radioButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  radioButtonSelected: {
+    borderColor: '#14B8A6',
+    backgroundColor: '#14B8A6',
+  },
+  planName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  planPrice: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  planPeriod: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  trialCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.4)',
+    backgroundColor: 'rgba(254, 243, 199, 0.6)',
+    padding: 16,
+  },
+  trialContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  trialBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(251, 191, 36, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  trialDays: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#D97706',
+  },
+  trialTextContainer: {
+    flex: 1,
+  },
+  trialTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#92400E',
+    marginBottom: 2,
+  },
+  trialSubtitle: {
+    fontSize: 14,
+    color: '#B45309',
+  },
+  bottomSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+    paddingTop: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(209, 213, 219, 0.3)',
+  },
+  ctaButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  ctaButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 18,
+  },
+  ctaButtonSubtext: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  restoreButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  restoreText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  legalContainer: {
+    alignItems: 'center',
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  legalLink: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    textDecorationLine: 'underline',
+  },
+  legalDot: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginHorizontal: 12,
+  },
+  legalDisclaimer: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    paddingHorizontal: 16,
+  },
+  orb1: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+    top: -50,
+    right: -50,
+  },
+  orb2: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(45, 212, 191, 0.1)',
+    bottom: 100,
+    left: -30,
+  },
+  orb3: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(94, 234, 212, 0.12)',
+    top: '40%',
+    right: 20,
+  },
+});

@@ -50,7 +50,7 @@ export async function clearStoredTheme(): Promise<void> {
 /**
  * Get the resolved theme based on user preference and system settings
  */
-export function getResolvedTheme(userTheme: Theme, systemTheme: 'light' | 'dark' | null): ResolvedTheme {
+export function getResolvedTheme(userTheme: Theme, systemTheme: 'light' | 'dark' | null | undefined): ResolvedTheme {
   if (userTheme === 'system') {
     return systemTheme === 'dark' ? 'dark' : 'light';
   }

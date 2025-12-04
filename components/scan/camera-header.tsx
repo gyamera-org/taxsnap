@@ -1,5 +1,6 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { X, Zap, ZapOff } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 interface CameraHeaderProps {
   title?: string;
@@ -9,24 +10,20 @@ interface CameraHeaderProps {
 }
 
 export function CameraHeader({
-  title = 'Scan Food',
+  title,
   flash,
   onClose,
   onToggleFlash,
 }: CameraHeaderProps) {
+  const { t } = useTranslation();
+  const displayTitle = title || t('scan.title');
   return (
-    <View className="flex-row items-center justify-between px-4 pt-2">
-      <Pressable
-        onPress={onClose}
-        className="w-10 h-10 rounded-full bg-black/30 items-center justify-center"
-      >
+    <View style={styles.container}>
+      <Pressable onPress={onClose} style={styles.button}>
         <X size={24} color="#FFFFFF" />
       </Pressable>
-      <Text className="text-white text-lg font-semibold">{title}</Text>
-      <Pressable
-        onPress={onToggleFlash}
-        className="w-10 h-10 rounded-full bg-black/30 items-center justify-center"
-      >
+      <Text style={styles.title}>{displayTitle}</Text>
+      <Pressable onPress={onToggleFlash} style={styles.button}>
         {flash ? (
           <Zap size={22} color="#FFD700" fill="#FFD700" />
         ) : (
@@ -36,3 +33,33 @@ export function CameraHeader({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  button: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+});

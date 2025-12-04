@@ -42,8 +42,6 @@ export function ScanList({
     <FlatList
       data={scans}
       keyExtractor={(item) => item.id}
-      numColumns={2}
-      columnWrapperStyle={styles.row}
       renderItem={({ item, index }) => (
         <ScanCard
           scan={item}
@@ -76,10 +74,8 @@ const styles = StyleSheet.create({
     paddingVertical: 80,
   },
   listContent: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 120,
-  },
-  row: {
-    justifyContent: 'space-between',
   },
 });

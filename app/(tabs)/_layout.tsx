@@ -1,7 +1,6 @@
 import { Tabs, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 import Svg, { Path, G } from 'react-native-svg';
 import { useTabBar } from '@/context/tab-bar-provider';
 import * as Haptics from 'expo-haptics';
@@ -41,7 +40,12 @@ function ScanIcon({ color, size = 24 }: { color: string; size?: number }) {
   );
 }
 
-function CustomTabBar({ state, navigation }: any) {
+interface TabBarProps {
+  state: any;
+  navigation: any;
+}
+
+function CustomTabBar({ state, navigation }: TabBarProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -74,37 +78,35 @@ function CustomTabBar({ state, navigation }: any) {
     <View
       style={[
         styles.container,
-        { paddingBottom: insets.bottom > 0 ? insets.bottom : 16 },
+        { paddingBottom: insets.bottom > 0 ? insets.bottom : 12 },
       ]}
     >
       {/* Liquid Glass Tab Bar */}
       <View style={styles.tabBarWrapper}>
-        <BlurView intensity={80} tint="light" style={styles.blurView}>
-          <View style={styles.tabBarContent}>
-            {/* Home Tab */}
-            <Pressable
-              onPress={() => handleTabPress('home/index')}
-              style={styles.tabButton}
-            >
-              <HomeIcon color={getTabColor('home/index')} size={26} />
-            </Pressable>
+        <View style={styles.tabBarContent}>
+          {/* Home Tab */}
+          <Pressable
+            onPress={() => handleTabPress('home/index')}
+            style={styles.tabButton}
+          >
+            <HomeIcon color={getTabColor('home/index')} size={24} />
+          </Pressable>
 
-            {/* Scan Button */}
-            <Pressable onPress={handleScanPress} style={styles.scanButtonWrapper}>
-              <View style={styles.scanButton}>
-                <ScanIcon color="#FFFFFF" size={26} />
-              </View>
-            </Pressable>
+          {/* Scan Button */}
+          <Pressable onPress={handleScanPress} style={styles.scanButtonWrapper}>
+            <View style={styles.scanButton}>
+              <ScanIcon color="#FFFFFF" size={24} />
+            </View>
+          </Pressable>
 
-            {/* Settings Tab */}
-            <Pressable
-              onPress={() => handleTabPress('settings/index')}
-              style={styles.tabButton}
-            >
-              <SettingsIcon color={getTabColor('settings/index')} size={26} />
-            </Pressable>
-          </View>
-        </BlurView>
+          {/* Settings Tab */}
+          <Pressable
+            onPress={() => handleTabPress('settings/index')}
+            style={styles.tabButton}
+          >
+            <SettingsIcon color={getTabColor('settings/index')} size={24} />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -124,37 +126,34 @@ const styles = StyleSheet.create({
     maxWidth: 280,
     borderRadius: 32,
     overflow: 'hidden',
-    // Liquid glass effect - balanced gray
-    backgroundColor: 'rgba(229, 231, 235, 0.9)',
+    // Liquid glass effect with backdrop blur simulation
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(209, 213, 219, 0.6)',
-    shadowColor: '#000',
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#0D9488',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 24,
     elevation: 12,
   },
-  blurView: {
-    flex: 1,
-  },
   tabBarContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
   },
   tabButton: {
-    padding: 12,
+    padding: 8,
     borderRadius: 16,
   },
   scanButtonWrapper: {
     marginHorizontal: 8,
   },
   scanButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#0D9488',
     alignItems: 'center',
     justifyContent: 'center',
@@ -173,7 +172,7 @@ export default function TabLayout() {
     <Tabs
       tabBar={(props) => (isTabBarVisible ? <CustomTabBar {...props} /> : null)}
       screenOptions={{
-        sceneStyle: { backgroundColor: '#FFFFFF' },
+        sceneStyle: { backgroundColor: 'transparent' },
         headerShown: false,
       }}
     >

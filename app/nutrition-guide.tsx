@@ -1,9 +1,11 @@
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft } from 'lucide-react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 
 // Icons for each metric
 function GlycemicIcon({ color = '#0D9488', size = 24 }: { color?: string; size?: number }) {
@@ -96,6 +98,7 @@ interface MetricCardProps {
   goodValues: string;
   badValues: string;
   delay: number;
+  t: any;
 }
 
 function MetricCard({
@@ -106,38 +109,37 @@ function MetricCard({
   goodValues,
   badValues,
   delay,
+  t,
 }: MetricCardProps) {
   return (
     <Animated.View entering={FadeInUp.delay(delay).duration(400)}>
-      <View className="bg-white rounded-2xl p-5 mb-4 border border-gray-100 shadow-sm">
+      <View style={styles.metricCard}>
         {/* Header */}
-        <View className="flex-row items-center mb-3">
-          <View className="w-12 h-12 rounded-full bg-primary-50 items-center justify-center mr-3">
+        <View style={styles.metricHeader}>
+          <View style={styles.metricIconContainer}>
             <Icon size={24} color="#0D9488" />
           </View>
-          <Text className="text-gray-900 text-lg font-semibold flex-1">{title}</Text>
+          <Text style={styles.metricTitle}>{title}</Text>
         </View>
 
         {/* Description */}
-        <Text className="text-gray-600 text-sm leading-5 mb-4">{description}</Text>
+        <Text style={styles.metricDescription}>{description}</Text>
 
         {/* PCOS Impact */}
-        <View className="bg-amber-50 rounded-xl p-3 mb-3">
-          <Text className="text-amber-800 font-medium text-xs uppercase tracking-wide mb-1">
-            How It Affects PCOS
-          </Text>
-          <Text className="text-amber-700 text-sm leading-5">{pcosImpact}</Text>
+        <View style={styles.impactCard}>
+          <Text style={styles.impactLabel}>{t('nutritionGuide.howItAffects')}</Text>
+          <Text style={styles.impactText}>{pcosImpact}</Text>
         </View>
 
         {/* Good vs Bad */}
-        <View className="flex-row gap-3">
-          <View className="flex-1 bg-green-50 rounded-xl p-3">
-            <Text className="text-green-700 font-medium text-xs mb-1">Good</Text>
-            <Text className="text-green-600 text-sm">{goodValues}</Text>
+        <View style={styles.valuesRow}>
+          <View style={styles.goodCard}>
+            <Text style={styles.goodLabel}>{t('nutritionGuide.good')}</Text>
+            <Text style={styles.goodText}>{goodValues}</Text>
           </View>
-          <View className="flex-1 bg-red-50 rounded-xl p-3">
-            <Text className="text-red-700 font-medium text-xs mb-1">Limit</Text>
-            <Text className="text-red-600 text-sm">{badValues}</Text>
+          <View style={styles.badCard}>
+            <Text style={styles.badLabel}>{t('nutritionGuide.limit')}</Text>
+            <Text style={styles.badText}>{badValues}</Text>
           </View>
         </View>
       </View>
@@ -230,62 +232,285 @@ const NUTRITION_METRICS = [
 
 export default function NutritionGuideScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full items-center justify-center -ml-2"
+    <View style={styles.container}>
+      {/* Liquid Glass Background */}
+      <LinearGradient
+        colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
+        locations={[0, 0.3, 0.7, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Floating orbs */}
+      <Animated.View entering={FadeIn.duration(1000)} style={styles.orb1} />
+      <Animated.View entering={FadeIn.duration(1000).delay(200)} style={styles.orb2} />
+      <Animated.View entering={FadeIn.duration(1000).delay(400)} style={styles.orb3} />
+
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <View style={styles.glassButton}>
+              <ChevronLeft size={24} color="#0D9488" />
+            </View>
+          </Pressable>
+          <Text style={styles.headerTitle}>{t('nutritionGuide.title')}</Text>
+          <View style={styles.headerSpacer} />
+        </Animated.View>
+
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <ChevronLeft size={28} color="#0D0D0D" />
-        </Pressable>
-        <Text className="flex-1 text-center text-lg font-semibold text-gray-900 mr-10">
-          Nutrition Guide
-        </Text>
-      </View>
-
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-      >
-        {/* Intro */}
-        <Animated.View entering={FadeInUp.duration(400)} className="mb-6">
-          <Text className="text-gray-900 text-2xl font-bold mb-2">
-            Understanding Your Scan Results
-          </Text>
-          <Text className="text-gray-500 text-base leading-6">
-            Learn what each nutritional metric means and how it can affect your PCOS symptoms.
-          </Text>
-        </Animated.View>
-
-        {/* Metric Cards */}
-        {NUTRITION_METRICS.map((metric, index) => (
-          <MetricCard
-            key={metric.title}
-            icon={metric.icon}
-            title={metric.title}
-            description={metric.description}
-            pcosImpact={metric.pcosImpact}
-            goodValues={metric.goodValues}
-            badValues={metric.badValues}
-            delay={100 + index * 80}
-          />
-        ))}
-
-        {/* Bottom Note */}
-        <Animated.View entering={FadeInUp.delay(800).duration(400)}>
-          <View className="bg-primary-50 rounded-2xl p-4 border border-primary-100">
-            <Text className="text-primary-800 font-semibold mb-2">Remember</Text>
-            <Text className="text-primary-700 text-sm leading-5">
-              Everyone's body responds differently. Use these guidelines as a starting point
-              and work with your healthcare provider to find what works best for you.
+          {/* Intro */}
+          <Animated.View entering={FadeInUp.duration(400)} style={styles.introSection}>
+            <Text style={styles.introTitle}>{t('nutritionGuide.intro.title')}</Text>
+            <Text style={styles.introDescription}>
+              {t('nutritionGuide.intro.description')}
             </Text>
-          </View>
-        </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+          </Animated.View>
+
+          {/* Metric Cards */}
+          {NUTRITION_METRICS.map((metric, index) => (
+            <MetricCard
+              key={metric.title}
+              icon={metric.icon}
+              title={metric.title}
+              description={metric.description}
+              pcosImpact={metric.pcosImpact}
+              goodValues={metric.goodValues}
+              badValues={metric.badValues}
+              delay={100 + index * 80}
+              t={t}
+            />
+          ))}
+
+          {/* Bottom Note */}
+          <Animated.View entering={FadeInUp.delay(800).duration(400)}>
+            <View style={styles.noteCard}>
+              <Text style={styles.noteTitle}>{t('nutritionGuide.remember.title')}</Text>
+              <Text style={styles.noteText}>
+                {t('nutritionGuide.remember.message')}
+              </Text>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backButton: {
+    marginRight: 12,
+  },
+  glassButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 52,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  introSection: {
+    marginBottom: 24,
+  },
+  introTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  introDescription: {
+    fontSize: 16,
+    color: '#6B7280',
+    lineHeight: 24,
+  },
+  metricCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  metricHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  metricIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(20, 184, 166, 0.2)',
+  },
+  metricTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    flex: 1,
+  },
+  metricDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  impactCard: {
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.25)',
+  },
+  impactLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#92400E',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  impactText: {
+    fontSize: 14,
+    color: '#A16207',
+    lineHeight: 20,
+  },
+  valuesRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  goodCard: {
+    flex: 1,
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.2)',
+  },
+  goodLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#166534',
+    marginBottom: 4,
+  },
+  goodText: {
+    fontSize: 13,
+    color: '#15803D',
+    lineHeight: 18,
+  },
+  badCard: {
+    flex: 1,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  badLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#991B1B',
+    marginBottom: 4,
+  },
+  badText: {
+    fontSize: 13,
+    color: '#DC2626',
+    lineHeight: 18,
+  },
+  noteCard: {
+    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(20, 184, 166, 0.2)',
+  },
+  noteTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0D9488',
+    marginBottom: 8,
+  },
+  noteText: {
+    fontSize: 14,
+    color: '#0F766E',
+    lineHeight: 20,
+  },
+  orb1: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+    top: -50,
+    right: -50,
+  },
+  orb2: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(45, 212, 191, 0.1)',
+    bottom: 100,
+    left: -30,
+  },
+  orb3: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(94, 234, 212, 0.12)',
+    top: '40%',
+    right: 20,
+  },
+});

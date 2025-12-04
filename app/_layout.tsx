@@ -51,6 +51,7 @@ export default function Layout() {
           <Stack.Screen name="referral" />
           <Stack.Screen name="how-it-works" />
           <Stack.Screen name="nutrition-guide" />
+          <Stack.Screen name="language" />
 
           {/* Error Handling */}
           <Stack.Screen name="+not-found" />

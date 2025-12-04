@@ -1,24 +1,30 @@
-import { View, Text, Pressable, StyleSheet, Share } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Share, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { toast } from 'sonner-native';
 import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { FormPage } from '@/components/ui/form-page';
-import { Gift, Copy, Share2, Users } from 'lucide-react-native';
+import { Copy, Share2, DollarSign } from 'lucide-react-native';
 import { APP_URLS } from '@/lib/config/urls';
+import { useTranslation } from 'react-i18next';
 
-const REFERRAL_CODE = 'DEBTFREE2024';
+const REFERRAL_CODE = 'PCOS2024';
 const REFERRAL_LINK = `${APP_URLS.baseUrl}/invite/${REFERRAL_CODE}`;
 
 export default function ReferralScreen() {
+  const { t } = useTranslation();
+
   const handleCopyCode = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await Clipboard.setStringAsync(REFERRAL_CODE);
-    toast.success('Code copied to clipboard');
+    toast.success(t('referral.codeCopied'));
   };
 
   const handleShare = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       await Share.share({
-        message: `Join me on PCOS Food Scanner and take control of your finances! Use my referral code ${REFERRAL_CODE} to get started. ${REFERRAL_LINK}`,
+        message: t('referral.shareMessage', { code: REFERRAL_CODE, link: REFERRAL_LINK }),
       });
     } catch (error) {
       // User cancelled
@@ -26,38 +32,56 @@ export default function ReferralScreen() {
   };
 
   return (
-    <FormPage title="Refer & Earn">
-      {/* Hero Section */}
-      <View className="items-center py-6">
-        <View className="w-20 h-20 rounded-3xl bg-emerald-500/20 items-center justify-center mb-4">
-          <Gift size={40} color="#10B981" />
-        </View>
-        <Text className="text-white text-2xl font-bold text-center">Give 1 Month, Get 1 Month</Text>
-        <Text className="text-gray-400 text-center mt-2 px-4">
-          Share your referral code with friends. When they subscribe, you both get 1 month free!
-        </Text>
+    <FormPage title={t('referral.title')}>
+      {/* Hero Section with Background Image */}
+      <View className="rounded-3xl overflow-hidden mb-6">
+        <ImageBackground
+          source={require('@/assets/images/referral-image.png')}
+          style={styles.heroImage}
+          imageStyle={styles.heroImageStyle}
+        >
+          <LinearGradient
+            colors={['rgba(13, 148, 136, 0.9)', 'rgba(15, 118, 110, 0.85)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <View className="p-6">
+            <View className="items-center">
+              <View className="w-16 h-16 rounded-2xl bg-white/20 items-center justify-center mb-4">
+                <DollarSign size={32} color="#ffffff" />
+              </View>
+              <Text className="text-white text-2xl font-bold text-center">
+                {t('referral.hero.title')}
+              </Text>
+              <Text className="text-white/90 text-center mt-2 text-base">
+                {t('referral.hero.subtitle')}
+              </Text>
+            </View>
+          </View>
+        </ImageBackground>
       </View>
 
       {/* Referral Code Card */}
-      <View className="rounded-2xl overflow-hidden mb-4">
+      <View className="rounded-2xl overflow-hidden mb-4" style={styles.codeCard}>
         <LinearGradient
-          colors={['#1a1a1f', '#141418']}
+          colors={['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.9)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <View className="absolute inset-0 rounded-2xl border border-white/[0.08]" />
+        <View className="absolute inset-0 rounded-2xl border-2 border-teal-200" />
         <View className="p-5">
-          <Text className="text-gray-500 text-xs uppercase tracking-wider mb-2">
-            Your Referral Code
+          <Text className="text-teal-700 text-xs uppercase tracking-wider mb-2 font-semibold">
+            {t('referral.yourCode')}
           </Text>
           <View className="flex-row items-center justify-between">
-            <Text className="text-white text-2xl font-bold tracking-widest">{REFERRAL_CODE}</Text>
+            <Text className="text-gray-900 text-3xl font-bold tracking-widest">{REFERRAL_CODE}</Text>
             <Pressable
               onPress={handleCopyCode}
-              className="w-10 h-10 rounded-xl bg-white/10 items-center justify-center"
+              className="w-12 h-12 rounded-xl bg-teal-500 items-center justify-center"
             >
-              <Copy size={18} color="#9CA3AF" />
+              <Copy size={20} color="#ffffff" />
             </Pressable>
           </View>
         </View>
@@ -66,60 +90,69 @@ export default function ReferralScreen() {
       {/* Share Button */}
       <Pressable onPress={handleShare} className="rounded-2xl overflow-hidden mb-6">
         <LinearGradient
-          colors={['#10B981', '#059669']}
+          colors={['#14B8A6', '#0D9488', '#0F766E']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
         <View className="p-4 flex-row items-center justify-center">
           <Share2 size={20} color="#ffffff" />
-          <Text className="text-white font-bold text-base ml-2">Share with Friends</Text>
+          <Text className="text-white font-bold text-lg ml-2">{t('referral.shareButton')}</Text>
         </View>
       </Pressable>
 
-      {/* Stats */}
-      <View className="rounded-2xl overflow-hidden">
-        <LinearGradient
-          colors={['#1a1a1f', '#141418']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View className="absolute inset-0 rounded-2xl border border-white/[0.08]" />
+      {/* How it works */}
+      <View className="rounded-2xl overflow-hidden mb-6" style={styles.howItWorksCard}>
+        <View className="absolute inset-0 bg-teal-50 rounded-2xl border border-teal-100" />
         <View className="p-5">
           <View className="flex-row items-center mb-4">
-            <Users size={18} color="#9CA3AF" />
-            <Text className="text-gray-400 ml-2">Your Referrals</Text>
-          </View>
-          <View className="flex-row">
-            <View className="flex-1">
-              <Text className="text-white text-2xl font-bold">0</Text>
-              <Text className="text-gray-500 text-sm">Friends Invited</Text>
+            <View className="w-8 h-8 rounded-full bg-teal-500 items-center justify-center mr-3">
+              <DollarSign size={16} color="#ffffff" />
             </View>
-            <View className="flex-1">
-              <Text className="text-emerald-400 text-2xl font-bold">0</Text>
-              <Text className="text-gray-500 text-sm">Months Earned</Text>
-            </View>
+            <Text className="text-teal-900 font-bold text-base">{t('referral.howToEarn')}</Text>
           </View>
+          {[
+            { step: '✦', text: t('referral.steps.step1') },
+            { step: '✦', text: t('referral.steps.step2') },
+          ].map((item, index) => (
+            <View key={index} className="flex-row items-start mb-3">
+              <Text className="text-teal-600 font-bold text-lg mr-3 mt-0.5">{item.step}</Text>
+              <Text className="text-gray-700 flex-1 text-base">{item.text}</Text>
+            </View>
+          ))}
         </View>
       </View>
 
-      {/* How it works */}
-      <View className="mt-6">
-        <Text className="text-gray-500 text-xs uppercase tracking-wider mb-3">How it Works</Text>
-        {[
-          { step: '1', text: 'Share your unique referral code with friends' },
-          { step: '2', text: 'They sign up and subscribe using your code' },
-          { step: '3', text: 'You both get 1 month of premium free!' },
-        ].map((item) => (
-          <View key={item.step} className="flex-row items-center mb-3">
-            <View className="w-7 h-7 rounded-full bg-emerald-500/20 items-center justify-center mr-3">
-              <Text className="text-emerald-400 font-bold text-sm">{item.step}</Text>
-            </View>
-            <Text className="text-gray-300 flex-1">{item.text}</Text>
-          </View>
-        ))}
+      {/* Terms */}
+      <View className="px-4">
+        <Text className="text-gray-500 text-xs text-center leading-5">
+          {t('referral.terms')}
+        </Text>
       </View>
     </FormPage>
   );
 }
+
+const styles = StyleSheet.create({
+  heroImage: {
+    width: '100%',
+    minHeight: 200,
+  },
+  heroImageStyle: {
+    borderRadius: 24,
+  },
+  codeCard: {
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  howItWorksCard: {
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+});

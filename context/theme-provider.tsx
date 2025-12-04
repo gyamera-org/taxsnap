@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
+import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
 import { useColorScheme } from 'react-native';
-import { getStoredTheme, saveTheme, getResolvedTheme, type Theme, type ResolvedTheme } from '@/lib/utils/theme-storage';
+import {
+  getStoredTheme,
+  saveTheme,
+  getResolvedTheme,
+  type Theme,
+  type ResolvedTheme,
+} from '@/lib/utils/theme-storage';
 
 interface ThemeContextType {
   theme: Theme;
@@ -25,14 +31,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     const loadTheme = async () => {
       try {
         const storedTheme = await getStoredTheme();
-
-        if (storedTheme === 'system') {
-          // First time user - default to light theme
-          setThemeState('light');
-          await saveTheme('light');
-        } else {
-          setThemeState(storedTheme);
-        }
+        setThemeState(storedTheme);
       } catch (error) {
         console.error('Error loading theme preference:', error);
         // Fallback to light theme as default
@@ -43,7 +42,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     };
 
     loadTheme();
-  }, [systemTheme]);
+  }, []);
 
   // Save theme preference to storage
   const setTheme = async (newTheme: Theme) => {
@@ -67,11 +66,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     isDark,
   };
 
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

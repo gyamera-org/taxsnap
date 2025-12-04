@@ -4,8 +4,10 @@ import { useRouter } from 'expo-router';
 import { toast } from 'sonner-native';
 import { FormPage, FormField, SaveButton } from '@/components/ui/form-page';
 import { supabase } from '@/lib/supabase/client';
+import { useTranslation } from 'react-i18next';
 
 export default function FeedbackScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,7 +19,7 @@ export default function FeedbackScreen() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Please sign in to submit feedback');
+        toast.error(t('feedback.signInRequired'));
         return;
       }
 
@@ -30,10 +32,10 @@ export default function FeedbackScreen() {
 
       if (error) throw error;
 
-      toast.success('Thank you for your feedback!');
+      toast.success(t('feedback.success'));
       router.back();
     } catch (error) {
-      toast.error('Failed to send feedback');
+      toast.error(t('feedback.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -41,25 +43,25 @@ export default function FeedbackScreen() {
 
   return (
     <FormPage
-      title="Give Feedback"
+      title={t('feedback.title')}
       rightAction={
         <SaveButton
           onPress={handleSubmit}
           disabled={!feedback.trim()}
           loading={isSubmitting}
-          label="Send"
+          label={t('feedback.submit')}
         />
       }
     >
       <Text className="text-gray-500 text-base -mt-2 mb-2">
-        We'd love to hear your thoughts on how we can improve.
+        {t('feedback.subtitle')}
       </Text>
 
       <FormField
-        label="Your Feedback"
+        label={t('feedback.label')}
         value={feedback}
         onChangeText={setFeedback}
-        placeholder="Share your feedback..."
+        placeholder={t('feedback.placeholder')}
         multiline
         numberOfLines={4}
       />

@@ -3,9 +3,11 @@ import { View, Text, ScrollView, Image, Pressable, StyleSheet } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { DEMO_MODE, getDemoScanById, DEMO_IMAGES } from '@/lib/config/demo-data';
 import { useScan } from '@/lib/hooks/use-scans';
-import type { ScanResult, ScanStatus, ScanAnalysis } from '@/lib/types/scan';
+import type { ScanResult, ScanStatus } from '@/lib/types/scan';
 
 // Icons
 function ChevronLeftIcon({ color = '#111827', size = 24 }: { color?: string; size?: number }) {
@@ -51,43 +53,63 @@ function XCircleIcon({ color = '#EF4444', size = 20 }: { color?: string; size?: 
   );
 }
 
-// Status configuration
-const statusConfig: Record<ScanStatus, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
+// Status configuration (labels will be translated in component)
+const statusConfig: Record<ScanStatus, { color: string; bgColor: string; icon: React.ReactNode }> = {
   safe: {
-    label: 'PCOS Friendly',
     color: '#059669',
     bgColor: 'rgba(209, 250, 229, 0.8)',
     icon: <CheckCircleIcon color="#059669" />,
   },
   caution: {
-    label: 'Consume with Caution',
     color: '#D97706',
     bgColor: 'rgba(254, 243, 199, 0.8)',
     icon: <AlertTriangleIcon color="#D97706" />,
   },
   avoid: {
-    label: 'Best to Avoid',
     color: '#DC2626',
     bgColor: 'rgba(254, 226, 226, 0.8)',
     icon: <XCircleIcon color="#DC2626" />,
   },
 };
 
-// Analysis label mapping
-const analysisLabels: Record<string, string> = {
-  glycemic_index: 'Glycemic Index',
-  sugar_content: 'Sugar Content',
-  inflammatory_score: 'Inflammatory Score',
-  hormone_impact: 'Hormone Impact',
-  fiber_content: 'Fiber Content',
-  protein_quality: 'Protein Quality',
-  healthy_fats: 'Healthy Fats',
-  processed_level: 'Processing Level',
+// Analysis label keys for translation
+const analysisLabelKeys: Record<string, string> = {
+  glycemic_index: 'nutrition.glycemicIndex',
+  sugar_content: 'nutrition.sugarContent',
+  inflammatory_score: 'nutrition.inflammatoryScore',
+  hormone_impact: 'nutrition.hormoneImpact',
+  fiber_content: 'nutrition.fiberContent',
+  protein_quality: 'nutrition.proteinQuality',
+  healthy_fats: 'nutrition.healthyFats',
+  processed_level: 'nutrition.processedLevel',
 };
 
-function formatAnalysisValue(key: string, value: any): string {
+// Value translation keys
+const analysisValueKeys: Record<string, string> = {
+  low: 'nutrition.values.low',
+  moderate: 'nutrition.values.moderate',
+  medium: 'nutrition.values.medium',
+  high: 'nutrition.values.high',
+  positive: 'nutrition.values.positive',
+  neutral: 'nutrition.values.neutral',
+  negative: 'nutrition.values.negative',
+  minimally: 'nutrition.values.minimally',
+  moderately: 'nutrition.values.moderately',
+  highly: 'nutrition.values.highly',
+};
+
+// Get translated analysis label
+function getAnalysisLabel(t: any, key: string): string {
+  return t(analysisLabelKeys[key] || key);
+}
+
+// Format and translate analysis value
+function formatAnalysisValue(t: any, key: string, value: any): string {
   if (key === 'inflammatory_score') return `${value}/10`;
-  if (key === 'healthy_fats') return value ? 'Yes' : 'No';
+  if (key === 'healthy_fats') return value ? t('nutrition.values.yes') : t('nutrition.values.no');
+  if (typeof value === 'string' && analysisValueKeys[value]) {
+    return t(analysisValueKeys[value]);
+  }
   if (typeof value === 'string') return value.charAt(0).toUpperCase() + value.slice(1);
   return String(value);
 }
@@ -150,6 +172,7 @@ export default function ScanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   // Get scan data
   const { data: apiScan, isLoading } = useScan(id || '');
@@ -158,14 +181,21 @@ export default function ScanDetailScreen() {
 
   if (!scan && !isLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
+          locations={[0, 0.3, 0.7, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={[styles.header, { paddingTop: insets.top }]}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <ChevronLeftIcon />
           </Pressable>
         </View>
         <View style={styles.notFound}>
-          <Text style={styles.notFoundText}>Scan not found</Text>
+          <Text style={styles.notFoundText}>{t('scanDetail.notFound')}</Text>
         </View>
       </View>
     );
@@ -173,9 +203,16 @@ export default function ScanDetailScreen() {
 
   if (!scan) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
+          locations={[0, 0.3, 0.7, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.loadingText}>{t('scanDetail.loading')}</Text>
         </View>
       </View>
     );
@@ -186,6 +223,29 @@ export default function ScanDetailScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Background gradient */}
+      <LinearGradient
+        colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
+        locations={[0, 0.3, 0.7, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Floating orbs for liquid effect */}
+      <Animated.View
+        entering={FadeIn.delay(100).duration(1000)}
+        style={[styles.orb, styles.orb1]}
+      />
+      <Animated.View
+        entering={FadeIn.delay(200).duration(1000)}
+        style={[styles.orb, styles.orb2]}
+      />
+      <Animated.View
+        entering={FadeIn.delay(300).duration(1000)}
+        style={[styles.orb, styles.orb3]}
+      />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
@@ -221,7 +281,9 @@ export default function ScanDetailScreen() {
             style={[styles.statusBadge, { backgroundColor: status.bgColor }]}
           >
             {status.icon}
-            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+            <Text style={[styles.statusText, { color: status.color }]}>
+              {t(`scanDetail.status.${scan.status}`)}
+            </Text>
           </Animated.View>
 
           {/* Title */}
@@ -236,15 +298,15 @@ export default function ScanDetailScreen() {
 
           {/* Analysis Grid */}
           {analysis && (
-            <Section title="Nutritional Analysis" delay={250}>
+            <Section title={t('scanDetail.sections.analysis')} delay={250}>
               <View style={styles.analysisGrid}>
                 {Object.entries(analysis).map(([key, value]) => {
                   if (key === 'recommendations' || key === 'warnings' || value === undefined) return null;
                   return (
                     <AnalysisItem
                       key={key}
-                      label={analysisLabels[key] || key}
-                      value={formatAnalysisValue(key, value)}
+                      label={getAnalysisLabel(t, key)}
+                      value={formatAnalysisValue(t, key, value)}
                       color={getAnalysisColor(key, value)}
                     />
                   );
@@ -255,7 +317,7 @@ export default function ScanDetailScreen() {
 
           {/* Ingredients */}
           {scan.ingredients && scan.ingredients.length > 0 && (
-            <Section title="Ingredients" delay={300}>
+            <Section title={t('scanDetail.sections.ingredients')} delay={300}>
               <View style={styles.ingredientsList}>
                 {scan.ingredients.map((ingredient, index) => (
                   <View key={index} style={styles.ingredientTag}>
@@ -268,7 +330,7 @@ export default function ScanDetailScreen() {
 
           {/* Recommendations */}
           {analysis?.recommendations && analysis.recommendations.length > 0 && (
-            <Section title="Recommendations" delay={350}>
+            <Section title={t('scanDetail.sections.recommendations')} delay={350}>
               <View style={styles.listContainer}>
                 {analysis.recommendations.map((rec, index) => (
                   <View key={index} style={styles.listItem}>
@@ -282,7 +344,7 @@ export default function ScanDetailScreen() {
 
           {/* Warnings */}
           {analysis?.warnings && analysis.warnings.length > 0 && (
-            <Section title="Warnings" delay={400}>
+            <Section title={t('scanDetail.sections.warnings')} delay={400}>
               <View style={styles.listContainer}>
                 {analysis.warnings.map((warning, index) => (
                   <View key={index} style={styles.listItem}>
@@ -314,7 +376,31 @@ export default function ScanDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  orb: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  orb1: {
+    width: 200,
+    height: 200,
+    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+    top: -50,
+    right: -50,
+  },
+  orb2: {
+    width: 150,
+    height: 150,
+    backgroundColor: 'rgba(45, 212, 191, 0.12)',
+    bottom: 200,
+    left: -40,
+  },
+  orb3: {
+    width: 100,
+    height: 100,
+    backgroundColor: 'rgba(94, 234, 212, 0.1)',
+    top: '40%',
+    right: -20,
   },
   scrollView: {
     flex: 1,
@@ -323,6 +409,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 300,
     backgroundColor: '#F3F4F6',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerOverlay: {
     position: 'absolute',
@@ -338,9 +426,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   headerNoImage: {
     position: 'absolute',
@@ -351,7 +441,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -363,9 +453,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(243, 244, 246, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   content: {
     paddingHorizontal: 20,
@@ -380,6 +472,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 8,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
   },
   statusText: {
     fontSize: 14,
@@ -414,9 +508,16 @@ const styles = StyleSheet.create({
   },
   analysisItem: {
     width: '47%',
-    backgroundColor: 'rgba(243, 244, 246, 0.8)',
-    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 16,
     padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   analysisLabel: {
     fontSize: 13,
@@ -433,10 +534,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ingredientTag: {
-    backgroundColor: 'rgba(243, 244, 246, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   ingredientText: {
     fontSize: 14,
@@ -444,6 +547,11 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     gap: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.8)',
   },
   listItem: {
     flexDirection: 'row',

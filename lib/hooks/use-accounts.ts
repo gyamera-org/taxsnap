@@ -5,6 +5,15 @@ import { supabase } from '@/lib/supabase/client';
 import { queryKeys } from './query-keys';
 import { handleError } from './utils';
 
+export interface OnboardingPreferences {
+  primary_goal: string | null;
+  symptoms: string[];
+  daily_struggles: string[];
+  food_relationship: string | null;
+  favorite_foods: string[];
+  activity_level: string | null;
+}
+
 export interface Account {
   id: string;
   name: string;
@@ -13,6 +22,9 @@ export interface Account {
   avatar: string;
   onboarding_completed: boolean;
   date_of_birth: string | null;
+  // Onboarding preferences
+  onboarding_preferences: OnboardingPreferences | null;
+  // Subscription
   subscription_status: string;
   subscription_plan: string;
   subscription_platform: string;
@@ -54,6 +66,7 @@ interface UpdateAccountPayload {
   onboarding_completed?: boolean;
   date_of_birth?: string;
   avatar?: string;
+  onboarding_preferences?: OnboardingPreferences;
 }
 
 export function useUpdateAccount() {
@@ -95,6 +108,35 @@ export function useUpdateAccount() {
       qc.invalidateQueries({ queryKey: queryKeys.accounts.detail() });
     },
     onError: (err: any) => handleError(err, 'Failed to update account'),
+  });
+}
+
+export function useSaveOnboardingPreferences() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (preferences: OnboardingPreferences) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('accounts')
+        .update({
+          onboarding_preferences: preferences,
+          onboarding_completed: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Account;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.accounts.detail() });
+    },
+    onError: (err: any) => handleError(err, 'Failed to save preferences'),
   });
 }
 

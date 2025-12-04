@@ -1,8 +1,10 @@
-import { View, Text, ScrollView, Pressable, Linking } from 'react-native';
+import { View, Text, ScrollView, Pressable, Linking, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, Scan, Brain, CheckCircle, ExternalLink } from 'lucide-react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 const MEDICAL_SOURCES = [
   {
@@ -42,19 +44,17 @@ function StepCard({
 }) {
   return (
     <Animated.View entering={FadeInUp.delay(delay).duration(400)}>
-      <View className="flex-row mb-6">
-        <View className="mr-4">
-          <View className="w-12 h-12 rounded-full bg-primary-100 items-center justify-center">
+      <View style={styles.stepRow}>
+        <View style={styles.stepIconColumn}>
+          <View style={styles.stepIconContainer}>
             <Icon size={24} color="#0D9488" />
           </View>
-          {number < 3 && (
-            <View className="w-0.5 h-8 bg-primary-200 self-center mt-2" />
-          )}
+          {number < 3 && <View style={styles.stepConnector} />}
         </View>
-        <View className="flex-1 pt-1">
-          <Text className="text-gray-400 text-xs font-medium mb-1">STEP {number}</Text>
-          <Text className="text-gray-900 text-lg font-semibold mb-1">{title}</Text>
-          <Text className="text-gray-500 text-sm leading-5">{description}</Text>
+        <View style={styles.stepContent}>
+          <Text style={styles.stepNumber}>STEP {number}</Text>
+          <Text style={styles.stepTitle}>{title}</Text>
+          <Text style={styles.stepDescription}>{description}</Text>
         </View>
       </View>
     </Animated.View>
@@ -74,18 +74,13 @@ function SourceCard({
 }) {
   return (
     <Animated.View entering={FadeInUp.delay(delay).duration(400)}>
-      <Pressable
-        onPress={() => Linking.openURL(url)}
-        className="bg-gray-50 rounded-2xl p-4 mb-3 border border-gray-100"
-      >
-        <View className="flex-row items-start justify-between">
-          <View className="flex-1 mr-3">
-            <Text className="text-gray-900 font-semibold mb-1">{title}</Text>
-            <Text className="text-gray-500 text-sm">{description}</Text>
-          </View>
-          <View className="w-8 h-8 rounded-full bg-primary-100 items-center justify-center">
-            <ExternalLink size={16} color="#0D9488" />
-          </View>
+      <Pressable onPress={() => Linking.openURL(url)} style={styles.sourceCard}>
+        <View style={styles.sourceContent}>
+          <Text style={styles.sourceTitle}>{title}</Text>
+          <Text style={styles.sourceDescription}>{description}</Text>
+        </View>
+        <View style={styles.sourceIconContainer}>
+          <ExternalLink size={16} color="#0D9488" />
         </View>
       </Pressable>
     </Animated.View>
@@ -94,121 +89,369 @@ function SourceCard({
 
 export default function HowItWorksScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-full items-center justify-center -ml-2"
-        >
-          <ChevronLeft size={28} color="#0D0D0D" />
-        </Pressable>
-        <Text className="flex-1 text-center text-lg font-semibold text-gray-900 mr-10">
-          How It Works
-        </Text>
-      </View>
+    <View style={styles.container}>
+      {/* Liquid Glass Background */}
+      <LinearGradient
+        colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
+        locations={[0, 0.3, 0.7, 1]}
+        style={StyleSheet.absoluteFill}
+      />
 
-      <ScrollView
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
-      >
-        {/* Intro */}
-        <Animated.View entering={FadeInUp.duration(400)} className="mb-8">
-          <Text className="text-gray-900 text-2xl font-bold mb-3">
-            Your PCOS Diet Assistant
-          </Text>
-          <Text className="text-gray-500 text-base leading-6">
-            PCOS Food Scanner helps you make informed dietary choices by analyzing foods
-            for their potential impact on PCOS symptoms, based on scientific research.
-          </Text>
-        </Animated.View>
+      {/* Floating orbs */}
+      <Animated.View entering={FadeIn.duration(1000)} style={styles.orb1} />
+      <Animated.View entering={FadeIn.duration(1000).delay(200)} style={styles.orb2} />
+      <Animated.View entering={FadeIn.duration(1000).delay(400)} style={styles.orb3} />
 
-        {/* Steps */}
-        <View className="mb-8">
-          <StepCard
-            number={1}
-            icon={Scan}
-            title="Scan Any Food"
-            description="Point your camera at any food item, package, or meal. Our AI will identify the food and its ingredients."
-            delay={100}
-          />
-          <StepCard
-            number={2}
-            icon={Brain}
-            title="AI Analysis"
-            description="We analyze the glycemic index, anti-inflammatory properties, hormone impact, and nutritional profile based on PCOS research."
-            delay={200}
-          />
-          <StepCard
-            number={3}
-            icon={CheckCircle}
-            title="Get Results"
-            description="Receive a clear rating (Safe, Caution, or Avoid) with detailed explanations of how the food may affect your PCOS symptoms."
-            delay={300}
-          />
-        </View>
-
-        {/* What We Check */}
-        <Animated.View entering={FadeInUp.delay(400).duration(400)} className="mb-8">
-          <Text className="text-gray-900 text-lg font-semibold mb-4">What We Analyze</Text>
-          <View className="bg-primary-50 rounded-2xl p-4">
-            <View className="flex-row flex-wrap">
-              {[
-                'Glycemic Index',
-                'Sugar Content',
-                'Inflammatory Markers',
-                'Hormone Disruptors',
-                'Fiber Content',
-                'Healthy Fats',
-                'Protein Quality',
-                'Processed Ingredients',
-              ].map((item, index) => (
-                <View
-                  key={item}
-                  className="bg-white px-3 py-1.5 rounded-full mr-2 mb-2 border border-primary-200"
-                >
-                  <Text className="text-primary-700 text-sm">{item}</Text>
-                </View>
-              ))}
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
+            <View style={styles.glassButton}>
+              <ChevronLeft size={24} color="#0D9488" />
             </View>
-          </View>
+          </Pressable>
+          <Text style={styles.headerTitle}>{t('howItWorks.title')}</Text>
+          <View style={styles.headerSpacer} />
         </Animated.View>
 
-        {/* Medical Disclaimer */}
-        <Animated.View entering={FadeInUp.delay(500).duration(400)} className="mb-8">
-          <View className="bg-amber-50 rounded-2xl p-4 border border-amber-200">
-            <Text className="text-amber-800 font-semibold mb-2">Important Note</Text>
-            <Text className="text-amber-700 text-sm leading-5">
-              This app is for informational purposes only and is not a substitute for
-              professional medical advice. Always consult with your healthcare provider
-              or a registered dietitian before making significant dietary changes.
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Intro */}
+          <Animated.View entering={FadeInUp.duration(400)} style={styles.introSection}>
+            <Text style={styles.introTitle}>{t('howItWorks.intro.title')}</Text>
+            <Text style={styles.introDescription}>
+              {t('howItWorks.intro.description')}
             </Text>
+          </Animated.View>
+
+          {/* Steps */}
+          <View style={styles.stepsSection}>
+            <StepCard
+              number={1}
+              icon={Scan}
+              title={t('howItWorks.steps.step1.title')}
+              description={t('howItWorks.steps.step1.description')}
+              delay={100}
+            />
+            <StepCard
+              number={2}
+              icon={Brain}
+              title={t('howItWorks.steps.step2.title')}
+              description={t('howItWorks.steps.step2.description')}
+              delay={200}
+            />
+            <StepCard
+              number={3}
+              icon={CheckCircle}
+              title={t('howItWorks.steps.step3.title')}
+              description={t('howItWorks.steps.step3.description')}
+              delay={300}
+            />
           </View>
-        </Animated.View>
 
-        {/* Medical Sources */}
-        <Animated.View entering={FadeInUp.delay(600).duration(400)}>
-          <Text className="text-gray-900 text-lg font-semibold mb-4">
-            Medical Sources & Research
-          </Text>
-          <Text className="text-gray-500 text-sm mb-4">
-            Our recommendations are based on peer-reviewed research and guidelines from trusted medical institutions.
-          </Text>
-        </Animated.View>
+          {/* What We Check */}
+          <Animated.View entering={FadeInUp.delay(400).duration(400)} style={styles.analyzeSection}>
+            <Text style={styles.sectionTitle}>{t('howItWorks.whatWeAnalyze')}</Text>
+            <View style={styles.glassCard}>
+              <View style={styles.tagsContainer}>
+                {[
+                  'Glycemic Index',
+                  'Sugar Content',
+                  'Inflammatory Markers',
+                  'Hormone Disruptors',
+                  'Fiber Content',
+                  'Healthy Fats',
+                  'Protein Quality',
+                  'Processed Ingredients',
+                ].map((item) => (
+                  <View key={item} style={styles.tag}>
+                    <Text style={styles.tagText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </Animated.View>
 
-        {MEDICAL_SOURCES.map((source, index) => (
-          <SourceCard
-            key={source.title}
-            title={source.title}
-            description={source.description}
-            url={source.url}
-            delay={700 + index * 100}
-          />
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+          {/* Medical Disclaimer */}
+          <Animated.View entering={FadeInUp.delay(500).duration(400)} style={styles.disclaimerSection}>
+            <View style={styles.disclaimerCard}>
+              <Text style={styles.disclaimerTitle}>{t('howItWorks.disclaimer.title')}</Text>
+              <Text style={styles.disclaimerText}>
+                {t('howItWorks.disclaimer.message')}
+              </Text>
+            </View>
+          </Animated.View>
+
+          {/* Medical Sources */}
+          <Animated.View entering={FadeInUp.delay(600).duration(400)}>
+            <Text style={styles.sectionTitle}>{t('howItWorks.sources.title')}</Text>
+            <Text style={styles.sourcesSubtitle}>
+              {t('howItWorks.sources.description')}
+            </Text>
+          </Animated.View>
+
+          {MEDICAL_SOURCES.map((source, index) => (
+            <SourceCard
+              key={source.title}
+              title={source.title}
+              description={source.description}
+              url={source.url}
+              delay={700 + index * 100}
+            />
+          ))}
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backButton: {
+    marginRight: 12,
+  },
+  glassButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 52,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  introSection: {
+    marginBottom: 32,
+  },
+  introTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  introDescription: {
+    fontSize: 16,
+    color: '#6B7280',
+    lineHeight: 24,
+  },
+  stepsSection: {
+    marginBottom: 32,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+  stepIconColumn: {
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  stepIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(20, 184, 166, 0.3)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  stepConnector: {
+    width: 2,
+    height: 32,
+    backgroundColor: 'rgba(20, 184, 166, 0.3)',
+    marginTop: 8,
+  },
+  stepContent: {
+    flex: 1,
+    paddingTop: 4,
+  },
+  stepNumber: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    marginBottom: 4,
+    letterSpacing: 1,
+  },
+  stepTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  stepDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  analyzeSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  tag: {
+    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(20, 184, 166, 0.2)',
+  },
+  tagText: {
+    fontSize: 14,
+    color: '#0D9488',
+    fontWeight: '500',
+  },
+  disclaimerSection: {
+    marginBottom: 32,
+  },
+  disclaimerCard: {
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+  },
+  disclaimerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#92400E',
+    marginBottom: 8,
+  },
+  disclaimerText: {
+    fontSize: 14,
+    color: '#A16207',
+    lineHeight: 20,
+  },
+  sourcesSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 16,
+    marginTop: -8,
+  },
+  sourceCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+  },
+  sourceContent: {
+    flex: 1,
+    marginRight: 12,
+  },
+  sourceTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  sourceDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  sourceIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orb1: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+    top: -50,
+    right: -50,
+  },
+  orb2: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(45, 212, 191, 0.1)',
+    bottom: 100,
+    left: -30,
+  },
+  orb3: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(94, 234, 212, 0.12)',
+    top: '40%',
+    right: 20,
+  },
+});

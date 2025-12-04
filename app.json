@@ -6,11 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "pcos-food-scanner",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "userInterfaceStyle": "light",
+      "userInterfaceStyle": "automatic",
       "bundleIdentifier": "com.pcos-food-scanner.app",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -37,7 +37,8 @@
           "backgroundColor": "#FFFFFF"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

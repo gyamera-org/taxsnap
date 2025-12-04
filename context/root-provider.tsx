@@ -10,6 +10,9 @@ import { RevenueCatProvider } from './revenuecat-provider';
 import { NotificationProvider } from './notification-provider';
 import { ThemeProvider } from './theme-provider';
 import { TabBarProvider } from './tab-bar-provider';
+import { LanguageProvider } from './language-provider';
+import { OnboardingProvider } from './onboarding-provider';
+import '@/lib/i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,20 +30,24 @@ export const RootProvider = ({ children }: PropsWithChildren) => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
-          <RevenueCatProvider>
-            <NotificationProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <BottomSheetModalProvider>
-                  <TabBarProvider>
-                    {children}
-                    <Toaster theme="dark" />
-                  </TabBarProvider>
-                </BottomSheetModalProvider>
-              </GestureHandlerRootView>
-            </NotificationProvider>
-          </RevenueCatProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <OnboardingProvider>
+              <RevenueCatProvider>
+                <NotificationProvider>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <BottomSheetModalProvider>
+                      <TabBarProvider>
+                        {children}
+                        <Toaster theme="dark" />
+                      </TabBarProvider>
+                    </BottomSheetModalProvider>
+                  </GestureHandlerRootView>
+                </NotificationProvider>
+              </RevenueCatProvider>
+            </OnboardingProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

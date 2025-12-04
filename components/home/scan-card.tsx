@@ -1,11 +1,22 @@
+import { useEffect } from 'react';
 import { View, Text, Pressable, Image, StyleSheet, Dimensions } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
+import Animated, {
+  FadeInUp,
+  useSharedValue,
+  useAnimatedProps,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import type { ScanResult, ScanStatus } from '@/lib/types/scan';
 import { DEMO_IMAGES } from '@/lib/config/demo-data';
+import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - 36) / 2; // 12px padding on each side + 12px gap
+const CARD_WIDTH = SCREEN_WIDTH - 32;
+
+const AnimatedCircle = Animated.createAnimatedComponent(SvgCircle);
 
 interface ScanCardProps {
   scan: ScanResult;
@@ -14,86 +25,185 @@ interface ScanCardProps {
   onToggleFavorite?: () => void;
 }
 
-// Bookmark icon
-function BookmarkIcon({ filled = false, size = 16 }: { filled?: boolean; size?: number }) {
-  const color = filled ? '#0D9488' : '#FFFFFF';
+// Circular progress indicator
+function CircularProgress({ progress, size = 70 }: { progress: number; size?: number }) {
+  const animatedProgress = useSharedValue(0);
+  const strokeWidth = 3;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+
+  useEffect(() => {
+    animatedProgress.value = withTiming(progress, {
+      duration: 500,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [progress]);
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: circumference * (1 - animatedProgress.value / 100),
+  }));
+
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'} stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <Path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-    </Svg>
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size} style={{ position: 'absolute' }}>
+        <SvgCircle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="rgba(255, 255, 255, 0.3)"
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <AnimatedCircle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="#FFFFFF"
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          animatedProps={animatedProps}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      <Text style={styles.progressText}>{Math.round(progress)}%</Text>
+    </View>
   );
 }
 
-const statusConfig: Record<ScanStatus, { label: string; color: string; bgColor: string }> = {
-  safe: {
-    label: 'Safe',
-    color: '#059669',
-    bgColor: 'rgba(209, 250, 229, 0.95)',
-  },
-  caution: {
-    label: 'Caution',
-    color: '#D97706',
-    bgColor: 'rgba(254, 243, 199, 0.95)',
-  },
-  avoid: {
-    label: 'Avoid',
-    color: '#DC2626',
-    bgColor: 'rgba(254, 226, 226, 0.95)',
-  },
-};
+// Skeleton loading bars
+function SkeletonBars() {
+  return (
+    <View style={styles.skeletonContainer}>
+      <View style={[styles.skeletonBar, { width: '80%' }]} />
+      <View style={styles.skeletonRow}>
+        <View style={[styles.skeletonBar, { width: '28%' }]} />
+        <View style={[styles.skeletonBar, { width: '28%' }]} />
+        <View style={[styles.skeletonBar, { width: '28%' }]} />
+      </View>
+    </View>
+  );
+}
 
 export function ScanCard({ scan, index, onPress, onToggleFavorite }: ScanCardProps) {
-  const status = statusConfig[scan.status];
+  const { t } = useTranslation();
+  const isPending = scan.status === 'pending';
+  const progress = scan.progress ?? 0;
+
+  const statusConfig: Record<Exclude<ScanStatus, 'pending'>, { label: string; color: string; bgColor: string }> = {
+    safe: {
+      label: t('scanResult.status.safe'),
+      color: '#059669',
+      bgColor: '#ECFDF5',
+    },
+    caution: {
+      label: t('scanResult.status.caution'),
+      color: '#D97706',
+      bgColor: '#FFFBEB',
+    },
+    avoid: {
+      label: t('scanResult.status.avoid'),
+      color: '#DC2626',
+      bgColor: '#FEF2F2',
+    },
+  };
+
+  const status = !isPending ? statusConfig[scan.status as Exclude<ScanStatus, 'pending'>] : null;
+
+  const timeString = format(new Date(scan.scanned_at), 'h:mm a');
+
+  const renderImage = () => {
+    if (scan.image_url) {
+      if (scan.image_url.startsWith('local:')) {
+        return (
+          <Image
+            source={DEMO_IMAGES[scan.image_url.replace('local:', '') as keyof typeof DEMO_IMAGES]}
+            style={styles.image}
+            blurRadius={isPending ? 15 : 0}
+          />
+        );
+      }
+      return (
+        <Image
+          source={{ uri: scan.image_url }}
+          style={styles.image}
+          blurRadius={isPending ? 15 : 0}
+        />
+      );
+    }
+    return (
+      <View style={styles.imagePlaceholder}>
+        <Text style={styles.placeholderEmoji}>🍽️</Text>
+      </View>
+    );
+  };
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(index * 50).duration(300)}
+      entering={FadeInUp.delay(index * 80).duration(400)}
       style={styles.wrapper}
     >
-      <Pressable onPress={onPress} style={styles.container}>
-        {/* Food Image */}
+      <Pressable
+        onPress={isPending ? undefined : onPress}
+        style={styles.container}
+        disabled={isPending}
+      >
+        {/* Image Section */}
         <View style={styles.imageContainer}>
-          {scan.image_url ? (
-            scan.image_url.startsWith('local:') ? (
-              <Image
-                source={DEMO_IMAGES[scan.image_url.replace('local:', '') as keyof typeof DEMO_IMAGES]}
-                style={styles.image}
-              />
-            ) : (
-              <Image source={{ uri: scan.image_url }} style={styles.image} />
-            )
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Text style={styles.placeholderEmoji}>🍽️</Text>
+          {renderImage()}
+
+          {/* Progress overlay for pending */}
+          {isPending && (
+            <View style={styles.progressOverlay}>
+              <CircularProgress progress={progress} size={70} />
             </View>
           )}
 
-          {/* Bookmark button on image */}
-          <Pressable
-            onPress={(e) => {
-              e.stopPropagation();
-              onToggleFavorite?.();
-            }}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.bookmarkButton}
-          >
-            <BookmarkIcon filled={scan.is_favorite} />
-          </Pressable>
-
-          {/* Status Badge on image */}
-          <View style={[styles.statusBadge, { backgroundColor: status.bgColor }]}>
-            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
-          </View>
+          {/* Corner brackets for pending */}
+          {isPending && (
+            <>
+              <View style={[styles.bracket, styles.bracketTopLeft]} />
+              <View style={[styles.bracket, styles.bracketTopRight]} />
+              <View style={[styles.bracket, styles.bracketBottomLeft]} />
+              <View style={[styles.bracket, styles.bracketBottomRight]} />
+            </>
+          )}
         </View>
 
-        {/* Content */}
+        {/* Content Section */}
         <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={1}>
-            {scan.name}
-          </Text>
-          <Text style={styles.summary} numberOfLines={2}>
-            {scan.summary}
-          </Text>
+          {isPending ? (
+            <>
+              <Text style={styles.pendingTitle}>{t('scan.analyzingImage')}</Text>
+              <SkeletonBars />
+              <Text style={styles.pendingSubtext}>{t('scan.notifyWhenDone')}</Text>
+            </>
+          ) : (
+            <>
+              {/* Title Row */}
+              <View style={styles.titleRow}>
+                <Text style={styles.title} numberOfLines={1}>
+                  {scan.name}
+                </Text>
+                <Text style={styles.time}>{timeString}</Text>
+              </View>
+
+              {/* Status Badge */}
+              {status && (
+                <View style={[styles.statusBadge, { backgroundColor: status.bgColor }]}>
+                  <Text style={[styles.statusText, { color: status.color }]}>
+                    {status.label}
+                  </Text>
+                </View>
+              )}
+
+              {/* Summary */}
+              <Text style={styles.summary} numberOfLines={2}>
+                {scan.summary}
+              </Text>
+            </>
+          )}
         </View>
       </Pressable>
     </Animated.View>
@@ -104,71 +214,156 @@ const styles = StyleSheet.create({
   wrapper: {
     width: CARD_WIDTH,
     marginBottom: 12,
+    alignSelf: 'center',
   },
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    flexDirection: 'row',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
   },
   imageContainer: {
-    height: 120,
-    backgroundColor: '#F3F4F6',
+    width: 110,
+    height: 110,
+    backgroundColor: '#E5E7EB',
     position: 'relative',
+    borderRadius: 16,
+    margin: 8,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
     height: '100%',
+    borderRadius: 12,
   },
   imagePlaceholder: {
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(243, 244, 246, 0.8)',
+    borderRadius: 12,
   },
   placeholderEmoji: {
-    fontSize: 36,
+    fontSize: 32,
   },
-  bookmarkButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  progressOverlay: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderRadius: 12,
   },
-  statusBadge: {
+  progressText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  bracket: {
     position: 'absolute',
-    bottom: 8,
-    left: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    width: 18,
+    height: 18,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderWidth: 2,
   },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '600',
+  bracketTopLeft: {
+    top: 10,
+    left: 10,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+    borderTopLeftRadius: 6,
+  },
+  bracketTopRight: {
+    top: 10,
+    right: 10,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+    borderTopRightRadius: 6,
+  },
+  bracketBottomLeft: {
+    bottom: 10,
+    left: 10,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 6,
+  },
+  bracketBottomRight: {
+    bottom: 10,
+    right: 10,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    borderBottomRightRadius: 6,
   },
   content: {
-    padding: 12,
-    backgroundColor: 'rgba(249, 250, 251, 0.8)',
+    flex: 1,
+    paddingVertical: 14,
+    paddingRight: 14,
+    paddingLeft: 6,
+    justifyContent: 'center',
+  },
+  // Pending state
+  pendingTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 10,
+  },
+  skeletonContainer: {
+    gap: 8,
+  },
+  skeletonBar: {
+    height: 10,
+    backgroundColor: 'rgba(229, 231, 235, 0.6)',
+    borderRadius: 5,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pendingSubtext: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    marginTop: 10,
+  },
+  // Completed state
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
   },
   title: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 4,
+    flex: 1,
+    marginRight: 8,
+  },
+  time: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   summary: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 18,
     color: '#6B7280',
   },
 });

@@ -1,4 +1,4 @@
-export type ScanStatus = 'safe' | 'caution' | 'avoid';
+export type ScanStatus = 'safe' | 'caution' | 'avoid' | 'pending';
 
 export interface ScanResult {
   id: string;
@@ -9,6 +9,13 @@ export interface ScanResult {
   summary: string;
   ingredients?: string[];
   analysis?: ScanAnalysis;
+  // Nutrition info
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  // Progress for pending scans
+  progress?: number;
   is_favorite: boolean;
   scanned_at: string;
   created_at: string;

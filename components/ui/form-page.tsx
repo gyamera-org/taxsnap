@@ -228,8 +228,15 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     borderRadius: 16,
-    backgroundColor: 'rgba(243, 244, 246, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
     overflow: 'hidden',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   input: {
     flex: 1,
@@ -245,8 +252,15 @@ const styles = StyleSheet.create({
   },
   toggleWrapper: {
     borderRadius: 16,
-    backgroundColor: 'rgba(243, 244, 246, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
     overflow: 'hidden',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   toggleContent: {
     flexDirection: 'row',

@@ -1,4 +1,4 @@
-import { View, Pressable, ActivityIndicator } from 'react-native';
+import { View, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { RotateCcw, ImagePlus } from 'lucide-react-native';
 
 interface CameraControlsProps {
@@ -15,12 +15,12 @@ export function CameraControls({
   isCapturing = false,
 }: CameraControlsProps) {
   return (
-    <View className="items-center pb-8">
-      <View className="flex-row items-center justify-center gap-8">
+    <View style={styles.container}>
+      <View style={styles.controlsRow}>
         {/* Flip Camera Button */}
         <Pressable
           onPress={onFlipCamera}
-          className="w-12 h-12 rounded-full bg-white/20 items-center justify-center"
+          style={styles.sideButton}
           disabled={isCapturing}
         >
           <RotateCcw size={24} color="#FFFFFF" />
@@ -28,11 +28,11 @@ export function CameraControls({
 
         {/* Capture Button */}
         <Pressable onPress={onCapture} disabled={isCapturing}>
-          <View className="w-20 h-20 rounded-full bg-white items-center justify-center">
+          <View style={styles.captureButtonOuter}>
             {isCapturing ? (
               <ActivityIndicator size="large" color="#0D9488" />
             ) : (
-              <View className="w-16 h-16 rounded-full border-4 border-primary-500" />
+              <View style={styles.captureButtonInner} />
             )}
           </View>
         </Pressable>
@@ -41,15 +41,69 @@ export function CameraControls({
         {onPickImage ? (
           <Pressable
             onPress={onPickImage}
-            className="w-12 h-12 rounded-full bg-white/20 items-center justify-center"
+            style={styles.sideButton}
             disabled={isCapturing}
           >
             <ImagePlus size={24} color="#FFFFFF" />
           </Pressable>
         ) : (
-          <View className="w-12 h-12" />
+          <View style={styles.placeholder} />
         )}
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    paddingBottom: 32,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 32,
+  },
+  sideButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  captureButtonOuter: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  captureButtonInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 4,
+    borderColor: '#0D9488',
+  },
+  placeholder: {
+    width: 48,
+    height: 48,
+  },
+});

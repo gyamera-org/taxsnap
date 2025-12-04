@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
+import * as Haptics from 'expo-haptics';
 
 export type TabType = 'all' | 'saves';
 
@@ -17,7 +18,16 @@ interface HomeHeaderProps {
 // Grid/All icon
 function AllIcon({ color, size = 16 }: { color: string; size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <Path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" />
     </Svg>
   );
@@ -26,7 +36,16 @@ function AllIcon({ color, size = 16 }: { color: string; size?: number }) {
 // Bookmark/Saves icon
 function SavesIcon({ color, size = 16 }: { color: string; size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <Path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
     </Svg>
   );
@@ -35,7 +54,16 @@ function SavesIcon({ color, size = 16 }: { color: string; size?: number }) {
 // Search icon
 function SearchIcon({ color = '#6B7280', size = 20 }: { color?: string; size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <Circle cx="11" cy="11" r="8" />
       <Path d="m21 21-4.35-4.35" />
     </Svg>
@@ -45,17 +73,33 @@ function SearchIcon({ color = '#6B7280', size = 20 }: { color?: string; size?: n
 // X/Close icon
 function CloseIcon({ color = '#6B7280', size = 18 }: { color?: string; size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <Path d="M18 6 6 18M6 6l12 12" />
     </Svg>
   );
 }
 
-export function HomeHeader({ activeTab, onTabChange, searchQuery, onSearchChange }: HomeHeaderProps) {
+export function HomeHeader({
+  activeTab,
+  onTabChange,
+  searchQuery,
+  onSearchChange,
+}: HomeHeaderProps) {
   const insets = useSafeAreaInsets();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { t } = useTranslation();
 
   const toggleSearch = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (isSearchOpen) {
       onSearchChange('');
     }
@@ -66,7 +110,7 @@ export function HomeHeader({ activeTab, onTabChange, searchQuery, onSearchChange
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
       {/* Main Header Row */}
       <View style={styles.headerRow}>
-        <Text style={styles.title}>My Scans</Text>
+        <Text style={styles.title}>{t('home.title')}</Text>
 
         <View style={styles.actions}>
           {/* Search Button */}
@@ -84,13 +128,19 @@ export function HomeHeader({ activeTab, onTabChange, searchQuery, onSearchChange
           <View style={styles.tabSwitcher}>
             <View style={styles.tabsWrapper}>
               <Pressable
-                onPress={() => onTabChange('all')}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  onTabChange('all');
+                }}
                 style={[styles.tabButton, activeTab === 'all' && styles.tabButtonActive]}
               >
                 <AllIcon color={activeTab === 'all' ? '#0D9488' : '#6B7280'} />
               </Pressable>
               <Pressable
-                onPress={() => onTabChange('saves')}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  onTabChange('saves');
+                }}
                 style={[styles.tabButton, activeTab === 'saves' && styles.tabButtonActive]}
               >
                 <SavesIcon color={activeTab === 'saves' ? '#0D9488' : '#6B7280'} />
@@ -110,7 +160,7 @@ export function HomeHeader({ activeTab, onTabChange, searchQuery, onSearchChange
           <View style={styles.searchWrapper}>
             <SearchIcon color="#9CA3AF" size={18} />
             <TextInput
-              placeholder="Search scans..."
+              placeholder={t('home.searchPlaceholder')}
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={onSearchChange}
@@ -135,7 +185,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   headerRow: {
     flexDirection: 'row',
@@ -143,7 +193,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: '700',
     color: '#111827',
     letterSpacing: -0.5,
@@ -159,18 +209,34 @@ const styles = StyleSheet.create({
   iconButtonInner: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(229, 231, 235, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   iconButtonActive: {
     backgroundColor: 'rgba(209, 250, 244, 0.9)',
+    borderColor: 'rgba(20, 184, 166, 0.4)',
+    shadowOpacity: 0.15,
   },
   tabSwitcher: {
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: 'rgba(229, 231, 235, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   tabsWrapper: {
     flexDirection: 'row',
@@ -180,16 +246,16 @@ const styles = StyleSheet.create({
   tabButton: {
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tabButtonActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 2,
   },
   searchContainer: {
@@ -200,8 +266,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: 'rgba(243, 244, 246, 0.95)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   searchInput: {
     flex: 1,

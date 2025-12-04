@@ -10,6 +10,20 @@ export const DEMO_IMAGES = {
 };
 
 export const DEMO_SCANS: ScanResult[] = [
+  // Pending scan at the top
+  {
+    id: 'demo-pending',
+    user_id: 'demo-user',
+    name: 'Analyzing...',
+    image_url: 'local:choco',
+    status: 'pending',
+    summary: '',
+    progress: 45,
+    is_favorite: false,
+    scanned_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
   {
     id: 'demo-1',
     user_id: 'demo-user',
