@@ -38,6 +38,7 @@ import {
 } from '@/components/onboarding/steps';
 import { useOnboarding } from '@/context/onboarding-provider';
 import { useTranslation } from 'react-i18next';
+import { useSaveOnboardingProfile } from '@/lib/hooks/use-accounts';
 
 type Step =
   | 'welcome'
@@ -56,11 +57,12 @@ export default function OnboardingScreen() {
   const { signInWithApple, loading: authLoading } = useAuth();
   const { data: onboardingData, resetData } = useOnboarding();
   const { t } = useTranslation();
+  const { mutateAsync: saveOnboardingProfile, isPending: isSaving } = useSaveOnboardingProfile();
 
   const [step, setStep] = useState<Step>('welcome');
   const [appleLoading, setAppleLoading] = useState(false);
 
-  const isLoading = authLoading || appleLoading;
+  const isLoading = authLoading || appleLoading || isSaving;
 
   const steps: Step[] = [
     'welcome',
@@ -100,17 +102,31 @@ export default function OnboardingScreen() {
 
   const handleAppleAuth = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // TODO: Re-enable Apple auth and save onboarding data
-    // setAppleLoading(true);
-    // try {
-    //   await signInWithApple();
-    //   // Save onboarding preferences to database here
-    // } catch (error) {
-    //   console.error('Apple auth error:', error);
-    // } finally {
-    //   setAppleLoading(false);
-    // }
-    router.replace('/(tabs)/home');
+    setAppleLoading(true);
+    try {
+      const success = await signInWithApple();
+
+      if (success) {
+        // Save onboarding data to database
+        await saveOnboardingProfile({
+          primary_goal: onboardingData.primaryGoal,
+          symptoms: onboardingData.symptoms,
+          daily_struggles: onboardingData.dailyStruggles,
+          food_relationship: onboardingData.foodRelationship,
+          feel_good_foods: onboardingData.feelGoodFoods,
+          guilt_foods: onboardingData.guiltFoods,
+          activity_level: onboardingData.activityLevel,
+          referral_source: onboardingData.referralSource,
+        });
+
+        resetData();
+        // signInWithApple redirects to /paywall for hard paywall
+      }
+    } catch (error) {
+      console.error('Auth/onboarding error:', error);
+    } finally {
+      setAppleLoading(false);
+    }
   };
 
   // Render the appropriate step

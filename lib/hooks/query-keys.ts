@@ -3,6 +3,7 @@ export const queryKeys = {
     all: ['accounts'] as const,
     detail: () => [...queryKeys.accounts.all, 'detail'] as const,
     subscription: () => [...queryKeys.accounts.all, 'subscription'] as const,
+    onboardingProfile: () => [...queryKeys.accounts.all, 'onboarding-profile'] as const,
   },
   subscription: {
     all: ['subscription'] as const,

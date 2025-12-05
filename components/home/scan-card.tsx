@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { View, Text, Pressable, Image, StyleSheet, Dimensions } from 'react-native';
-import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
+import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import Animated, {
   FadeInUp,
   useSharedValue,
@@ -8,7 +8,15 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import type { ScanResult, ScanStatus } from '@/lib/types/scan';
+import {
+  Gauge,
+  Candy,
+  Wheat,
+  Flame,
+  HeartPulse,
+  Factory,
+} from 'lucide-react-native';
+import type { ScanResult, ScanStatus, ScanAnalysis } from '@/lib/types/scan';
 import { DEMO_IMAGES } from '@/lib/config/demo-data';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
@@ -82,6 +90,91 @@ function SkeletonBars() {
         <View style={[styles.skeletonBar, { width: '28%' }]} />
         <View style={[styles.skeletonBar, { width: '28%' }]} />
       </View>
+    </View>
+  );
+}
+
+// Get color based on value level
+function getIndicatorColor(
+  value: 'low' | 'moderate' | 'medium' | 'high' | 'positive' | 'neutral' | 'negative' | 'minimally' | 'moderately' | 'highly' | undefined,
+  invertScale = false
+): string {
+  if (!value) return '#9CA3AF'; // gray for unknown
+
+  const greenValues = invertScale
+    ? ['high', 'negative', 'highly']
+    : ['low', 'positive', 'minimally'];
+  const yellowValues = ['moderate', 'medium', 'neutral', 'moderately'];
+  const redValues = invertScale
+    ? ['low', 'positive', 'minimally']
+    : ['high', 'negative', 'highly'];
+
+  if (greenValues.includes(value)) return '#059669'; // green
+  if (yellowValues.includes(value)) return '#D97706'; // yellow/orange
+  if (redValues.includes(value)) return '#DC2626'; // red
+  return '#9CA3AF';
+}
+
+// Get color for inflammatory score (1-10, lower is better)
+function getInflammatoryColor(score: number | undefined): string {
+  if (score === undefined) return '#9CA3AF';
+  if (score <= 3) return '#059669'; // green
+  if (score <= 6) return '#D97706'; // yellow
+  return '#DC2626'; // red
+}
+
+// Nutrition indicators row
+function NutritionIndicators({ analysis }: { analysis?: ScanAnalysis }) {
+  if (!analysis) return null;
+
+  const indicators = [
+    {
+      key: 'gi',
+      Icon: Gauge,
+      color: getIndicatorColor(analysis.glycemic_index),
+      visible: !!analysis.glycemic_index,
+    },
+    {
+      key: 'sugar',
+      Icon: Candy,
+      color: getIndicatorColor(analysis.sugar_content),
+      visible: !!analysis.sugar_content,
+    },
+    {
+      key: 'fiber',
+      Icon: Wheat,
+      color: getIndicatorColor(analysis.fiber_content, true), // inverted: high fiber is good
+      visible: !!analysis.fiber_content,
+    },
+    {
+      key: 'inflammation',
+      Icon: Flame,
+      color: getInflammatoryColor(analysis.inflammatory_score),
+      visible: analysis.inflammatory_score !== undefined,
+    },
+    {
+      key: 'hormone',
+      Icon: HeartPulse,
+      color: getIndicatorColor(analysis.hormone_impact),
+      visible: !!analysis.hormone_impact,
+    },
+    {
+      key: 'processed',
+      Icon: Factory,
+      color: getIndicatorColor(analysis.processed_level),
+      visible: !!analysis.processed_level,
+    },
+  ].filter((ind) => ind.visible);
+
+  if (indicators.length === 0) return null;
+
+  return (
+    <View style={styles.indicatorsRow}>
+      {indicators.map(({ key, Icon, color }) => (
+        <View key={key} style={[styles.indicatorBadge, { backgroundColor: `${color}15` }]}>
+          <Icon size={14} color={color} strokeWidth={2.5} />
+        </View>
+      ))}
     </View>
   );
 }
@@ -198,10 +291,8 @@ export function ScanCard({ scan, index, onPress, onToggleFavorite }: ScanCardPro
                 </View>
               )}
 
-              {/* Summary */}
-              <Text style={styles.summary} numberOfLines={2}>
-                {scan.summary}
-              </Text>
+              {/* Nutrition Indicators */}
+              <NutritionIndicators analysis={scan.analysis} />
             </>
           )}
         </View>
@@ -365,5 +456,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     color: '#6B7280',
+  },
+  indicatorsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 2,
+  },
+  indicatorBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

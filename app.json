@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PCOS Food Scanner",
+    "name": "PCOS Friendly",
     "slug": "pcos-food-scanner",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,8 +14,9 @@
       "bundleIdentifier": "com.pcos-food-scanner.app",
       "usesAppleSignIn": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "PCOS Food Scanner uses your camera to scan food items and check if they are PCOS-friendly.",
-        "NSPhotoLibraryUsageDescription": "PCOS Food Scanner accesses your photo library to analyze food items from your saved photos.",
+        "NSCameraUsageDescription": "PCOS Food Scanner uses your camera to scan food items and take photos for your profile avatar.",
+        "NSPhotoLibraryUsageDescription": "PCOS Food Scanner accesses your photo library to analyze food items and select your profile avatar.",
+        "NSPhotoLibraryAddUsageDescription": "PCOS Food Scanner saves images to your photo library.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },

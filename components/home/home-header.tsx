@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
+import {
+  Gauge,
+  Candy,
+  Wheat,
+  Flame,
+  HeartPulse,
+  Factory,
+  Info,
+} from 'lucide-react-native';
+import { GlassBottomSheet, GlassBottomSheetRef } from '@/components/ui/glass-bottom-sheet';
 
 export type TabType = 'all' | 'saves';
 
@@ -88,6 +98,60 @@ function CloseIcon({ color = '#6B7280', size = 18 }: { color?: string; size?: nu
   );
 }
 
+// Indicator legend configuration with descriptions
+const INDICATOR_CONFIG = [
+  { key: 'gi', Icon: Gauge, labelKey: 'nutrition.glycemicIndex', descKey: 'nutrition.descriptions.gi' },
+  { key: 'sugar', Icon: Candy, labelKey: 'nutrition.sugarContent', descKey: 'nutrition.descriptions.sugar' },
+  { key: 'fiber', Icon: Wheat, labelKey: 'nutrition.fiberContent', descKey: 'nutrition.descriptions.fiber' },
+  { key: 'inflammation', Icon: Flame, labelKey: 'nutrition.inflammatoryScore', descKey: 'nutrition.descriptions.inflammation' },
+  { key: 'hormone', Icon: HeartPulse, labelKey: 'nutrition.hormoneImpact', descKey: 'nutrition.descriptions.hormone' },
+  { key: 'processed', Icon: Factory, labelKey: 'nutrition.processedLevel', descKey: 'nutrition.descriptions.processed' },
+] as const;
+
+// Color guide data
+const COLOR_GUIDE = [
+  { color: '#059669', labelKey: 'nutrition.colorGood' },
+  { color: '#D97706', labelKey: 'nutrition.colorModerate' },
+  { color: '#DC2626', labelKey: 'nutrition.colorPoor' },
+] as const;
+
+// Indicator Legend Content (for bottom sheet)
+function IndicatorLegendContent() {
+  const { t } = useTranslation();
+
+  return (
+    <View style={styles.legendContainer}>
+      <Text style={styles.legendTitle}>{t('nutrition.legendTitle')}</Text>
+
+      <View style={styles.legendItems}>
+        {INDICATOR_CONFIG.map(({ key, Icon, labelKey, descKey }) => (
+          <View key={key} style={styles.legendItem}>
+            <View style={styles.legendIconBadge}>
+              <Icon size={18} color="#9CA3AF" strokeWidth={2} />
+            </View>
+            <View style={styles.legendTextContainer}>
+              <Text style={styles.legendLabel}>{t(labelKey)}</Text>
+              <Text style={styles.legendDescription}>{t(descKey)}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.legendColorGuide}>
+        <Text style={styles.legendSubtitle}>{t('nutrition.colorGuide')}</Text>
+        <View style={styles.colorChips}>
+          {COLOR_GUIDE.map(({ color, labelKey }) => (
+            <View key={color} style={[styles.colorChip, { backgroundColor: `${color}15` }]}>
+              <View style={[styles.colorDot, { backgroundColor: color }]} />
+              <Text style={[styles.colorChipLabel, { color }]}>{t(labelKey)}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export function HomeHeader({
   activeTab,
   onTabChange,
@@ -96,6 +160,7 @@ export function HomeHeader({
 }: HomeHeaderProps) {
   const insets = useSafeAreaInsets();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const legendSheetRef = useRef<GlassBottomSheetRef>(null);
   const { t } = useTranslation();
 
   const toggleSearch = () => {
@@ -106,11 +171,21 @@ export function HomeHeader({
     setIsSearchOpen(!isSearchOpen);
   };
 
+  const openLegend = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    legendSheetRef.current?.expand();
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
       {/* Main Header Row */}
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{t('home.title')}</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{t('home.title')}</Text>
+          <Pressable onPress={openLegend} style={styles.infoButton} hitSlop={8}>
+            <Info size={16} color="#9CA3AF" strokeWidth={2} />
+          </Pressable>
+        </View>
 
         <View style={styles.actions}>
           {/* Search Button */}
@@ -177,6 +252,15 @@ export function HomeHeader({
           </View>
         </Animated.View>
       )}
+
+      {/* Legend Bottom Sheet */}
+      <GlassBottomSheet
+        ref={legendSheetRef}
+        snapPoints={['62%']}
+        hideTabBar={false}
+      >
+        <IndicatorLegendContent />
+      </GlassBottomSheet>
     </View>
   );
 }
@@ -282,5 +366,88 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
     paddingVertical: 0,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoButton: {
+    padding: 4,
+  },
+  // Bottom sheet legend styles (light theme)
+  legendContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 4,
+  },
+  legendTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 20,
+  },
+  legendItems: {
+    gap: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  legendIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(156, 163, 175, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legendTextContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  legendLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  legendDescription: {
+    fontSize: 13,
+    color: '#6B7280',
+    lineHeight: 17,
+  },
+  legendColorGuide: {
+    marginTop: 28,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.06)',
+  },
+  legendSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 14,
+  },
+  colorChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  colorChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    gap: 8,
+  },
+  colorDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  colorChipLabel: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

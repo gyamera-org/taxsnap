@@ -1,6 +1,6 @@
 import { Alert, AlertButton, AlertOptions } from 'react-native';
 
-interface DarkAlertOptions {
+interface LightAlertOptions {
   title: string;
   message?: string;
   buttons?: AlertButton[];
@@ -8,18 +8,18 @@ interface DarkAlertOptions {
 }
 
 /**
- * Dark themed alert utility
- * Uses userInterfaceStyle: 'dark' to ensure consistent dark appearance
+ * Light themed alert utility
+ * Uses userInterfaceStyle: 'light' to ensure consistent light appearance
  */
 export function showAlert({
   title,
   message,
   buttons = [{ text: 'OK' }],
   options,
-}: DarkAlertOptions) {
+}: LightAlertOptions) {
   Alert.alert(title, message, buttons, {
     ...options,
-    userInterfaceStyle: 'dark',
+    userInterfaceStyle: 'light',
   });
 }
 

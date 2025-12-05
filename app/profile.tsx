@@ -65,7 +65,7 @@ export default function ProfileScreen() {
 
     setUploadingAvatar(true);
     try {
-      const fileName = `${user.id}-${Date.now()}.jpg`;
+      const fileName = `${user.id}/${Date.now()}.jpg`;
       const formData = new FormData();
 
       // @ts-ignore
@@ -131,8 +131,8 @@ export default function ProfileScreen() {
         <SaveButton onPress={handleSave} disabled={!hasChanges} loading={updateAccount.isPending} />
       }
     >
-      {/* Avatar Section */}
-      <View style={styles.avatarSection}>
+      {/* Avatar Section - Temporarily disabled */}
+      {/* <View style={styles.avatarSection}>
         <View style={styles.avatarContainer}>
           {avatarUrl ? (
             <Image source={{ uri: avatarUrl }} style={styles.avatar} />
@@ -157,7 +157,7 @@ export default function ProfileScreen() {
             </Pressable>
           )}
         </View>
-      </View>
+      </View> */}
 
       <FormField label={t('profile.name')} value={name} onChangeText={setName} placeholder={t('profile.namePlaceholder')} />
 

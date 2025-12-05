@@ -1,10 +1,11 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
-import BottomSheet, {
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
+import { StyleSheet, View, ViewStyle } from 'react-native';
+import {
+  BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetView,
-  BottomSheetProps,
 } from '@gorhom/bottom-sheet';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabBar } from '@/context/tab-bar-provider';
 
@@ -24,11 +25,19 @@ interface GlassBottomSheetProps {
   contentStyle?: ViewStyle;
 }
 
+// Custom background component with blur effect
+const GlassBackground = () => (
+  <View style={styles.backgroundContainer}>
+    <BlurView intensity={80} tint="light" style={styles.blurView} />
+    <View style={styles.glassOverlay} />
+  </View>
+);
+
 export const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheetProps>(
   (
     {
       children,
-      snapPoints = ['40%'],
+      snapPoints: snapPointsProp = ['40%'],
       onClose,
       onChange,
       enablePanDownToClose = true,
@@ -38,16 +47,18 @@ export const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheet
     ref
   ) => {
     const insets = useSafeAreaInsets();
-    const bottomSheetRef = useRef<BottomSheet>(null);
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
     const { hideTabBar, showTabBar } = useTabBar();
+
+    const snapPoints = useMemo(() => snapPointsProp, [snapPointsProp]);
 
     useImperativeHandle(ref, () => ({
       expand: () => {
         if (shouldHideTabBar) hideTabBar();
-        bottomSheetRef.current?.expand();
+        bottomSheetRef.current?.present();
       },
       close: () => {
-        bottomSheetRef.current?.close();
+        bottomSheetRef.current?.dismiss();
       },
       snapToIndex: (index: number) => {
         bottomSheetRef.current?.snapToIndex(index);
@@ -65,36 +76,41 @@ export const GlassBottomSheet = forwardRef<GlassBottomSheetRef, GlassBottomSheet
       [showTabBar, shouldHideTabBar, onClose, onChange]
     );
 
+    const handleDismiss = useCallback(() => {
+      if (shouldHideTabBar) showTabBar();
+      onClose?.();
+    }, [showTabBar, shouldHideTabBar, onClose]);
+
     const renderBackdrop = useCallback(
       (props: any) => (
         <BottomSheetBackdrop
           {...props}
           disappearsOnIndex={-1}
           appearsOnIndex={0}
-          opacity={0.7}
+          opacity={0.4}
         />
       ),
       []
     );
 
     return (
-      <BottomSheet
+      <BottomSheetModal
         ref={bottomSheetRef}
-        index={-1}
         snapPoints={snapPoints}
         enablePanDownToClose={enablePanDownToClose}
         backdropComponent={renderBackdrop}
         onChange={handleSheetChange}
-        backgroundStyle={styles.sheetBackground}
+        onDismiss={handleDismiss}
+        backgroundComponent={GlassBackground}
         handleIndicatorStyle={styles.handleIndicator}
         style={styles.sheet}
       >
         <BottomSheetView
-          style={[styles.sheetContent, { paddingBottom: insets.bottom }, contentStyle]}
+          style={[styles.sheetContent, { paddingBottom: insets.bottom + 20 }, contentStyle]}
         >
           {children}
         </BottomSheetView>
-      </BottomSheet>
+      </BottomSheetModal>
     );
   }
 );
@@ -103,20 +119,34 @@ GlassBottomSheet.displayName = 'GlassBottomSheet';
 
 const styles = StyleSheet.create({
   sheet: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
   },
-  sheetBackground: {
-    backgroundColor: '#151515',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    overflow: 'hidden',
+  },
+  blurView: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  glassOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    borderBottomWidth: 0,
   },
   handleIndicator: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
     width: 40,
+    height: 4,
   },
   sheetContent: {
     flex: 1,

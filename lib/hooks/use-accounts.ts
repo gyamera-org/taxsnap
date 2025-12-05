@@ -19,7 +19,7 @@ export interface Account {
   name: string;
   email: string;
   username: string;
-  avatar: string;
+  avatar_url: string | null;
   onboarding_completed: boolean;
   date_of_birth: string | null;
   // Onboarding preferences
@@ -65,7 +65,7 @@ interface UpdateAccountPayload {
   username?: string;
   onboarding_completed?: boolean;
   date_of_birth?: string;
-  avatar?: string;
+  avatar_url?: string | null;
   onboarding_preferences?: OnboardingPreferences;
 }
 
@@ -211,5 +211,145 @@ export function useSubscription(
       };
     },
     ...options,
+  });
+}
+
+// ============================================
+// ONBOARDING PROFILE HOOKS
+// ============================================
+
+export interface OnboardingProfile {
+  id: string;
+  user_id: string;
+  primary_goal: string | null;
+  symptoms: string[];
+  daily_struggles: string[];
+  food_relationship: string | null;
+  feel_good_foods: string[];
+  guilt_foods: string[];
+  activity_level: string | null;
+  referral_source: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OnboardingProfileInput {
+  primary_goal?: string | null;
+  symptoms?: string[];
+  daily_struggles?: string[];
+  food_relationship?: string | null;
+  feel_good_foods?: string[];
+  guilt_foods?: string[];
+  activity_level?: string | null;
+  referral_source?: string | null;
+}
+
+export function useOnboardingProfile(
+  options?: Omit<UseQueryOptions<OnboardingProfile | null, Error>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: queryKeys.accounts.onboardingProfile(),
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('onboarding_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') return null; // Not found
+        throw error;
+      }
+
+      return data as OnboardingProfile;
+    },
+    ...options,
+  });
+}
+
+export function useSaveOnboardingProfile() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profile: OnboardingProfileInput) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Check if profile already exists
+      const { data: existing } = await supabase
+        .from('onboarding_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      let result;
+
+      if (existing) {
+        // Update existing profile
+        const { data, error } = await supabase
+          .from('onboarding_profiles')
+          .update(profile)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      } else {
+        // Insert new profile
+        const { data, error } = await supabase
+          .from('onboarding_profiles')
+          .insert({
+            user_id: user.id,
+            ...profile,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      }
+
+      // Also mark onboarding as completed in accounts table
+      await supabase
+        .from('accounts')
+        .update({ onboarding_completed: true })
+        .eq('id', user.id);
+
+      return result as OnboardingProfile;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.accounts.onboardingProfile() });
+      qc.invalidateQueries({ queryKey: queryKeys.accounts.detail() });
+    },
+    onError: (err: any) => handleError(err, 'Failed to save onboarding profile'),
+  });
+}
+
+export function useUpdateOnboardingProfile() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profile: OnboardingProfileInput) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('onboarding_profiles')
+        .update(profile)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as OnboardingProfile;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.accounts.onboardingProfile() });
+    },
+    onError: (err: any) => handleError(err, 'Failed to update profile'),
   });
 }

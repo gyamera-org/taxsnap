@@ -1,8 +1,8 @@
 require "jwt"
 
-key_file = "/Users/josephinegyamera/gyamera-org/debt-free/AuthKey_7549G4GFFR.p8"
+key_file = "/Users/josephinegyamera/gyamera-org/pcos-food-scanner/AuthKey_454G98HVJ4.p8"
 team_id = "2AFY6WW292"
-client_id = "com.debt-free.app"
+client_id = "com.pcos-food-scanner.app"
 key_id = "7549G4GFFR"
 validity_period = 180 # In days. Max 180 (6 months) according to Apple docs.
 

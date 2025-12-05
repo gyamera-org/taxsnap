@@ -30,7 +30,7 @@ interface SubscriptionContextValue extends SubscriptionState {
 const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(undefined);
 
 export function RevenueCatProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState<SubscriptionState>({
     isSubscribed: false,
     isTrialing: false,
@@ -47,6 +47,11 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
 
   // Load subscription when user changes
   useEffect(() => {
+    // Don't do anything until auth is done loading
+    if (authLoading) {
+      return;
+    }
+
     if (user) {
       // Set loading to true immediately while we fetch subscription status
       setState((prev) => ({ ...prev, loading: true }));
@@ -68,7 +73,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         loading: false,
       }));
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const initializeRevenueCat = async () => {
     try {

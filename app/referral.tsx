@@ -4,19 +4,18 @@ import { toast } from 'sonner-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { FormPage } from '@/components/ui/form-page';
-import { Copy, Share2, DollarSign } from 'lucide-react-native';
+import { Copy, Share2, Heart } from 'lucide-react-native';
 import { APP_URLS } from '@/lib/config/urls';
 import { useTranslation } from 'react-i18next';
 
-const REFERRAL_CODE = 'PCOS2024';
-const REFERRAL_LINK = `${APP_URLS.baseUrl}/invite/${REFERRAL_CODE}`;
+const SHARE_LINK = APP_URLS.appStore;
 
 export default function ReferralScreen() {
   const { t } = useTranslation();
 
-  const handleCopyCode = async () => {
+  const handleCopyLink = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await Clipboard.setStringAsync(REFERRAL_CODE);
+    await Clipboard.setStringAsync(SHARE_LINK);
     toast.success(t('referral.codeCopied'));
   };
 
@@ -24,7 +23,7 @@ export default function ReferralScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       await Share.share({
-        message: t('referral.shareMessage', { code: REFERRAL_CODE, link: REFERRAL_LINK }),
+        message: t('referral.shareMessage', { link: SHARE_LINK }),
       });
     } catch (error) {
       // User cancelled
@@ -49,7 +48,7 @@ export default function ReferralScreen() {
           <View className="p-6">
             <View className="items-center">
               <View className="w-16 h-16 rounded-2xl bg-white/20 items-center justify-center mb-4">
-                <DollarSign size={32} color="#ffffff" />
+                <Heart size={32} color="#ffffff" />
               </View>
               <Text className="text-white text-2xl font-bold text-center">
                 {t('referral.hero.title')}
@@ -76,9 +75,9 @@ export default function ReferralScreen() {
             {t('referral.yourCode')}
           </Text>
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-900 text-3xl font-bold tracking-widest">{REFERRAL_CODE}</Text>
+            <Text className="text-gray-900 text-base font-semibold flex-1 mr-3" numberOfLines={1}>{SHARE_LINK}</Text>
             <Pressable
-              onPress={handleCopyCode}
+              onPress={handleCopyLink}
               className="w-12 h-12 rounded-xl bg-teal-500 items-center justify-center"
             >
               <Copy size={20} color="#ffffff" />
@@ -107,7 +106,7 @@ export default function ReferralScreen() {
         <View className="p-5">
           <View className="flex-row items-center mb-4">
             <View className="w-8 h-8 rounded-full bg-teal-500 items-center justify-center mr-3">
-              <DollarSign size={16} color="#ffffff" />
+              <Heart size={16} color="#ffffff" />
             </View>
             <Text className="text-teal-900 font-bold text-base">{t('referral.howToEarn')}</Text>
           </View>

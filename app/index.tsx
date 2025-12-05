@@ -35,6 +35,14 @@ export default function Index() {
     prepare();
   }, []);
 
+  // Hide splash screen when auth loading is complete
+  const onLayoutRootView = useCallback(() => {
+    if (appIsReady && !authLoading) {
+      SplashScreen.hide();
+    }
+  }, [appIsReady, authLoading]);
+
+  // Handle routing when user and subscription status are known
   useEffect(() => {
     if (!appIsReady || authLoading) {
       return;
@@ -58,12 +66,6 @@ export default function Index() {
     }
   }, [appIsReady, user, authLoading, subscriptionLoading, isSubscribed]);
 
-  const onLayoutRootView = useCallback(() => {
-    if (appIsReady && !authLoading) {
-      SplashScreen.hide();
-    }
-  }, [appIsReady, authLoading]);
-
   // Only wait for auth loading initially
   if (!appIsReady || authLoading) {
     return null;
@@ -72,10 +74,7 @@ export default function Index() {
   // If user exists but subscription is still loading, show loader
   if (user && subscriptionLoading) {
     return (
-      <View
-        className="flex-1 bg-white items-center justify-center"
-        onLayout={onLayoutRootView}
-      >
+      <View className="flex-1 bg-white items-center justify-center" onLayout={onLayoutRootView}>
         <ActivityIndicator size="large" color="#0D9488" />
       </View>
     );
@@ -92,10 +91,7 @@ export default function Index() {
 
   // User exists -> show loader while navigating
   return (
-    <View
-      className="flex-1 bg-white items-center justify-center"
-      onLayout={onLayoutRootView}
-    >
+    <View className="flex-1 bg-white items-center justify-center" onLayout={onLayoutRootView}>
       <ActivityIndicator size="large" color="#0D9488" />
     </View>
   );
