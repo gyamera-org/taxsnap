@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { View, Text, ScrollView, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Alert } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle } from 'react-native-svg';
 import Animated, {
@@ -15,7 +16,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { DEMO_MODE, getDemoScanById, DEMO_IMAGES } from '@/lib/config/demo-data';
-import { useScan, useToggleFavorite } from '@/lib/hooks/use-scans';
+import { useScan, useToggleFavorite, useDeleteScan } from '@/lib/hooks/use-scans';
 import type { ScanResult, ScanStatus } from '@/lib/types/scan';
 import * as Haptics from 'expo-haptics';
 
@@ -32,6 +33,14 @@ function BookmarkIcon({ color = '#111827', size = 24, filled = false }: { color?
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'} stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <Path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </Svg>
+  );
+}
+
+function TrashIcon({ color = '#111827', size = 24 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
     </Svg>
   );
 }
@@ -307,6 +316,7 @@ export default function ScanDetailScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const toggleFavorite = useToggleFavorite();
+  const deleteScan = useDeleteScan();
   const [imageLoaded, setImageLoaded] = useState(false);
 
   // Get scan data
@@ -318,6 +328,30 @@ export default function ScanDetailScreen() {
     if (!scan) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     toggleFavorite.mutate(scan);
+  };
+
+  const handleDelete = () => {
+    if (!scan) return;
+
+    Alert.alert(
+      t('scan.deleteTitle'),
+      t('scan.deleteMessage'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            deleteScan.mutate(scan.id);
+            router.back();
+          },
+        },
+      ]
+    );
   };
 
   if (!scan && !isLoading) {
@@ -384,14 +418,14 @@ export default function ScanDetailScreen() {
           <Animated.View entering={FadeIn.duration(400)}>
             <View style={styles.heroImageContainer}>
               {scan.image_url.startsWith('local:') ? (
-                <Image
+                <FastImage
                   source={DEMO_IMAGES[scan.image_url.replace('local:', '') as keyof typeof DEMO_IMAGES]}
                   style={styles.heroImage}
                 />
               ) : (
                 <>
                   {!imageLoaded && <HeroImageSkeleton />}
-                  <Image
+                  <FastImage
                     source={{ uri: scan.image_url }}
                     style={[styles.heroImage, !imageLoaded && styles.imageHidden]}
                     onLoad={() => setImageLoaded(true)}
@@ -403,9 +437,14 @@ export default function ScanDetailScreen() {
               <Pressable onPress={() => router.back()} style={styles.headerButtonDark}>
                 <ChevronLeftIcon color="#FFFFFF" />
               </Pressable>
-              <Pressable onPress={handleToggleFavorite} style={styles.headerButtonDark}>
-                <BookmarkIcon color="#FFFFFF" filled={scan.is_favorite} />
-              </Pressable>
+              <View style={styles.headerRightButtons}>
+                <Pressable onPress={handleToggleFavorite} style={styles.headerButtonDark}>
+                  <BookmarkIcon color="#FFFFFF" filled={scan.is_favorite} />
+                </Pressable>
+                <Pressable onPress={handleDelete} style={styles.headerButtonDark}>
+                  <TrashIcon color="#FFFFFF" size={22} />
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
         )}
@@ -501,9 +540,14 @@ export default function ScanDetailScreen() {
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <ChevronLeftIcon />
           </Pressable>
-          <Pressable onPress={handleToggleFavorite} style={styles.backButton}>
-            <BookmarkIcon filled={scan.is_favorite} />
-          </Pressable>
+          <View style={styles.headerRightButtons}>
+            <Pressable onPress={handleToggleFavorite} style={styles.backButton}>
+              <BookmarkIcon filled={scan.is_favorite} />
+            </Pressable>
+            <Pressable onPress={handleDelete} style={styles.backButton}>
+              <TrashIcon size={22} />
+            </Pressable>
+          </View>
         </View>
       )}
     </View>
@@ -592,6 +636,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  headerRightButtons: {
+    flexDirection: 'row',
+    gap: 10,
   },
   headerNoImage: {
     position: 'absolute',

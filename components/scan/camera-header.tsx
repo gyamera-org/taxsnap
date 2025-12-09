@@ -1,5 +1,5 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { X, Zap, ZapOff } from 'lucide-react-native';
+import { X, Zap, ZapOff, HelpCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 interface CameraHeaderProps {
@@ -7,6 +7,7 @@ interface CameraHeaderProps {
   flash: boolean;
   onClose: () => void;
   onToggleFlash: () => void;
+  onHelp?: () => void;
 }
 
 export function CameraHeader({
@@ -14,6 +15,7 @@ export function CameraHeader({
   flash,
   onClose,
   onToggleFlash,
+  onHelp,
 }: CameraHeaderProps) {
   const { t } = useTranslation();
   const displayTitle = title || t('scan.title');
@@ -23,13 +25,20 @@ export function CameraHeader({
         <X size={24} color="#FFFFFF" />
       </Pressable>
       <Text style={styles.title}>{displayTitle}</Text>
-      <Pressable onPress={onToggleFlash} style={styles.button}>
-        {flash ? (
-          <Zap size={22} color="#FFD700" fill="#FFD700" />
-        ) : (
-          <ZapOff size={22} color="#FFFFFF" />
+      <View style={styles.rightButtons}>
+        {onHelp && (
+          <Pressable onPress={onHelp} style={styles.button}>
+            <HelpCircle size={22} color="#FFFFFF" />
+          </Pressable>
         )}
-      </Pressable>
+        <Pressable onPress={onToggleFlash} style={styles.button}>
+          {flash ? (
+            <Zap size={22} color="#FFD700" fill="#FFD700" />
+          ) : (
+            <ZapOff size={22} color="#FFFFFF" />
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -41,6 +50,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 8,
+  },
+  rightButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   button: {
     width: 40,

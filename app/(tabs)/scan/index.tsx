@@ -13,6 +13,7 @@ import {
   CameraHeader,
   CameraControls,
   ScanFrame,
+  ScanHelpModal,
 } from '@/components/scan';
 
 export default function ScanScreen() {
@@ -24,6 +25,7 @@ export default function ScanScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [flash, setFlash] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
 
   // Hide tab bar when screen is focused, show when leaving
@@ -49,6 +51,15 @@ export default function ScanScreen() {
   const toggleFlash = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setFlash((prev) => !prev);
+  }, []);
+
+  const handleOpenHelp = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowHelp(true);
+  }, []);
+
+  const handleCloseHelp = useCallback(() => {
+    setShowHelp(false);
   }, []);
 
   const toggleCameraFacing = useCallback(() => {
@@ -172,6 +183,7 @@ export default function ScanScreen() {
             flash={flash}
             onClose={handleClose}
             onToggleFlash={toggleFlash}
+            onHelp={handleOpenHelp}
           />
 
           <ScanFrame />
@@ -184,6 +196,8 @@ export default function ScanScreen() {
           />
         </SafeAreaView>
       </CameraView>
+
+      <ScanHelpModal visible={showHelp} onClose={handleCloseHelp} />
     </View>
   );
 }

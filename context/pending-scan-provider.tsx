@@ -38,92 +38,94 @@ export function PendingScanProvider({ children }: { children: ReactNode }) {
     setPendingScan(null);
   }, []);
 
-  const startScan = useCallback(async (imageBase64: string, imagePreviewUri?: string) => {
-    if (!session?.access_token || !user) {
-      toast.error(t('errors.notAuthenticated'));
-      return;
-    }
-
-    // Create a temporary pending scan ID
-    const tempId = `pending-${Date.now()}`;
-
-    // Set pending scan state immediately
-    setPendingScan({
-      id: tempId,
-      imageBase64,
-      imagePreviewUri,
-      progress: 0,
-      createdAt: new Date(),
-    });
-
-    // Simulate progress updates
-    const progressInterval = setInterval(() => {
-      setPendingScan(prev => {
-        if (!prev) return null;
-        const newProgress = Math.min(prev.progress + Math.random() * 15, 90);
-        return { ...prev, progress: newProgress };
-      });
-    }, 500);
-
-    try {
-      // Call the analyze-food edge function with language preference
-      const response = await supabase.functions.invoke('analyze-food', {
-        body: {
-          image_base64: imageBase64,
-          language,
-        },
-      });
-
-      clearInterval(progressInterval);
-
-      if (response.error) {
-        throw new Error(response.error.message || 'Failed to analyze food');
+  const startScan = useCallback(
+    async (imageBase64: string, imagePreviewUri?: string) => {
+      if (!session?.access_token || !user) {
+        toast.error(t('errors.notAuthenticated'));
+        return;
       }
 
-      const data = response.data as { success: boolean; scan: ScanResult };
+      // Create a temporary pending scan ID
+      const tempId = `pending-${Date.now()}`;
 
-      if (!data.success) {
-        throw new Error('Analysis failed');
+      // Set pending scan state immediately
+      setPendingScan({
+        id: tempId,
+        imageBase64,
+        imagePreviewUri,
+        progress: 0,
+        createdAt: new Date(),
+      });
+
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setPendingScan((prev) => {
+          if (!prev) return null;
+          const newProgress = Math.min(prev.progress + Math.random() * 15, 90);
+          return { ...prev, progress: newProgress };
+        });
+      }, 500);
+
+      try {
+        // Call the analyze-food edge function with language preference
+        const response = await supabase.functions.invoke('analyze-food', {
+          body: {
+            image_base64: imageBase64,
+            language,
+          },
+        });
+
+        clearInterval(progressInterval);
+
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to analyze food');
+        }
+
+        const data = response.data as { success: boolean; scan: ScanResult };
+
+        if (!data.success) {
+          throw new Error('Analysis failed');
+        }
+
+        // Set progress to 100%
+        setPendingScan((prev) => (prev ? { ...prev, progress: 100 } : null));
+
+        // Small delay to show 100% progress
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Clear pending scan
+        clearPendingScan();
+
+        // Invalidate scan lists to show the new scan
+        queryClient.invalidateQueries({ queryKey: scanKeys.lists() });
+
+        // Success feedback
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        // Show success toast with action to view result
+        toast.success(t('scan.analysisComplete'), {
+          description: data.scan.name,
+          action: {
+            label: t('scan.viewResult'),
+            onClick: () => router.push(`/scan/${data.scan.id}`),
+          },
+          duration: 8000,
+        });
+      } catch (error) {
+        clearInterval(progressInterval);
+        clearPendingScan();
+
+        console.error('Error analyzing food:', error);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+        const errorMessage = error instanceof Error ? error.message : t('errors.generic');
+        toast.error(t('scan.analysisFailed'), {
+          description: errorMessage,
+        });
       }
-
-      // Set progress to 100%
-      setPendingScan(prev => prev ? { ...prev, progress: 100 } : null);
-
-      // Small delay to show 100% progress
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Clear pending scan
-      clearPendingScan();
-
-      // Invalidate scan lists to show the new scan
-      queryClient.invalidateQueries({ queryKey: scanKeys.lists() });
-
-      // Success feedback
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      // Show success toast with action to view result
-      toast.success(t('scan.analysisComplete'), {
-        description: data.scan.name,
-        action: {
-          label: t('scan.viewResult'),
-          onClick: () => router.push(`/scan/${data.scan.id}`),
-        },
-        duration: 5000,
-      });
-
-    } catch (error) {
-      clearInterval(progressInterval);
-      clearPendingScan();
-
-      console.error('Error analyzing food:', error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-
-      const errorMessage = error instanceof Error ? error.message : t('errors.generic');
-      toast.error(t('scan.analysisFailed'), {
-        description: errorMessage,
-      });
-    }
-  }, [session, user, language, queryClient, router, t, clearPendingScan]);
+    },
+    [session, user, language, queryClient, router, t, clearPendingScan]
+  );
 
   const value = {
     pendingScan,
@@ -131,11 +133,7 @@ export function PendingScanProvider({ children }: { children: ReactNode }) {
     clearPendingScan,
   };
 
-  return (
-    <PendingScanContext.Provider value={value}>
-      {children}
-    </PendingScanContext.Provider>
-  );
+  return <PendingScanContext.Provider value={value}>{children}</PendingScanContext.Provider>;
 }
 
 export function usePendingScan(): PendingScanContextType {

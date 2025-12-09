@@ -16,6 +16,21 @@ export default {
     ok: 'OK',
   },
 
+  // Welcome Flow (multi-step intro)
+  welcomeFlow: {
+    continue: 'Continue',
+    step1: {
+      title: 'Finally know what\'s safe to eat with PCOS.',
+      subtitle: 'No calorie counting. No toxic yoyo diets. Just simple answers.',
+    },
+    step2: {
+      title: 'Snap a photo of any food',
+    },
+    step3: {
+      title: 'Know exactly what to eat',
+    },
+  },
+
   // Welcome Screen
   welcome: {
     appName: 'PCOS Scanner',
@@ -215,6 +230,7 @@ export default {
     analysisComplete: 'Analysis Complete',
     analysisFailed: 'Analysis Failed',
     viewResult: 'View Result',
+    positionFood: 'Position the food item within the frame',
     cameraPermission: {
       title: 'Camera Access Required',
       description: 'To scan food items, please enable camera access in your device settings.',
@@ -223,6 +239,20 @@ export default {
     capture: 'Capture',
     photoCaptured: 'Photo Captured',
     analysisComingSoon: 'Food analysis feature coming soon! We will analyze this food item for PCOS compatibility.',
+    // Swipe actions
+    deleteTitle: 'Delete Scan',
+    deleteMessage: 'Are you sure you want to delete this scan?',
+    save: 'Save',
+    unsave: 'Unsave',
+    // Help tutorial
+    help: {
+      title: 'How to Scan',
+      step1Title: 'Take a Photo',
+      step1Description: 'Point your camera at any food item, meal, or nutrition label',
+      step2Title: 'Get Results',
+      step2Description: 'See instant PCOS-friendly ratings and personalized recommendations',
+      gotIt: 'Got it!',
+    },
   },
 
   // Scan Results
@@ -298,24 +328,23 @@ export default {
 
   // Paywall
   paywall: {
-    title: 'Unlock Full Access',
-    subtitle: 'Your personal PCOS nutrition guide',
+    title: 'Know What You\'re Eating',
+    subtitle: 'Scan any food to instantly see how it affects your blood sugar, hormones, and inflammation. Make confident choices for your PCOS.',
     features: {
-      unlimitedScans: {
-        title: 'Unlimited Food Scans',
-        description: 'Scan any food item to check PCOS compatibility',
+      bloodSugar: {
+        title: 'See how foods spike your blood sugar',
       },
-      aiAnalysis: {
-        title: 'AI-Powered Analysis',
-        description: 'Get detailed ingredient breakdowns and health insights',
+      inflammation: {
+        title: 'Spot foods that trigger inflammation',
       },
-      personalized: {
-        title: 'Personalized Recommendations',
-        description: 'Food suggestions tailored to your PCOS needs',
+      hormones: {
+        title: 'Understand hormone impact instantly',
       },
-      scienceBacked: {
-        title: 'Science-Backed Results',
-        description: 'Analysis based on latest PCOS research',
+      hiddenSugars: {
+        title: 'Find hidden sugars & additives',
+      },
+      personalizedTips: {
+        title: 'Get tips based on your symptoms',
       },
     },
     plans: {
@@ -336,6 +365,7 @@ export default {
       thenPrice: 'Then {{price}}/year',
       perMonth: '{{price}}/month',
     },
+    save30: 'Save 30%',
     continueForFree: 'Continue for Free',
     restore: 'Restore Purchases',
     restoreSuccess: 'Purchases restored successfully',
@@ -417,6 +447,7 @@ export default {
       ko: 'Korean',
       ar: 'Arabic',
       hi: 'Hindi',
+      tr: 'Turkish',
     },
   },
 
@@ -556,5 +587,17 @@ export default {
     network: 'Network error. Please check your connection.',
     camera: 'Failed to capture photo. Please try again.',
     notAuthenticated: 'Please sign in to continue.',
+  },
+
+  // Auth Toasts
+  authToasts: {
+    signInFailed: 'Failed to complete sign in',
+    signInAppleFailed: 'Failed to sign in with Apple',
+    signInGoogleFailed: 'Failed to sign in with Google',
+    signOutFailed: 'Failed to sign out',
+    accountDeleted: 'Account deleted successfully',
+    accountDeleteFailed: 'Failed to delete account',
+    authFailed: 'Authentication failed',
+    completingSignIn: 'Completing sign in...',
   },
 };

@@ -16,6 +16,21 @@ export default {
     ok: 'OK',
   },
 
+  // Welcome Flow (multi-step intro)
+  welcomeFlow: {
+    continue: 'Continuar',
+    step1: {
+      title: 'Por fin sabrás qué es seguro comer con SOP.',
+      subtitle: 'Sin contar calorías. Sin dietas yoyo tóxicas. Solo respuestas simples.',
+    },
+    step2: {
+      title: 'Toma una foto de cualquier comida',
+    },
+    step3: {
+      title: 'Sabe exactamente qué comer',
+    },
+  },
+
   // Welcome Screen
   welcome: {
     appName: 'PCOS Scanner',
@@ -212,6 +227,7 @@ export default {
     analyzing: 'Analizando...',
     analyzingImage: 'Analizando Imagen',
     notifyWhenDone: '¡Te notificaremos cuando esté listo!',
+    positionFood: 'Coloca el alimento dentro del marco',
     cameraPermission: {
       title: 'Acceso a Cámara Requerido',
       description: 'Para escanear alimentos, por favor habilita el acceso a la cámara en la configuración de tu dispositivo.',
@@ -220,6 +236,20 @@ export default {
     capture: 'Capturar',
     photoCaptured: 'Foto Capturada',
     analysisComingSoon: '¡Función de análisis de alimentos próximamente! Analizaremos este alimento para compatibilidad con PCOS.',
+    // Swipe actions
+    deleteTitle: 'Eliminar Escaneo',
+    deleteMessage: '¿Estás segura de que quieres eliminar este escaneo?',
+    save: 'Guardar',
+    unsave: 'Quitar',
+    // Help tutorial
+    help: {
+      title: 'Cómo Escanear',
+      step1Title: 'Toma una Foto',
+      step1Description: 'Apunta tu cámara a cualquier alimento, comida o etiqueta nutricional',
+      step2Title: 'Obtén Resultados',
+      step2Description: 'Ve calificaciones instantáneas para SOP y recomendaciones personalizadas',
+      gotIt: '¡Entendido!',
+    },
   },
 
   // Scan Results
@@ -295,24 +325,23 @@ export default {
 
   // Paywall
   paywall: {
-    title: 'Desbloquear Acceso Completo',
-    subtitle: 'Tu guía personal de nutrición para PCOS',
+    title: 'Sabe Lo Que Comes',
+    subtitle: 'Escanea cualquier alimento para ver al instante cómo afecta tu azúcar, hormonas e inflamación. Toma decisiones seguras para tu SOP.',
     features: {
-      unlimitedScans: {
-        title: 'Escaneos de Alimentos Ilimitados',
-        description: 'Escanea cualquier alimento para verificar compatibilidad con PCOS',
+      bloodSugar: {
+        title: 'Mira cómo los alimentos afectan tu azúcar',
       },
-      aiAnalysis: {
-        title: 'Análisis Impulsado por IA',
-        description: 'Obtén desglose detallado de ingredientes y perspectivas de salud',
+      inflammation: {
+        title: 'Detecta alimentos que causan inflamación',
       },
-      personalized: {
-        title: 'Recomendaciones Personalizadas',
-        description: 'Sugerencias de alimentos adaptadas a tus necesidades PCOS',
+      hormones: {
+        title: 'Entiende el impacto hormonal al instante',
       },
-      scienceBacked: {
-        title: 'Resultados Respaldados por Ciencia',
-        description: 'Análisis basado en la última investigación de PCOS',
+      hiddenSugars: {
+        title: 'Encuentra azúcares y aditivos ocultos',
+      },
+      personalizedTips: {
+        title: 'Consejos según tus síntomas',
       },
     },
     plans: {
@@ -333,6 +362,7 @@ export default {
       thenPrice: 'Luego {{price}}/año',
       perMonth: '{{price}}/mes',
     },
+    save30: 'Ahorra 30%',
     continueForFree: 'Continuar Gratis',
     restore: 'Restaurar Compras',
     restoreSuccess: 'Compras restauradas exitosamente',
@@ -414,6 +444,7 @@ export default {
       ko: 'Coreano',
       ar: 'Árabe',
       hi: 'Hindi',
+      tr: 'Turco',
     },
   },
 
@@ -552,5 +583,18 @@ export default {
     generic: 'Algo salió mal. Por favor intenta de nuevo.',
     network: 'Error de red. Por favor verifica tu conexión.',
     camera: 'Error al capturar foto. Por favor intenta de nuevo.',
+    notAuthenticated: 'Por favor inicia sesión para continuar.',
+  },
+
+  // Auth Toasts
+  authToasts: {
+    signInFailed: 'Error al completar el inicio de sesión',
+    signInAppleFailed: 'Error al iniciar sesión con Apple',
+    signInGoogleFailed: 'Error al iniciar sesión con Google',
+    signOutFailed: 'Error al cerrar sesión',
+    accountDeleted: 'Cuenta eliminada exitosamente',
+    accountDeleteFailed: 'Error al eliminar la cuenta',
+    authFailed: 'Error de autenticación',
+    completingSignIn: 'Completando inicio de sesión...',
   },
 };

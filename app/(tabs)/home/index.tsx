@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { HomeHeader, ScanList, type TabType } from '@/components/home';
-import { useScans, useToggleFavorite, useScansRealtime } from '@/lib/hooks/use-scans';
+import { useScans, useToggleFavorite, useDeleteScan, useScansRealtime } from '@/lib/hooks/use-scans';
 import { usePendingScan } from '@/context/pending-scan-provider';
 import { DEMO_MODE, DEMO_SCANS } from '@/lib/config/demo-data';
 import type { ScanResult } from '@/lib/types/scan';
@@ -18,6 +18,7 @@ export default function HomeScreen() {
   // Fetch scans from backend (only when not in demo mode)
   const { data: apiScans = [], isLoading: apiLoading, refetch, isRefetching } = useScans();
   const toggleFavorite = useToggleFavorite();
+  const deleteScan = useDeleteScan();
   const { pendingScan } = usePendingScan();
 
   // Enable realtime updates for scans (invalidates queries on INSERT/UPDATE/DELETE)
@@ -45,7 +46,9 @@ export default function HomeScreen() {
   // Filter scans based on active tab and search query
   const filteredScans = useMemo(() => {
     const baseScans = scans.filter((scan) => {
-      const matchesSearch = scan.name.toLowerCase().includes(searchQuery.toLowerCase());
+      // Skip undefined/null scans
+      if (!scan) return false;
+      const matchesSearch = scan.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false;
       const matchesTab = activeTab === 'all' || (activeTab === 'saves' && scan.is_favorite);
       return matchesSearch && matchesTab;
     });
@@ -82,6 +85,15 @@ export default function HomeScreen() {
       refetch();
     }
   }, [refetch]);
+
+  const handleDeleteScan = useCallback((scan: ScanResult) => {
+    if (DEMO_MODE) {
+      // Delete in demo mode locally
+      setDemoScans((prev) => prev.filter((s) => s.id !== scan.id));
+    } else {
+      deleteScan.mutate(scan.id);
+    }
+  }, [deleteScan]);
 
   return (
     <View style={styles.container}>
@@ -126,6 +138,7 @@ export default function HomeScreen() {
         searchQuery={searchQuery}
         onScanPress={handleScanPress}
         onToggleFavorite={handleToggleFavorite}
+        onDeleteScan={handleDeleteScan}
       />
     </View>
   );

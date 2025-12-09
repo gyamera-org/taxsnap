@@ -1,100 +1,62 @@
-import { useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
   Pressable,
   StatusBar,
-  Image,
   Dimensions,
   StyleSheet,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   FadeIn,
-  FadeInDown,
-  FadeInUp,
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-  withRepeat,
-  withSequence,
-  Easing,
+  SlideInRight,
+  SlideOutLeft,
 } from 'react-native-reanimated';
-import { ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { PCOSLogo } from '@/components/icons/pcos-logo';
 import { useTranslation } from 'react-i18next';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const FRAME_WIDTH = SCREEN_WIDTH * 0.58;
+const FRAME_WIDTH = SCREEN_WIDTH * 0.7;
 const FRAME_HEIGHT = FRAME_WIDTH * 2.1;
+
+type WelcomeStep = 0 | 1 | 2;
 
 export function WelcomeScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const scanOpacity = useSharedValue(1);
-  const resultOpacity = useSharedValue(0);
+  const [currentStep, setCurrentStep] = useState<WelcomeStep>(0);
 
-  useEffect(() => {
-    const fadeDuration = 1500;
-    const holdDuration = 3500;
-
-    scanOpacity.value = withDelay(
-      holdDuration,
-      withRepeat(
-        withSequence(
-          withTiming(0, { duration: fadeDuration, easing: Easing.inOut(Easing.ease) }),
-          withDelay(
-            holdDuration,
-            withTiming(1, { duration: fadeDuration, easing: Easing.inOut(Easing.ease) })
-          ),
-          withDelay(holdDuration, withTiming(1, { duration: 0 }))
-        ),
-        -1,
-        false
-      )
-    );
-
-    resultOpacity.value = withDelay(
-      holdDuration,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: fadeDuration, easing: Easing.inOut(Easing.ease) }),
-          withDelay(
-            holdDuration,
-            withTiming(0, { duration: fadeDuration, easing: Easing.inOut(Easing.ease) })
-          ),
-          withDelay(holdDuration, withTiming(0, { duration: 0 }))
-        ),
-        -1,
-        false
-      )
-    );
-  }, []);
-
-  const scanStyle = useAnimatedStyle(() => ({
-    opacity: scanOpacity.value,
-    position: 'absolute' as const,
-  }));
-
-  const resultStyle = useAnimatedStyle(() => ({
-    opacity: resultOpacity.value,
-    position: 'absolute' as const,
-  }));
-
-  const handleGetStarted = () => {
-    router.push('/onboarding');
-  };
+  const handleContinue = useCallback(() => {
+    if (currentStep < 2) {
+      setCurrentStep((prev) => (prev + 1) as WelcomeStep);
+    } else {
+      router.push('/onboarding');
+    }
+  }, [currentStep, router]);
 
   const handleSignIn = () => {
     router.push('/auth?mode=signin');
   };
 
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return <WelcomeStep0 />;
+      case 1:
+        return <WelcomeStep1 />;
+      case 2:
+        return <WelcomeStep2 />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <View className="flex-1">
-      {/* Background gradient */}
+    <View style={styles.container}>
+      {/* Background gradient - same as app */}
       <LinearGradient
         colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
         locations={[0, 0.3, 0.7, 1]}
@@ -122,117 +84,168 @@ export function WelcomeScreen() {
       />
 
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView className="flex-1">
-        <View className="flex-1 px-6">
-          {/* Demo Screenshots with Phone Frame */}
-          <Animated.View
-            entering={FadeIn.delay(100).duration(600)}
-            className="items-center mt-4 mb-6"
-            style={{ height: FRAME_HEIGHT + 20 }}
-          >
-            {/* Phone Frame with glass effect */}
-            <View style={styles.phoneFrame}>
-              {/* Dynamic Island / Notch */}
-              <View style={styles.dynamicIsland} />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.content}>
+          {/* Step Content */}
+          <View style={styles.stepContainer}>{renderStep()}</View>
 
-              {/* Screen Container */}
-              <View style={styles.screenContainer}>
-                {/* Scan Screenshot */}
-                <Animated.View
-                  style={[
-                    {
-                      width: '100%',
-                      height: '100%',
-                      position: 'absolute',
-                    },
-                    scanStyle,
-                  ]}
-                >
-                  <Image
-                    source={require('@/assets/images/demo-scan.png')}
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="cover"
-                  />
-                </Animated.View>
-
-                {/* Result Screenshot */}
-                <Animated.View
-                  style={[
-                    {
-                      width: '100%',
-                      height: '100%',
-                      position: 'absolute',
-                    },
-                    resultStyle,
-                  ]}
-                >
-                  <Image
-                    source={require('@/assets/images/demo-result.png')}
-                    style={{ width: '100%', height: '100%' }}
-                    resizeMode="cover"
-                  />
-                </Animated.View>
-              </View>
-
-              {/* Home Indicator */}
-              <View style={styles.homeIndicator} />
-            </View>
-          </Animated.View>
-
-          {/* Brand Section - Logo and Name on same line */}
-          <Animated.View
-            entering={FadeInUp.delay(400).duration(600)}
-            className="flex-row items-center justify-center mb-3"
-          >
-            <View style={{ marginRight: 12 }}>
-              <PCOSLogo size={44} color="#000000" textColor="#ffffff" />
-            </View>
-            <Text className="text-2xl font-bold text-gray-900">{t('welcome.appName')}</Text>
-          </Animated.View>
-
-          {/* Tagline */}
-          <Animated.Text
-            entering={FadeInUp.delay(500).duration(600)}
-            className="text-base text-center px-4 mb-8 text-gray-600"
-          >
-            {t('welcome.tagline')}
-          </Animated.Text>
-
-          {/* Spacer */}
-          <View className="flex-1" />
-
-          {/* Bottom Section with Actions */}
-          <Animated.View entering={FadeInDown.delay(600).duration(600)} className="pb-8">
-            {/* Get Started Button */}
-            <Pressable onPress={handleGetStarted} style={styles.primaryButton}>
+          {/* Bottom Section */}
+          <View style={styles.bottomSection}>
+            {/* Continue Button */}
+            <Pressable onPress={handleContinue} style={styles.continueButton}>
               <LinearGradient
                 colors={['#14B8A6', '#0D9488']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.buttonGradient}
               >
-                <Text className="text-white font-bold text-lg mr-2">{t('welcome.getStarted')}</Text>
-                <ChevronRight size={20} color="#ffffff" />
+                <Text style={styles.continueButtonText}>
+                  {t('welcomeFlow.continue')}
+                </Text>
               </LinearGradient>
             </Pressable>
 
-            {/* Sign In Link - Glass style */}
-            <Pressable onPress={handleSignIn} style={styles.signInButton}>
-              <View style={styles.signInGlass}>
-                <Text className="text-gray-600 text-center">
-                  {t('welcome.alreadyHaveAccount')}{' '}
-                  <Text className="text-teal-600 font-semibold">{t('welcome.signIn')}</Text>
-                </Text>
-              </View>
-            </Pressable>
-          </Animated.View>
+            {/* Sign In Link - Only on first step */}
+            {currentStep === 0 && (
+              <Animated.View entering={FadeIn.delay(600).duration(400)}>
+                <Pressable onPress={handleSignIn} style={styles.signInButton}>
+                  <Text style={styles.signInText}>
+                    {t('welcome.alreadyHaveAccount')}{' '}
+                    <Text style={styles.signInLink}>{t('welcome.signIn')}</Text>
+                  </Text>
+                </Pressable>
+              </Animated.View>
+            )}
+          </View>
         </View>
       </SafeAreaView>
     </View>
   );
 }
 
+// Step 0: Your next healthy meal starts with a photo
+function WelcomeStep0() {
+  const { t } = useTranslation();
+
+  return (
+    <Animated.View
+      entering={FadeIn.duration(600)}
+      exiting={SlideOutLeft.duration(300)}
+      style={styles.valuePropsStep}
+    >
+      <Animated.View
+        entering={FadeIn.delay(200).duration(400)}
+        style={styles.iconContainer}
+      >
+        <FastImage
+          source={require('@/assets/images/splash-icon.png')}
+          style={styles.logoIcon}
+          resizeMode={FastImage.resizeMode.contain}
+        />
+      </Animated.View>
+      <Animated.Text
+        entering={FadeIn.delay(300).duration(400)}
+        style={styles.valuePropTitle}
+      >
+        {t('welcomeFlow.step1.title')}
+      </Animated.Text>
+      <Animated.Text
+        entering={FadeIn.delay(400).duration(400)}
+        style={styles.valuePropSubtitle}
+      >
+        {t('welcomeFlow.step1.subtitle')}
+      </Animated.Text>
+    </Animated.View>
+  );
+}
+
+// Step 1: Just snap a pic of your food
+function WelcomeStep1() {
+  const { t } = useTranslation();
+
+  return (
+    <Animated.View
+      entering={SlideInRight.duration(400)}
+      exiting={SlideOutLeft.duration(300)}
+      style={styles.mockupStep}
+    >
+      <Animated.Text
+        entering={FadeIn.delay(100).duration(400)}
+        style={styles.mockupTitle}
+      >
+        {t('welcomeFlow.step2.title')}
+      </Animated.Text>
+
+      <Animated.View
+        entering={FadeIn.delay(200).duration(500)}
+        style={styles.phoneFrame}
+      >
+        <View style={styles.dynamicIsland} />
+        <View style={styles.screenContainer}>
+          <FastImage
+            source={require('@/assets/images/demo-scan.jpg')}
+            style={styles.mockupImage}
+            resizeMode={FastImage.resizeMode.cover}
+          />
+        </View>
+        <View style={styles.homeIndicator} />
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+// Step 2: And get PCOS-friendly insights
+function WelcomeStep2() {
+  const { t } = useTranslation();
+
+  return (
+    <Animated.View
+      entering={SlideInRight.duration(400)}
+      exiting={SlideOutLeft.duration(300)}
+      style={styles.mockupStep}
+    >
+      <Animated.Text
+        entering={FadeIn.delay(100).duration(400)}
+        style={styles.mockupTitle}
+      >
+        {t('welcomeFlow.step3.title')}
+      </Animated.Text>
+
+      <Animated.View
+        entering={FadeIn.delay(200).duration(500)}
+        style={styles.phoneFrame}
+      >
+        <View style={styles.dynamicIsland} />
+        <View style={styles.screenContainer}>
+          <FastImage
+            source={require('@/assets/images/demo-result.jpg')}
+            style={styles.mockupImage}
+            resizeMode={FastImage.resizeMode.cover}
+          />
+        </View>
+        <View style={styles.homeIndicator} />
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  stepContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+
+  // Floating orbs
   orb: {
     position: 'absolute',
     borderRadius: 999,
@@ -265,12 +278,56 @@ const styles = StyleSheet.create({
     bottom: 80,
     right: 20,
   },
+
+  // Step 0 - Value Prop
+  valuePropsStep: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingBottom: 80,
+  },
+  iconContainer: {
+    marginBottom: 24,
+  },
+  logoIcon: {
+    width: 48,
+    height: 48,
+  },
+  valuePropTitle: {
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#111827',
+    lineHeight: 42,
+  },
+  valuePropSubtitle: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: '#6B7280',
+    lineHeight: 26,
+    marginTop: 12,
+  },
+
+  // Steps 1 & 2 - Mockups
+  mockupStep: {
+    flex: 1,
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  mockupTitle: {
+    fontSize: 28,
+    fontWeight: '600',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 36,
+  },
   phoneFrame: {
     width: FRAME_WIDTH,
     height: FRAME_HEIGHT,
-    backgroundColor: '#1F2937',
-    borderRadius: 40,
-    padding: 6,
+    backgroundColor: 'rgba(13, 148, 136, 0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(20, 184, 166, 0.4)',
+    borderRadius: 44,
+    padding: 8,
     shadowColor: '#0D9488',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
@@ -279,32 +336,41 @@ const styles = StyleSheet.create({
   },
   dynamicIsland: {
     position: 'absolute',
-    top: 10,
+    top: 12,
     left: '50%',
-    marginLeft: -30,
-    width: 60,
-    height: 20,
-    backgroundColor: '#1F2937',
-    borderRadius: 10,
+    marginLeft: -35,
+    width: 70,
+    height: 22,
+    backgroundColor: 'rgba(13, 148, 136, 0.3)',
+    borderRadius: 12,
     zIndex: 10,
   },
   screenContainer: {
     flex: 1,
-    borderRadius: 34,
+    borderRadius: 36,
     overflow: 'hidden',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  mockupImage: {
+    width: '100%',
+    height: '100%',
   },
   homeIndicator: {
     position: 'absolute',
     bottom: 8,
     left: '50%',
-    marginLeft: -35,
-    width: 70,
+    marginLeft: -40,
+    width: 80,
     height: 4,
-    backgroundColor: '#4B5563',
+    backgroundColor: 'rgba(13, 148, 136, 0.4)',
     borderRadius: 2,
   },
-  primaryButton: {
+
+  // Bottom Section
+  bottomSection: {
+    paddingBottom: 24,
+  },
+  continueButton: {
     borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#0D9488',
@@ -312,25 +378,43 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 16,
     elevation: 8,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   buttonGradient: {
     paddingVertical: 16,
     paddingHorizontal: 24,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  signInButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
+  continueButtonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
-  signInGlass: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 16,
+  footerLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerLinkText: {
+    fontSize: 12,
+    color: 'rgba(107, 114, 128, 0.8)',
+  },
+  footerDivider: {
+    fontSize: 12,
+    color: 'rgba(107, 114, 128, 0.5)',
+    marginHorizontal: 8,
+  },
+  signInButton: {
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  signInText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  signInLink: {
+    color: '#0D9488',
+    fontWeight: '600',
   },
 });

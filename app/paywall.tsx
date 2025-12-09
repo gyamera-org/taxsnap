@@ -8,12 +8,14 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Scan, Sparkles, Heart, Check, LockOpen } from 'lucide-react-native';
+import { Gauge, Flame, HeartPulse, Candy, Activity, Check, CreditCard } from 'lucide-react-native';
 import { useRevenueCat } from '@/context/revenuecat-provider';
+import { useAuth } from '@/context/auth-provider';
 import { APP_URLS } from '@/lib/config/urls';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner-native';
@@ -21,21 +23,24 @@ import { toast } from 'sonner-native';
 // Fallback prices if RevenueCat fails to load
 const FALLBACK_MONTHLY_PRICE = 3.99;
 const FALLBACK_YEARLY_PRICE = 29.99;
-const TRIAL_DAYS = 7;
+const TRIAL_DAYS = 3;
 
 type PlanType = 'monthly' | 'yearly';
 
 export default function PaywallScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const { offerings, purchasePackage, restorePurchases } = useRevenueCat();
 
   const features = [
-    { icon: Scan, title: t('paywall.features.unlimitedScans.title') },
-    { icon: Sparkles, title: t('paywall.features.aiAnalysis.title') },
-    { icon: Heart, title: t('paywall.features.personalized.title') },
+    { icon: Gauge, title: t('paywall.features.bloodSugar.title') },
+    { icon: Flame, title: t('paywall.features.inflammation.title') },
+    { icon: HeartPulse, title: t('paywall.features.hormones.title') },
+    { icon: Candy, title: t('paywall.features.hiddenSugars.title') },
+    { icon: Activity, title: t('paywall.features.personalizedTips.title') },
   ];
 
   // Get packages from RevenueCat offerings
@@ -52,7 +57,6 @@ export default function PaywallScreen() {
   const monthlyPrice = monthlyPackage?.product.price ?? FALLBACK_MONTHLY_PRICE;
   const yearlyPrice = yearlyPackage?.product.price ?? FALLBACK_YEARLY_PRICE;
 
-  const currentPriceString = selectedPlan === 'yearly' ? yearlyPriceString : monthlyPriceString;
   const savingsPercent = Math.round((1 - yearlyPrice / 12 / monthlyPrice) * 100);
 
   const handleSubscribe = async () => {
@@ -90,6 +94,17 @@ export default function PaywallScreen() {
     }
   };
 
+  // Handle Stripe web checkout
+  const handleStripeCheckout = () => {
+    if (!user?.id) {
+      toast.error(t('errors.notAuthenticated'));
+      return;
+    }
+    // Build checkout URL with user ID and selected plan
+    const checkoutUrl = `${APP_URLS.stripeCheckout}?user_id=${user.id}&plan=${selectedPlan}`;
+    Linking.openURL(checkoutUrl);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -112,22 +127,26 @@ export default function PaywallScreen() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.headerSection}>
-            <View style={styles.iconContainer}>
-              <LinearGradient
-                colors={['#14B8A6', '#0D9488', '#0F766E']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.iconGradient}
-              >
-                <LockOpen size={28} color="#FFFFFF" />
-              </LinearGradient>
-            </View>
             <Text style={styles.headerTitle}>{t('paywall.title')}</Text>
             <Text style={styles.headerSubtitle}>{t('paywall.subtitle')}</Text>
           </View>
 
+          {/* Phone Screenshot Preview - Cropped to show top half */}
+          <View style={styles.phoneContainer}>
+            <View style={styles.phoneFrame}>
+              <View style={styles.phoneNotch} />
+              <View style={styles.phoneScreenContainer}>
+                <FastImage
+                  source={require('@/assets/images/paywall-screenshot.jpg')}
+                  style={styles.phoneScreenshot}
+                  resizeMode={FastImage.resizeMode.cover}
+                />
+              </View>
+            </View>
+          </View>
+
           {/* Compact Features - Liquid Glass Style */}
-          <View style={styles.featuresCard}>
+          {/* <View style={styles.featuresCard}>
             {features.map((feature, index) => (
               <View
                 key={feature.title}
@@ -139,11 +158,13 @@ export default function PaywallScreen() {
                 <View style={styles.featureIconContainer}>
                   <feature.icon size={16} color="#14B8A6" />
                 </View>
-                <Text style={styles.featureTitle} numberOfLines={1}>{feature.title}</Text>
+                <Text style={styles.featureTitle} numberOfLines={1}>
+                  {feature.title}
+                </Text>
                 <Check size={16} color="#14B8A6" />
               </View>
             ))}
-          </View>
+          </View> */}
 
           {/* Plan Selection - Row Layout */}
           <View style={styles.plansContainer}>
@@ -169,14 +190,17 @@ export default function PaywallScreen() {
                 <Text style={styles.planName}>{t('paywall.plans.yearly')}</Text>
                 <Text style={styles.planPriceTotal}>{yearlyPriceString}</Text>
                 <Text style={styles.planPeriod}>
-                  {yearlyPerMonthString}{t('paywall.plans.perMonth')}
+                  {yearlyPerMonthString}
+                  {t('paywall.plans.perMonth')}
                 </Text>
               </View>
             </Pressable>
 
             {/* Monthly Plan */}
             <Pressable onPress={() => setSelectedPlan('monthly')} style={styles.planWrapper}>
-              <View style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}>
+              <View
+                style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
+              >
                 <View
                   style={[
                     styles.radioButton,
@@ -193,7 +217,7 @@ export default function PaywallScreen() {
           </View>
 
           {/* Trial Info - Only for Yearly */}
-          {selectedPlan === 'yearly' && (
+          {/* {selectedPlan === 'yearly' && (
             <View style={styles.trialCard}>
               <View style={styles.trialIconContainer}>
                 <Text style={styles.trialIconText}>{TRIAL_DAYS}</Text>
@@ -205,12 +229,12 @@ export default function PaywallScreen() {
                 <Text style={styles.trialSubtitle}>{t('paywall.trial.subtitle')}</Text>
               </View>
             </View>
-          )}
+          )} */}
         </View>
 
         {/* Bottom Section */}
         <View style={styles.bottomSection}>
-          {/* CTA Button */}
+          {/* CTA Button - App Store */}
           <Pressable
             onPress={handleSubscribe}
             disabled={isLoading}
@@ -225,20 +249,23 @@ export default function PaywallScreen() {
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <View style={styles.ctaContent}>
-                <Text style={styles.ctaButtonText}>
-                  {selectedPlan === 'yearly'
-                    ? t('paywall.cta.startTrial', { days: TRIAL_DAYS })
-                    : t('paywall.cta.subscribeNow')}
-                </Text>
-                <Text style={styles.ctaSubtext}>
-                  {selectedPlan === 'yearly'
-                    ? t('paywall.cta.thenPrice', { price: currentPriceString })
-                    : t('paywall.cta.perMonth', { price: currentPriceString })}
-                </Text>
-              </View>
+              <Text style={styles.ctaButtonText}>
+                {selectedPlan === 'yearly'
+                  ? t('paywall.cta.startTrial', { days: TRIAL_DAYS })
+                  : t('paywall.cta.subscribeNow')}
+              </Text>
             )}
           </Pressable>
+
+          {/* Stripe Web Checkout Button - 30% Off */}
+          {/* <Pressable
+            onPress={handleStripeCheckout}
+            disabled={isLoading}
+            style={[styles.stripeButton, isLoading && styles.buttonDisabled]}
+          >
+            <CreditCard size={18} color="#0D9488" style={{ marginRight: 8 }} />
+            <Text style={styles.stripeButtonText}>{t('paywall.save30')}</Text>
+          </Pressable> */}
 
           {/* Legal Links */}
           <View style={styles.legalContainer}>
@@ -280,34 +307,22 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  iconContainer: {
-    marginBottom: 12,
-    shadowColor: '#0D9488',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  iconGradient: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 10,
+    marginTop: 20,
+    marginBottom: 24,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: '700',
     color: '#111827',
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 16,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#6B7280',
     textAlign: 'center',
+    lineHeight: 24,
   },
   featuresCard: {
     borderRadius: 16,
@@ -463,12 +478,75 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: '#0D9488',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  stripeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    paddingVertical: 14,
+    marginBottom: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(20, 184, 166, 0.3)',
+  },
+  stripeButtonText: {
+    color: '#0D9488',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  phoneContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  phoneFrame: {
+    width: 300,
+    height: 340,
+    backgroundColor: 'rgba(13, 148, 136, 0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(20, 184, 166, 0.4)',
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
+    padding: 6,
+    paddingBottom: 0,
+    shadowColor: '#0D9488',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 15,
+    overflow: 'hidden',
+  },
+  phoneNotch: {
+    position: 'absolute',
+    top: 6,
+    left: '50%',
+    marginLeft: -40,
+    width: 80,
+    height: 22,
+    backgroundColor: 'rgba(13, 148, 136, 0.3)',
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+    zIndex: 10,
+  },
+  phoneScreenContainer: {
+    flex: 1,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    overflow: 'hidden',
+  },
+  phoneScreenshot: {
+    width: '100%',
+    height: 680,
   },
   ctaContent: {
     alignItems: 'center',

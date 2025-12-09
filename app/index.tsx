@@ -2,9 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { Asset } from 'expo-asset';
 import { useAuth } from '@/context/auth-provider';
 import { useRevenueCat } from '@/context/revenuecat-provider';
 import { WelcomeScreen } from '@/components/screens';
+
+// Images to preload for welcome screen and paywall
+const welcomeImages = [
+  require('@/assets/images/splash-icon.png'),
+  require('@/assets/images/demo-scan.jpg'),
+  require('@/assets/images/demo-result.jpg'),
+  require('@/assets/images/paywall-screenshot.jpg'),
+];
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -23,10 +32,10 @@ export default function Index() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Preload fonts or make necessary API calls here
-        // Example: await Font.loadAsync({ ... });
+        // Preload images while splash is showing
+        await Asset.loadAsync(welcomeImages);
       } catch (e) {
-        console.warn(e);
+        console.warn('Error preloading assets:', e);
       } finally {
         setAppIsReady(true);
       }
@@ -35,12 +44,22 @@ export default function Index() {
     prepare();
   }, []);
 
-  // Hide splash screen when auth loading is complete
-  const onLayoutRootView = useCallback(() => {
-    if (appIsReady && !authLoading) {
+  // Determine if everything is loaded
+  const isFullyLoaded = appIsReady && !authLoading && (!user || !subscriptionLoading);
+
+  // Hide splash screen when all loading is complete
+  useEffect(() => {
+    if (isFullyLoaded) {
       SplashScreen.hide();
     }
-  }, [appIsReady, authLoading]);
+  }, [isFullyLoaded]);
+
+  // Backup: also hide on layout in case effect doesn't trigger
+  const onLayoutRootView = useCallback(() => {
+    if (isFullyLoaded) {
+      SplashScreen.hide();
+    }
+  }, [isFullyLoaded]);
 
   // Handle routing when user and subscription status are known
   useEffect(() => {
@@ -66,18 +85,15 @@ export default function Index() {
     }
   }, [appIsReady, user, authLoading, subscriptionLoading, isSubscribed]);
 
-  // Only wait for auth loading initially
+  // Keep splash screen visible while loading
   if (!appIsReady || authLoading) {
     return null;
   }
 
-  // If user exists but subscription is still loading, show loader
+  // For logged-in users: keep splash visible until subscription status is known
+  // This prevents the paywall flash for subscribed users
   if (user && subscriptionLoading) {
-    return (
-      <View className="flex-1 bg-white items-center justify-center" onLayout={onLayoutRootView}>
-        <ActivityIndicator size="large" color="#0D9488" />
-      </View>
-    );
+    return null;
   }
 
   // No user -> show welcome screen
@@ -89,7 +105,7 @@ export default function Index() {
     );
   }
 
-  // User exists -> show loader while navigating
+  // User exists and subscription loaded -> show loader while navigating to home/paywall
   return (
     <View className="flex-1 bg-white items-center justify-center" onLayout={onLayoutRootView}>
       <ActivityIndicator size="large" color="#0D9488" />

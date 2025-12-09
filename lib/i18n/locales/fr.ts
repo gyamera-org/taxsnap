@@ -16,6 +16,21 @@ export default {
     ok: 'OK',
   },
 
+  // Welcome Flow (multi-step intro)
+  welcomeFlow: {
+    continue: 'Continuer',
+    step1: {
+      title: 'Enfin savoir ce qui est bon à manger avec le SOPK.',
+      subtitle: 'Fini le comptage des calories. Fini les régimes yoyo toxiques. Juste des réponses simples.',
+    },
+    step2: {
+      title: 'Prenez une photo de n\'importe quel aliment',
+    },
+    step3: {
+      title: 'Sachez exactement quoi manger',
+    },
+  },
+
   // Welcome Screen
   welcome: {
     appName: 'PCOS Scanner',
@@ -212,6 +227,7 @@ export default {
     analyzing: 'Analyse en cours...',
     analyzingImage: 'Analyse de l\'Image',
     notifyWhenDone: 'Nous vous informerons quand c\'est terminé!',
+    positionFood: 'Positionnez l\'aliment dans le cadre',
     cameraPermission: {
       title: 'Accès Caméra Requis',
       description: 'Pour scanner des aliments, veuillez activer l\'accès à la caméra dans les paramètres de votre appareil.',
@@ -220,6 +236,20 @@ export default {
     capture: 'Capturer',
     photoCaptured: 'Photo Capturée',
     analysisComingSoon: 'Fonction d\'analyse alimentaire bientôt disponible! Nous analyserons cet aliment pour sa compatibilité SOPK.',
+    // Swipe actions
+    deleteTitle: 'Supprimer le Scan',
+    deleteMessage: 'Êtes-vous sûre de vouloir supprimer ce scan?',
+    save: 'Enregistrer',
+    unsave: 'Retirer',
+    // Help tutorial
+    help: {
+      title: 'Comment Scanner',
+      step1Title: 'Prenez une Photo',
+      step1Description: 'Pointez votre caméra vers n\'importe quel aliment, repas ou étiquette nutritionnelle',
+      step2Title: 'Obtenez les Résultats',
+      step2Description: 'Voyez les évaluations SOPK instantanées et des recommandations personnalisées',
+      gotIt: 'Compris!',
+    },
   },
 
   // Scan Results
@@ -295,24 +325,23 @@ export default {
 
   // Paywall
   paywall: {
-    title: 'Débloquer l\'Accès Complet',
-    subtitle: 'Votre guide nutrition SOPK personnel',
+    title: 'Sachez Ce Que Vous Mangez',
+    subtitle: 'Scannez n\'importe quel aliment pour voir instantanément son impact sur votre glycémie, vos hormones et l\'inflammation. Faites des choix éclairés pour votre SOPK.',
     features: {
-      unlimitedScans: {
-        title: 'Scans Alimentaires Illimités',
-        description: 'Scannez tout aliment pour vérifier sa compatibilité SOPK',
+      bloodSugar: {
+        title: 'Voyez l\'impact sur votre glycémie',
       },
-      aiAnalysis: {
-        title: 'Analyse Propulsée par l\'IA',
-        description: 'Obtenez des analyses détaillées des ingrédients et des conseils santé',
+      inflammation: {
+        title: 'Détectez les aliments inflammatoires',
       },
-      personalized: {
-        title: 'Recommandations Personnalisées',
-        description: 'Suggestions alimentaires adaptées à vos besoins SOPK',
+      hormones: {
+        title: 'Comprenez l\'effet sur vos hormones',
       },
-      scienceBacked: {
-        title: 'Résultats Basés sur la Science',
-        description: 'Analyse basée sur les dernières recherches SOPK',
+      hiddenSugars: {
+        title: 'Trouvez les sucres et additifs cachés',
+      },
+      personalizedTips: {
+        title: 'Conseils adaptés à vos symptômes',
       },
     },
     plans: {
@@ -333,6 +362,7 @@ export default {
       thenPrice: 'Puis {{price}}/an',
       perMonth: '{{price}}/mois',
     },
+    save30: 'Économisez 30%',
     continueForFree: 'Continuer Gratuitement',
     restore: 'Restaurer les Achats',
     restoreSuccess: 'Achats restaurés avec succès',
@@ -414,6 +444,7 @@ export default {
       ko: 'Coréen',
       ar: 'Arabe',
       hi: 'Hindi',
+      tr: 'Turc',
     },
   },
 
@@ -552,5 +583,18 @@ export default {
     generic: 'Une erreur est survenue. Veuillez réessayer.',
     network: 'Erreur réseau. Vérifiez votre connexion.',
     camera: 'Échec de la capture photo. Veuillez réessayer.',
+    notAuthenticated: 'Veuillez vous connecter pour continuer.',
+  },
+
+  // Auth Toasts
+  authToasts: {
+    signInFailed: 'Échec de la connexion',
+    signInAppleFailed: 'Échec de la connexion avec Apple',
+    signInGoogleFailed: 'Échec de la connexion avec Google',
+    signOutFailed: 'Échec de la déconnexion',
+    accountDeleted: 'Compte supprimé avec succès',
+    accountDeleteFailed: 'Échec de la suppression du compte',
+    authFailed: 'Échec de l\'authentification',
+    completingSignIn: 'Connexion en cours...',
   },
 };

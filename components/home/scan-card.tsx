@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { View, Text, Pressable, Image, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Dimensions, Alert } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import Animated, {
   FadeInUp,
@@ -34,6 +35,7 @@ interface ScanCardProps {
   index: number;
   onPress?: () => void;
   onToggleFavorite?: () => void;
+  onDelete?: () => void;
 }
 
 // Circular progress indicator
@@ -203,7 +205,7 @@ function NutritionIndicators({ analysis }: { analysis?: ScanAnalysis }) {
   );
 }
 
-export function ScanCard({ scan, index, onPress, onToggleFavorite }: ScanCardProps) {
+export function ScanCard({ scan, index, onPress, onToggleFavorite, onDelete }: ScanCardProps) {
   const { t } = useTranslation();
   const isPending = scan.status === 'pending';
   const progress = scan.progress ?? 0;
@@ -232,24 +234,42 @@ export function ScanCard({ scan, index, onPress, onToggleFavorite }: ScanCardPro
 
   const [imageLoaded, setImageLoaded] = useState(false);
 
+  const handleLongPress = () => {
+    if (isPending) return;
+
+    Alert.alert(
+      t('scan.deleteTitle'),
+      t('scan.deleteMessage'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => onDelete?.(),
+        },
+      ]
+    );
+  };
+
   const renderImage = () => {
     if (scan.image_url) {
       if (scan.image_url.startsWith('local:')) {
         return (
-          <Image
+          <FastImage
             source={DEMO_IMAGES[scan.image_url.replace('local:', '') as keyof typeof DEMO_IMAGES]}
             style={styles.image}
-            blurRadius={isPending ? 15 : 0}
           />
         );
       }
       return (
         <>
           {!imageLoaded && <ImageSkeleton />}
-          <Image
+          <FastImage
             source={{ uri: scan.image_url }}
             style={[styles.image, !imageLoaded && styles.imageHidden]}
-            blurRadius={isPending ? 15 : 0}
             onLoad={() => setImageLoaded(true)}
           />
         </>
@@ -269,6 +289,8 @@ export function ScanCard({ scan, index, onPress, onToggleFavorite }: ScanCardPro
     >
       <Pressable
         onPress={isPending ? undefined : onPress}
+        onLongPress={handleLongPress}
+        delayLongPress={500}
         style={styles.container}
         disabled={isPending}
       >

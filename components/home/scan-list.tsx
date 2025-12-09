@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { FlatList, View, RefreshControl, StyleSheet, Dimensions } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -80,6 +81,7 @@ interface ScanListProps {
   searchQuery: string;
   onScanPress?: (scan: ScanResult) => void;
   onToggleFavorite?: (scan: ScanResult) => void;
+  onDeleteScan?: (scan: ScanResult) => void;
 }
 
 export function ScanList({
@@ -91,6 +93,7 @@ export function ScanList({
   searchQuery,
   onScanPress,
   onToggleFavorite,
+  onDeleteScan,
 }: ScanListProps) {
   if (isLoading) {
     return <SkeletonList />;
@@ -102,30 +105,37 @@ export function ScanList({
   }
 
   return (
-    <FlatList
-      data={scans}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item, index }) => (
-        <ScanCard
-          scan={item}
-          index={index}
-          onPress={() => onScanPress?.(item)}
-          onToggleFavorite={() => onToggleFavorite?.(item)}
-        />
-      )}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.listContent}
-      refreshControl={
-        onRefresh ? (
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={onRefresh}
-            tintColor="#0D9488"
-            colors={['#0D9488']}
-          />
-        ) : undefined
-      }
-    />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <FlatList
+        data={scans}
+        keyExtractor={(item, index) => item?.id ?? `fallback-${index}`}
+        renderItem={({ item, index }) => {
+          // Skip rendering if item is undefined
+          if (!item) return null;
+          return (
+            <ScanCard
+              scan={item}
+              index={index}
+              onPress={() => onScanPress?.(item)}
+              onToggleFavorite={() => onToggleFavorite?.(item)}
+              onDelete={() => onDeleteScan?.(item)}
+            />
+          );
+        }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              tintColor="#0D9488"
+              colors={['#0D9488']}
+            />
+          ) : undefined
+        }
+      />
+    </GestureHandlerRootView>
   );
 }
 

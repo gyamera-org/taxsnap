@@ -8,6 +8,7 @@ import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
+import i18n from '@/lib/i18n';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (error) {
             console.error('Error setting session:', error);
-            toast.error('Failed to complete sign in');
+            toast.error(i18n.t('authToasts.signInFailed'));
           }
         }
       }
@@ -186,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false; // Cancelled
       }
       console.error('Apple sign-in error:', error);
-      toast.error(error.message || 'Failed to sign in with Apple');
+      toast.error(error.message || i18n.t('authToasts.signInAppleFailed'));
       throw error;
     } finally {
       setLoading(false);
@@ -236,7 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error('Google sign-in error:', error);
-      toast.error(error.message || 'Failed to sign in with Google');
+      toast.error(error.message || i18n.t('authToasts.signInGoogleFailed'));
     } finally {
       setLoading(false);
     }
@@ -254,7 +255,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // toast.success('Signed out successfully');
     } catch (error: any) {
       console.error('Sign out error:', error);
-      toast.error('Failed to sign out');
+      toast.error(i18n.t('authToasts.signOutFailed'));
     } finally {
       setLoading(false);
     }
@@ -272,11 +273,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(null);
       setUser(null);
-      toast.success('Account deleted successfully');
+      toast.success(i18n.t('authToasts.accountDeleted'));
       router.replace('/auth');
     } catch (error: any) {
       console.error('Delete account error:', error);
-      toast.error(error.message || 'Failed to delete account');
+      toast.error(error.message || i18n.t('authToasts.accountDeleteFailed'));
       throw error;
     } finally {
       setLoading(false);
