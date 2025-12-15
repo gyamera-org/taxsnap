@@ -244,6 +244,18 @@ export default {
     deleteMessage: 'Sei sicura di voler eliminare questa scansione?',
     save: 'Salva',
     unsave: 'Rimuovi',
+    // Free scan limit
+    freeScansRemaining: '{{count}} di {{max}} scansioni gratuite rimaste',
+    limitReached: {
+      title: 'Scansioni Gratuite Esaurite',
+      description: 'Abbonati per sbloccare scansioni illimitate',
+      modalDescription: 'Hai usato tutte le 3 scansioni gratuite. Passa a PCOS AI Premium per continuare ad analizzare i cibi.',
+      feature1: 'Scansione illimitata degli alimenti',
+      feature2: 'Approfondimenti personalizzati sulla PCOS',
+      feature3: "Analisi dettagliata dell'impatto ormonale",
+      cta: 'Sblocca Scansioni Illimitate',
+      maybeLater: 'Forse dopo',
+    },
     // Help tutorial
     help: {
       title: 'Come Scansionare',

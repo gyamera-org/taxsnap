@@ -244,6 +244,18 @@ export default {
     deleteMessage: 'Are you sure you want to delete this scan?',
     save: 'Save',
     unsave: 'Unsave',
+    // Free scan limit
+    freeScansRemaining: '{{count}} of {{max}} free scans left',
+    limitReached: {
+      title: 'Free Scans Used',
+      description: 'Subscribe to unlock unlimited scans',
+      modalDescription: "You've used all 3 free scans. Upgrade to PCOS AI Premium to continue analyzing foods.",
+      feature1: 'Unlimited food scanning',
+      feature2: 'Personalized PCOS insights',
+      feature3: 'Detailed hormone impact analysis',
+      cta: 'Unlock Unlimited Scans',
+      maybeLater: 'Maybe later',
+    },
     // Help tutorial
     help: {
       title: 'How to Scan',

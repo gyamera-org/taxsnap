@@ -244,6 +244,18 @@ export default {
     deleteMessage: 'क्या आप वाकई इस स्कैन को हटाना चाहती हैं?',
     save: 'सहेजें',
     unsave: 'हटाएं',
+    // Free scan limit
+    freeScansRemaining: '{{max}} में से {{count}} मुफ्त स्कैन बचे',
+    limitReached: {
+      title: 'मुफ्त स्कैन समाप्त',
+      description: 'असीमित स्कैन के लिए सब्सक्राइब करें',
+      modalDescription: 'आपने सभी 3 मुफ्त स्कैन का उपयोग कर लिया है। खाने का विश्लेषण जारी रखने के लिए PCOS AI Premium में अपग्रेड करें।',
+      feature1: 'असीमित भोजन स्कैनिंग',
+      feature2: 'व्यक्तिगत PCOS अंतर्दृष्टि',
+      feature3: 'विस्तृत हार्मोन प्रभाव विश्लेषण',
+      cta: 'असीमित स्कैन अनलॉक करें',
+      maybeLater: 'शायद बाद में',
+    },
     // Help tutorial
     help: {
       title: 'कैसे स्कैन करें',

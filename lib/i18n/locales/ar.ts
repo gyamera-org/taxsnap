@@ -244,6 +244,18 @@ export default {
     deleteMessage: 'هل أنت متأكدة من أنك تريدين حذف هذا المسح؟',
     save: 'حفظ',
     unsave: 'إلغاء الحفظ',
+    // Free scan limit
+    freeScansRemaining: '{{count}} من {{max}} مسحات مجانية متبقية',
+    limitReached: {
+      title: 'انتهت المسحات المجانية',
+      description: 'اشتركي لفتح مسحات غير محدودة',
+      modalDescription: 'لقد استخدمت جميع المسحات المجانية الـ 3. قومي بالترقية إلى PCOS AI Premium لمواصلة تحليل الأطعمة.',
+      feature1: 'مسح غير محدود للأطعمة',
+      feature2: 'رؤى مخصصة حول تكيس المبايض',
+      feature3: 'تحليل مفصل للتأثير الهرموني',
+      cta: 'فتح المسحات غير المحدودة',
+      maybeLater: 'ربما لاحقاً',
+    },
     // Help tutorial
     help: {
       title: 'كيفية المسح',

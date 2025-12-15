@@ -241,6 +241,18 @@ export default {
     deleteMessage: 'Êtes-vous sûre de vouloir supprimer ce scan?',
     save: 'Enregistrer',
     unsave: 'Retirer',
+    // Free scan limit
+    freeScansRemaining: '{{count}} sur {{max}} scans gratuits restants',
+    limitReached: {
+      title: 'Scans Gratuits Épuisés',
+      description: 'Abonnez-vous pour débloquer des scans illimités',
+      modalDescription: 'Vous avez utilisé vos 3 scans gratuits. Passez à PCOS AI Premium pour continuer à analyser les aliments.',
+      feature1: 'Scan alimentaire illimité',
+      feature2: 'Informations personnalisées sur le SOPK',
+      feature3: "Analyse détaillée de l'impact hormonal",
+      cta: 'Débloquer les Scans Illimités',
+      maybeLater: 'Peut-être plus tard',
+    },
     // Help tutorial
     help: {
       title: 'Comment Scanner',

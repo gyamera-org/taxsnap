@@ -5,15 +5,7 @@ import Svg, { Path, Circle } from 'react-native-svg';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import * as Haptics from 'expo-haptics';
-import {
-  Gauge,
-  Candy,
-  Wheat,
-  Flame,
-  HeartPulse,
-  Factory,
-  Info,
-} from 'lucide-react-native';
+import { Gauge, Candy, Wheat, Flame, HeartPulse, Factory, Info } from 'lucide-react-native';
 import { GlassBottomSheet, GlassBottomSheetRef } from '@/components/ui/glass-bottom-sheet';
 
 export type TabType = 'all' | 'saves';
@@ -100,12 +92,42 @@ function CloseIcon({ color = '#6B7280', size = 18 }: { color?: string; size?: nu
 
 // Indicator legend configuration with descriptions
 const INDICATOR_CONFIG = [
-  { key: 'gi', Icon: Gauge, labelKey: 'nutrition.glycemicIndex', descKey: 'nutrition.descriptions.gi' },
-  { key: 'sugar', Icon: Candy, labelKey: 'nutrition.sugarContent', descKey: 'nutrition.descriptions.sugar' },
-  { key: 'fiber', Icon: Wheat, labelKey: 'nutrition.fiberContent', descKey: 'nutrition.descriptions.fiber' },
-  { key: 'inflammation', Icon: Flame, labelKey: 'nutrition.inflammatoryScore', descKey: 'nutrition.descriptions.inflammation' },
-  { key: 'hormone', Icon: HeartPulse, labelKey: 'nutrition.hormoneImpact', descKey: 'nutrition.descriptions.hormone' },
-  { key: 'processed', Icon: Factory, labelKey: 'nutrition.processedLevel', descKey: 'nutrition.descriptions.processed' },
+  {
+    key: 'gi',
+    Icon: Gauge,
+    labelKey: 'nutrition.glycemicIndex',
+    descKey: 'nutrition.descriptions.gi',
+  },
+  {
+    key: 'sugar',
+    Icon: Candy,
+    labelKey: 'nutrition.sugarContent',
+    descKey: 'nutrition.descriptions.sugar',
+  },
+  {
+    key: 'fiber',
+    Icon: Wheat,
+    labelKey: 'nutrition.fiberContent',
+    descKey: 'nutrition.descriptions.fiber',
+  },
+  {
+    key: 'inflammation',
+    Icon: Flame,
+    labelKey: 'nutrition.inflammatoryScore',
+    descKey: 'nutrition.descriptions.inflammation',
+  },
+  {
+    key: 'hormone',
+    Icon: HeartPulse,
+    labelKey: 'nutrition.hormoneImpact',
+    descKey: 'nutrition.descriptions.hormone',
+  },
+  {
+    key: 'processed',
+    Icon: Factory,
+    labelKey: 'nutrition.processedLevel',
+    descKey: 'nutrition.descriptions.processed',
+  },
 ] as const;
 
 // Color guide data
@@ -254,11 +276,7 @@ export function HomeHeader({
       )}
 
       {/* Legend Bottom Sheet */}
-      <GlassBottomSheet
-        ref={legendSheetRef}
-        snapPoints={['62%']}
-        hideTabBar={false}
-      >
+      <GlassBottomSheet ref={legendSheetRef} snapPoints={['62%']} hideTabBar={false}>
         <IndicatorLegendContent />
       </GlassBottomSheet>
     </View>

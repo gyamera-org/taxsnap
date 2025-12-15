@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from './auth-provider';
 import { useLanguage } from './language-provider';
+import { useRevenueCat } from './revenuecat-provider';
 import { scanKeys } from '@/lib/hooks/use-scans';
 import type { ScanResult } from '@/lib/types/scan';
 
@@ -30,6 +31,7 @@ export function PendingScanProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { session, user } = useAuth();
   const { language } = useLanguage();
+  const { isSubscribed, canScan, freeScansRemaining, recordFreeScan } = useRevenueCat();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [pendingScan, setPendingScan] = useState<PendingScan | null>(null);
@@ -42,6 +44,15 @@ export function PendingScanProvider({ children }: { children: ReactNode }) {
     async (imageBase64: string, imagePreviewUri?: string) => {
       if (!session?.access_token || !user) {
         toast.error(t('errors.notAuthenticated'));
+        return;
+      }
+
+      // Check if user can scan (subscribed or has free scans remaining)
+      if (!canScan) {
+        toast.error(t('scan.limitReached.title'), {
+          description: t('scan.limitReached.description'),
+        });
+        router.push('/paywall');
         return;
       }
 
@@ -93,6 +104,11 @@ export function PendingScanProvider({ children }: { children: ReactNode }) {
         // Small delay to show 100% progress
         await new Promise((resolve) => setTimeout(resolve, 300));
 
+        // Record free scan usage (only for non-subscribers)
+        if (!isSubscribed) {
+          await recordFreeScan();
+        }
+
         // Clear pending scan
         clearPendingScan();
 
@@ -124,7 +140,7 @@ export function PendingScanProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [session, user, language, queryClient, router, t, clearPendingScan]
+    [session, user, language, queryClient, router, t, clearPendingScan, canScan, isSubscribed, recordFreeScan]
   );
 
   const value = {

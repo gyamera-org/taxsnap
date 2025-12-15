@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { Platform } from 'react-native';
 import Purchases, {
   PurchasesOfferings,
@@ -6,11 +6,14 @@ import Purchases, {
   CustomerInfo,
 } from 'react-native-purchases';
 import { useAuth } from './auth-provider';
+import { supabase } from '@/lib/supabase/client';
 
 const APIKeys = {
   apple: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
   android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
 };
+
+const MAX_FREE_SCANS = 3;
 
 interface SubscriptionState {
   isSubscribed: boolean;
@@ -19,12 +22,18 @@ interface SubscriptionState {
   customerInfo: CustomerInfo | null;
   error: string | null;
   offerings: PurchasesOfferings | null;
+  // Free scan limit
+  freeScansUsed: number;
+  freeScansRemaining: number;
+  canScan: boolean;
 }
 
 interface SubscriptionContextValue extends SubscriptionState {
   refreshSubscriptionStatus: () => Promise<void>;
   restorePurchases: () => Promise<CustomerInfo>;
   purchasePackage: (pack: PurchasesPackage) => Promise<{ success: boolean; error?: string }>;
+  recordFreeScan: () => Promise<void>;
+  maxFreeScans: number;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(undefined);
@@ -38,12 +47,97 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
     customerInfo: null,
     error: null,
     offerings: null,
+    freeScansUsed: 0,
+    freeScansRemaining: MAX_FREE_SCANS,
+    canScan: true,
   });
+
+  // Load free scan count from database
+  const loadFreeScanCount = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('free_scans_used')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading free scan count:', error);
+        return;
+      }
+
+      const scansUsed = data?.free_scans_used ?? 0;
+      const remaining = Math.max(0, MAX_FREE_SCANS - scansUsed);
+
+      setState((prev) => ({
+        ...prev,
+        freeScansUsed: scansUsed,
+        freeScansRemaining: remaining,
+        canScan: prev.isSubscribed || remaining > 0,
+      }));
+    } catch (error) {
+      console.error('Error loading free scan count:', error);
+    }
+  }, [user]);
+
+  // Record a free scan in database
+  const recordFreeScan = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      // Increment free_scans_used in the database
+      const { data, error } = await supabase.rpc('increment_free_scans', {
+        user_id: user.id,
+      });
+
+      // If RPC doesn't exist, fall back to manual update
+      if (error?.code === 'PGRST202') {
+        // RPC not found, use direct update
+        const { data: accountData } = await supabase
+          .from('accounts')
+          .select('free_scans_used')
+          .eq('id', user.id)
+          .single();
+
+        const currentCount = accountData?.free_scans_used ?? 0;
+        const newCount = currentCount + 1;
+
+        await supabase
+          .from('accounts')
+          .update({ free_scans_used: newCount })
+          .eq('id', user.id);
+
+        const remaining = Math.max(0, MAX_FREE_SCANS - newCount);
+        setState((prev) => ({
+          ...prev,
+          freeScansUsed: newCount,
+          freeScansRemaining: remaining,
+          canScan: prev.isSubscribed || remaining > 0,
+        }));
+      } else if (error) {
+        console.error('Error recording free scan:', error);
+      } else {
+        // RPC succeeded, reload the count
+        await loadFreeScanCount();
+      }
+    } catch (error) {
+      console.error('Error recording free scan:', error);
+    }
+  }, [user, loadFreeScanCount]);
 
   // Initialize RevenueCat on mount
   useEffect(() => {
     initializeRevenueCat();
   }, []);
+
+  // Load free scan count when user changes
+  useEffect(() => {
+    if (user) {
+      loadFreeScanCount();
+    }
+  }, [user, loadFreeScanCount]);
 
   // Load subscription when user changes
   useEffect(() => {
@@ -174,6 +268,8 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         customerInfo,
         loading: false,
         error: null,
+        // Subscribers can always scan, free users check remaining scans
+        canScan: hasActiveSubscription || prev.freeScansRemaining > 0,
       }));
     } catch (error: any) {
       console.error('Failed to load subscription status:', error);
@@ -208,6 +304,8 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
     refreshSubscriptionStatus,
     restorePurchases,
     purchasePackage,
+    recordFreeScan,
+    maxFreeScans: MAX_FREE_SCANS,
   };
 
   return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;

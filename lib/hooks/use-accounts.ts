@@ -30,6 +30,8 @@ export interface Account {
   subscription_platform: string;
   subscription_expires_at: string | null;
   subscription_billing: string | null;
+  // Free scan tracking
+  free_scans_used: number;
   created_at: string;
   updated_at: string;
 }

@@ -241,6 +241,18 @@ export default {
     deleteMessage: '¿Estás segura de que quieres eliminar este escaneo?',
     save: 'Guardar',
     unsave: 'Quitar',
+    // Free scan limit
+    freeScansRemaining: '{{count}} de {{max}} escaneos gratis restantes',
+    limitReached: {
+      title: 'Escaneos Gratis Agotados',
+      description: 'Suscríbete para desbloquear escaneos ilimitados',
+      modalDescription: 'Has usado los 3 escaneos gratis. Actualiza a PCOS AI Premium para seguir analizando alimentos.',
+      feature1: 'Escaneo ilimitado de alimentos',
+      feature2: 'Información personalizada sobre SOP',
+      feature3: 'Análisis detallado del impacto hormonal',
+      cta: 'Desbloquear Escaneos Ilimitados',
+      maybeLater: 'Quizás después',
+    },
     // Help tutorial
     help: {
       title: 'Cómo Escanear',

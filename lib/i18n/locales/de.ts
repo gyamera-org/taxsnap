@@ -244,6 +244,18 @@ export default {
     deleteMessage: 'Sind Sie sicher, dass Sie diesen Scan löschen möchten?',
     save: 'Speichern',
     unsave: 'Entfernen',
+    // Free scan limit
+    freeScansRemaining: '{{count}} von {{max}} kostenlosen Scans übrig',
+    limitReached: {
+      title: 'Kostenlose Scans Aufgebraucht',
+      description: 'Abonnieren Sie für unbegrenzte Scans',
+      modalDescription: 'Sie haben alle 3 kostenlosen Scans verwendet. Upgraden Sie auf PCOS AI Premium, um weiter Lebensmittel zu analysieren.',
+      feature1: 'Unbegrenztes Lebensmittel-Scannen',
+      feature2: 'Personalisierte PCOS-Einblicke',
+      feature3: 'Detaillierte Hormonwirkungsanalyse',
+      cta: 'Unbegrenzte Scans Freischalten',
+      maybeLater: 'Vielleicht später',
+    },
     // Help tutorial
     help: {
       title: 'So scannen Sie',

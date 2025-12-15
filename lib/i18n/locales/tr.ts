@@ -244,6 +244,18 @@ export default {
     deleteMessage: 'Bu taramayı silmek istediğinizden emin misiniz?',
     save: 'Kaydet',
     unsave: 'Kaldır',
+    // Free scan limit
+    freeScansRemaining: '{{max}} ücretsiz taramadan {{count}} kaldı',
+    limitReached: {
+      title: 'Ücretsiz Taramalar Bitti',
+      description: 'Sınırsız tarama için abone olun',
+      modalDescription: '3 ücretsiz taramanızın tümünü kullandınız. Yiyecekleri analiz etmeye devam etmek için PCOS AI Premium\'a yükseltin.',
+      feature1: 'Sınırsız yiyecek tarama',
+      feature2: 'Kişiselleştirilmiş PKOS bilgileri',
+      feature3: 'Detaylı hormon etkisi analizi',
+      cta: 'Sınırsız Taramayı Aç',
+      maybeLater: 'Belki sonra',
+    },
     // Help tutorial
     help: {
       title: 'Nasıl Taranır',
