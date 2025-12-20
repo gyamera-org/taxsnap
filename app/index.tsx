@@ -2,18 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { Asset } from 'expo-asset';
 import { useAuth } from '@/context/auth-provider';
 import { useRevenueCat } from '@/context/revenuecat-provider';
 import { WelcomeScreen } from '@/components/screens';
-
-// Images to preload for welcome screen and paywall
-const welcomeImages = [
-  require('@/assets/images/splash-icon.png'),
-  require('@/assets/images/demo-scan.jpg'),
-  require('@/assets/images/demo-result.jpg'),
-  require('@/assets/images/paywall-screenshot.jpg'),
-];
+import { isBypassActive } from '@/lib/config/dev-mode';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -29,19 +21,12 @@ export default function Index() {
   const { user, loading: authLoading } = useAuth();
   const { isSubscribed, loading: subscriptionLoading } = useRevenueCat();
 
-  useEffect(() => {
-    async function prepare() {
-      try {
-        // Preload images while splash is showing
-        await Asset.loadAsync(welcomeImages);
-      } catch (e) {
-        console.warn('Error preloading assets:', e);
-      } finally {
-        setAppIsReady(true);
-      }
-    }
+  // Check if all bypasses are active for quick dev mode routing
+  const isFullDevMode =
+    isBypassActive('AUTH') && isBypassActive('ONBOARDING') && isBypassActive('PAYWALL');
 
-    prepare();
+  useEffect(() => {
+    setAppIsReady(true);
   }, []);
 
   // Determine if everything is loaded
@@ -63,6 +48,13 @@ export default function Index() {
 
   // Handle routing when user and subscription status are known
   useEffect(() => {
+    // In full dev mode, go straight to home
+    if (isFullDevMode && appIsReady) {
+      console.log('🔧 Full dev mode active - navigating directly to home');
+      router.replace('/(tabs)/home');
+      return;
+    }
+
     if (!appIsReady || authLoading) {
       return;
     }
@@ -83,7 +75,7 @@ export default function Index() {
     } else {
       router.replace('/(tabs)/home');
     }
-  }, [appIsReady, user, authLoading, subscriptionLoading, isSubscribed]);
+  }, [appIsReady, user, authLoading, subscriptionLoading, isSubscribed, isFullDevMode]);
 
   // Keep splash screen visible while loading
   if (!appIsReady || authLoading) {

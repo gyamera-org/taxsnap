@@ -1,629 +1,167 @@
-export default {
-  // Common
+export const en = {
   common: {
     save: 'Save',
     cancel: 'Cancel',
-    delete: 'Delete',
-    edit: 'Edit',
-    done: 'Done',
     next: 'Next',
     back: 'Back',
-    close: 'Close',
-    search: 'Search',
+    done: 'Done',
+    continue: 'Continue',
+    skip: 'Skip',
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
-    ok: 'OK',
+    retry: 'Retry',
+    close: 'Close',
+    delete: 'Delete',
+    edit: 'Edit',
+    submit: 'Submit',
+    search: 'Search',
+    noResults: 'No results found',
+    seeAll: 'See All',
   },
-
-  // Welcome Flow (multi-step intro)
-  welcomeFlow: {
-    continue: 'Continue',
-    step1: {
-      title: 'Finally know what\'s safe to eat with PCOS.',
-      subtitle: 'No calorie counting. No toxic yoyo diets. Just simple answers.',
-    },
-    step2: {
-      title: 'Snap a photo of any food',
-    },
-    step3: {
-      title: 'Know exactly what to eat',
-    },
-  },
-
-  // Welcome Screen
   welcome: {
-    appName: 'PCOS Scanner',
-    title: 'PCOS Food Scanner',
-    tagline: "Scan any food to check if it's PCOS-friendly",
+    title: 'Welcome',
+    subtitle: 'Your journey starts here',
     getStarted: 'Get Started',
     signIn: 'Sign In',
     alreadyHaveAccount: 'Already have an account?',
-    personalizeTitle: "Let's personalize\nyour experience",
-    personalizeSubtitle: 'Answer a few quick questions so we can give you better food recommendations.',
-    featurePills: {
-      personalized: 'Personalized',
-      scienceBacked: 'Science-backed',
-      twoMin: '2 min',
-    },
-    letsGo: "Let's go",
   },
-
-  // Onboarding
-  onboarding: {
-    common: {
-      selectAll: 'Select all that apply',
-      skip: 'Skip',
-    },
-    welcome: {
-      title: "Let's personalize your experience",
-      subtitle: 'Answer a few quick questions so we can give you better food recommendations.',
-      letsGo: "Let's go",
-    },
-    goal: {
-      title: "What's your main goal?",
-      options: {
-        manageWeight: 'Manage my weight',
-        reduceSymptoms: 'Reduce PCOS symptoms',
-        fertility: 'Support fertility',
-        energy: 'Have more energy',
-        understand: 'Know what I can eat',
-        peace: 'Stop stressing about food',
-      },
-    },
-    symptoms: {
-      title: 'What symptoms do you have?',
-      options: {
-        irregularPeriods: 'Irregular periods',
-        weightGain: 'Weight gain',
-        fatigue: 'Fatigue',
-        acne: 'Acne or skin issues',
-        hairLoss: 'Hair thinning',
-        hairGrowth: 'Excess hair growth',
-        moodSwings: 'Mood changes',
-        cravings: 'Sugar cravings',
-        bloating: 'Bloating',
-        brainFog: 'Brain fog',
-      },
-    },
-    struggles: {
-      title: "What's been hardest for you?",
-      options: {
-        whatToEat: 'Not knowing what to eat',
-        groceryShopping: 'Reading food labels',
-        eatingOut: 'Eating out',
-        familyMeals: 'Cooking for others',
-        time: 'Finding time to plan meals',
-        conflictingInfo: 'Too much conflicting info',
-        emotionalEating: 'Emotional eating',
-        givingUp: 'Giving up too soon',
-      },
-    },
-    foodRelationship: {
-      title: 'How do you feel about food?',
-      options: {
-        loveFood: 'I love food',
-        complicated: "It's complicated",
-        anxious: 'Food makes me anxious',
-        restricted: "I've been very restrictive",
-        confused: "I'm confused about what to eat",
-        freshStart: 'Ready for a fresh start',
-      },
-    },
-    favoriteFoods: {
-      title: 'What foods do you enjoy?',
-      options: {
-        chocolate: 'Chocolate',
-        bread: 'Bread & pasta',
-        cheese: 'Cheese',
-        coffee: 'Coffee & lattes',
-        sweets: 'Desserts & sweets',
-        rice: 'Rice',
-        fruit: 'Fruit',
-        fastFood: 'Fast food',
-        snacks: 'Chips & snacks',
-        drinks: 'Wine & drinks',
-      },
-    },
-    activity: {
-      title: 'How active are you?',
-      options: {
-        sedentary: 'Mostly sitting',
-        light: 'Light activity',
-        moderate: 'Moderately active',
-        active: 'Pretty active',
-        veryActive: 'Very active',
-        varies: 'It varies',
-      },
-    },
-    personalized: {
-      title: 'Got it!',
-      description: "We'll personalize your food ratings based on your profile.",
-      summary: {
-        focus: 'Focus',
-        symptomsTracked: 'Symptoms tracked',
-        foodsNoted: 'Foods noted',
-        symptomCount_one: '{{count}} symptom',
-        symptomCount_other: '{{count}} symptoms',
-        foodCount_one: '{{count}} food',
-        foodCount_other: '{{count}} foods',
-      },
-      goalMessages: {
-        manageWeight: 'weight management',
-        reduceSymptoms: 'symptom reduction',
-        fertility: 'fertility support',
-        energy: 'energy levels',
-        understand: 'food understanding',
-        peace: 'food peace',
-        default: 'your goals',
-      },
-    },
-    review: {
-      title: 'Enjoying the app?',
-      description: 'Your review helps other women with PCOS discover this app and take control of their nutrition.',
-      rateButton: 'Rate the app',
-      maybeLater: 'Maybe later',
-    },
-    signup: {
-      title: 'Your plan is ready!',
-      subtitle: 'Create an account to save your preferences and start scanning.',
-      benefits: {
-        personalizedRatings: 'Personalized PCOS food ratings',
-        basedOnYou: 'Based on your symptoms & goals',
-        learnImpact: 'Learn how food affects your body',
-      },
-      continueWithApple: 'Continue with Apple',
-      continueWithGoogle: 'Continue with Google',
-      terms: 'By continuing, you agree to our',
-      termsLink: 'Terms',
-      and: '&',
-      privacyLink: 'Privacy Policy',
-    },
+  home: {
+    greeting: 'Welcome',
+    subtitle: 'Start exploring your new app',
   },
-
-  // Auth
   auth: {
-    welcomeBack: 'Welcome Back',
     createAccount: 'Create Account',
-    signInSubtitle: 'Sign in to continue your progress',
-    signUpSubtitle: 'Sign up to start your PCOS journey',
+    welcomeBack: 'Welcome Back',
+    signUpSubtitle: 'Start your journey today',
+    signInSubtitle: 'Good to see you again',
     continueWithApple: 'Continue with Apple',
     continueWithGoogle: 'Continue with Google',
-    dontHaveAccount: "Don't have an account?",
     alreadyHaveAccount: 'Already have an account?',
+    dontHaveAccount: "Don't have an account?",
     terms: 'By continuing, you agree to our',
-    termsLink: 'Terms',
-    and: '&',
+    termsLink: 'Terms of Service',
+    and: 'and',
     privacyLink: 'Privacy Policy',
+    signOut: 'Sign Out',
+    deleteAccount: 'Delete Account',
   },
-
-  // Home
-  home: {
-    title: 'My Scans',
-    tabs: {
-      all: 'All',
-      saves: 'Saves',
-    },
-    searchPlaceholder: 'Search scans...',
-    empty: {
-      all: {
-        title: 'No scans yet',
-        description: 'Start scanning foods to see them here',
-      },
-      saves: {
-        title: 'No saved scans',
-        description: 'Bookmark scans to find them here',
-      },
-      search: {
-        title: 'No results found',
-        description: 'Try a different search term',
-      },
-    },
+  onboarding: {
+    skip: 'Skip',
+    next: 'Next',
+    getStarted: 'Get Started',
+    step: 'Step {{current}} of {{total}}',
   },
-
-  // Scan
-  scan: {
-    title: 'Scan Food',
-    analyzing: 'Analyzing...',
-    analyzingImage: 'Analyzing Image',
-    notifyWhenDone: "We'll notify you when done!",
-    analysisComplete: 'Analysis Complete',
-    analysisFailed: 'Analysis Failed',
-    viewResult: 'View Result',
-    positionFood: 'Position the food item within the frame',
-    cameraPermission: {
-      title: 'Camera Access Required',
-      description: 'To scan food items, please enable camera access in your device settings.',
-      openSettings: 'Open Settings',
-    },
-    capture: 'Capture',
-    photoCaptured: 'Photo Captured',
-    analysisComingSoon: 'Food analysis feature coming soon! We will analyze this food item for PCOS compatibility.',
-    // Swipe actions
-    deleteTitle: 'Delete Scan',
-    deleteMessage: 'Are you sure you want to delete this scan?',
-    save: 'Save',
-    unsave: 'Unsave',
-    // Free scan limit
-    freeScansRemaining: '{{count}} of {{max}} free scans left',
-    limitReached: {
-      title: 'Free Scans Used',
-      description: 'Subscribe to unlock unlimited scans',
-      modalDescription: "You've used all 3 free scans. Upgrade to PCOS AI Premium to continue analyzing foods.",
-      feature1: 'Unlimited food scanning',
-      feature2: 'Personalized PCOS insights',
-      feature3: 'Detailed hormone impact analysis',
-      cta: 'Unlock Unlimited Scans',
-      maybeLater: 'Maybe later',
-    },
-    // Help tutorial
-    help: {
-      title: 'How to Scan',
-      step1Title: 'Take a Photo',
-      step1Description: 'Point your camera at any food item, meal, or nutrition label',
-      step2Title: 'Get Results',
-      step2Description: 'See instant PCOS-friendly ratings and personalized recommendations',
-      gotIt: 'Got it!',
-    },
-  },
-
-  // Scan Results
-  scanResult: {
-    status: {
-      safe: 'PCOS Friendly',
-      caution: 'Eat in Moderation',
-      avoid: 'Best to Avoid',
-    },
-    sections: {
-      nutritionalAnalysis: 'Nutritional Analysis',
-      ingredients: 'Ingredients',
-      recommendations: 'Recommendations',
-      warnings: 'Warnings',
-    },
-  },
-
-  // Scan Detail
-  scanDetail: {
-    notFound: 'Scan not found',
-    loading: 'Loading...',
-    sections: {
-      analysis: 'Nutritional Analysis',
-      ingredients: 'Ingredients',
-      recommendations: 'Recommendations',
-      warnings: 'Warnings',
-    },
-    status: {
-      safe: 'PCOS Friendly',
-      caution: 'Consume with Caution',
-      avoid: 'Best to Avoid',
-    },
-  },
-
-  // Nutrition Metrics
-  nutrition: {
-    glycemicIndex: 'Glycemic Index',
-    sugarContent: 'Sugar Content',
-    inflammatoryScore: 'Inflammatory Score',
-    hormoneImpact: 'Hormone Impact',
-    fiberContent: 'Fiber Content',
-    proteinQuality: 'Protein Quality',
-    healthyFats: 'Healthy Fats',
-    processedLevel: 'Processing Level',
-    legendTitle: 'What These Icons Mean',
-    colorGuide: 'Color Guide',
-    colorGood: 'Good for PCOS',
-    colorModerate: 'Consume in moderation',
-    colorPoor: 'Best to avoid',
-    descriptions: {
-      gi: 'How quickly food raises blood sugar',
-      sugar: 'Amount of added or natural sugars',
-      fiber: 'Helps with digestion and blood sugar',
-      inflammation: 'May trigger or reduce inflammation',
-      hormone: 'Effect on insulin and hormones',
-      processed: 'How refined or altered the food is',
-    },
-    values: {
-      low: 'Low',
-      moderate: 'Moderate',
-      medium: 'Medium',
-      high: 'High',
-      positive: 'Positive',
-      neutral: 'Neutral',
-      negative: 'Negative',
-      minimally: 'Minimally',
-      moderately: 'Moderately',
-      highly: 'Highly',
-      yes: 'Yes',
-      no: 'No',
-    },
-  },
-
-  // Paywall
   paywall: {
     title: 'Unlock Premium',
-    subtitle: 'Get unlimited scans and personalized insights for your PCOS journey',
+    subtitle: 'Get unlimited access to all features',
     features: {
       unlimitedScans: {
-        title: 'Unlimited Food Scans',
-        description: 'Scan any food, anytime, without limits',
+        title: 'Unlimited Scans',
+        description: 'Scan as many items as you want',
       },
       bloodSugar: {
-        title: 'Blood Sugar Impact',
-        description: 'See how foods affect your glucose levels',
+        title: 'Blood Sugar Analysis',
+        description: 'Understand glycemic impact',
       },
       inflammation: {
-        title: 'Inflammation Scores',
-        description: 'Identify foods that trigger inflammation',
+        title: 'Inflammation Tracking',
+        description: 'Monitor inflammatory markers',
       },
       hormones: {
-        title: 'Hormone Impact',
-        description: 'Understand effects on your hormones',
+        title: 'Hormone Insights',
+        description: 'Track hormonal health',
       },
       hiddenSugars: {
-        title: 'Hidden Ingredients',
-        description: 'Detect hidden sugars & additives',
+        title: 'Hidden Sugars',
+        description: 'Detect hidden sugars in foods',
       },
       personalizedTips: {
         title: 'Personalized Tips',
-        description: 'Get advice based on your symptoms',
+        description: 'Get tailored recommendations',
       },
     },
     plans: {
       yearly: 'Yearly',
       monthly: 'Monthly',
       perMonth: '/mo',
-      perMonthFull: '/month',
-      save: '-{{percent}}%',
-    },
-    trial: {
-      days: '{{days}}-Day Free Trial',
-      subtitle: 'Cancel anytime, no charge',
-      then: 'Then {{price}}/year',
+      perMonthFull: 'per month',
+      save: 'Save {{percent}}%',
     },
     cta: {
       startTrial: 'Start {{days}}-Day Free Trial',
       subscribeNow: 'Subscribe Now',
-      thenPrice: 'Then {{price}}/year',
+      thenPrice: 'then {{price}}/year',
       perMonth: '{{price}}/month',
     },
-    save30: 'Save 30%',
     continueForFree: 'Continue for Free',
     restore: 'Restore Purchases',
-    restoreSuccess: 'Purchases restored successfully',
-    restoreNone: 'No previous purchases found',
+    restoreSuccess: 'Purchases restored successfully!',
+    restoreNone: 'No purchases to restore',
     restoreError: 'Failed to restore purchases',
     legal: {
       terms: 'Terms',
       privacy: 'Privacy',
-      disclaimer: 'Subscription automatically renews unless canceled at least 24 hours before the end of the current period.',
     },
   },
-
-  // Settings
   settings: {
     title: 'Settings',
-    sections: {
-      account: 'Account',
-      appearance: 'Appearance',
-      support: 'Support',
-      about: 'About',
-      legal: 'Legal',
-    },
-    appearance: {
-      system: 'System',
-      light: 'Light',
-      dark: 'Dark',
-    },
-    items: {
-      profile: 'Profile',
-      updatePreferences: 'Update Preferences',
-      notifications: 'Notifications',
-      language: 'Language',
-      giveFeedback: 'Give Feedback',
-      rateApp: 'Rate the App',
-      howItWorks: 'How It Works',
-      nutritionGuide: 'Nutrition Guide',
-      aboutPcos: 'About PCOS',
-      termsOfService: 'Terms of Service',
-      privacyPolicy: 'Privacy Policy',
-      logOut: 'Log Out',
-      deleteAccount: 'Delete Account',
-    },
-    share: {
-      title: 'Share with Friends',
-      description: 'Help others manage their PCOS diet',
-      banner: {
-        title: 'Know someone with PCOS?',
-        subtitle: 'Help a friend on their journey',
-        earnPerReferral: 'Help a friend today',
-      },
-      modal: {
-        title: 'Help a Friend with PCOS',
-        subtitle: 'Share the app with someone who could benefit from it',
-        howItWorks: 'Why share:',
-        step1: 'PCOS affects 1 in 10 women worldwide',
-        step2: 'Many struggle to find PCOS-friendly foods',
-        step3: 'You could help someone take control of their health',
-        reward: '💜 Your recommendation could change someone\'s life',
-        shareNow: 'Share Now',
-        maybeLater: 'Maybe Later',
-      },
-    },
-    version: 'PCOS Food Scanner v{{version}}',
+    profile: 'Profile',
+    notifications: 'Notifications',
+    appearance: 'Appearance',
+    darkMode: 'Dark Mode',
+    language: 'Language',
+    support: 'Support',
+    helpCenter: 'Help Center',
+    contactUs: 'Contact Us',
+    feedback: 'Give Feedback',
+    rateApp: 'Rate App',
+    legal: 'Legal',
+    termsOfService: 'Terms of Service',
+    privacyPolicy: 'Privacy Policy',
+    account: 'Account',
+    signOut: 'Sign Out',
+    deleteAccount: 'Delete Account',
+    version: 'Version',
   },
-
-  // Language Selection
-  language: {
-    title: 'Language',
-    select: 'Select Language',
-    languages: {
-      en: 'English',
-      es: 'Spanish',
-      fr: 'French',
-      de: 'German',
-      pt: 'Portuguese',
-      it: 'Italian',
-      zh: 'Chinese',
-      ja: 'Japanese',
-      ko: 'Korean',
-      ar: 'Arabic',
-      hi: 'Hindi',
-      tr: 'Turkish',
-    },
-  },
-
-  // Logout Modal
-  logout: {
-    title: 'Log Out',
-    message: 'Are you sure you want to log out?',
-    confirm: 'Log Out',
-  },
-
-  // Delete Account Modal
-  deleteAccount: {
-    title: 'Delete Account',
-    message: 'This action cannot be undone. All your data will be permanently deleted.',
-    reasonPrompt: "Please tell us why you're leaving:",
-    reasons: {
-      noLongerNeed: 'No longer need the app',
-      foundBetter: 'Found a better alternative',
-      tooHard: 'Too difficult to use',
-      privacy: 'Privacy concerns',
-      other: 'Other',
-    },
-    additionalComments: 'Additional comments (optional)',
-    deleting: 'Deleting your account...',
-    confirm: 'Delete Account',
-  },
-
-  // How It Works
-  howItWorks: {
-    title: 'How It Works',
-    intro: {
-      title: 'Your PCOS Diet Assistant',
-      description: 'PCOS Food Scanner helps you make informed dietary choices by analyzing foods for their potential impact on PCOS symptoms, based on scientific research.',
-    },
-    steps: {
-      step1: {
-        title: 'Scan Any Food',
-        description: 'Point your camera at any food item, package, or meal. Our AI will identify the food and its ingredients.',
-      },
-      step2: {
-        title: 'AI Analysis',
-        description: 'We analyze the glycemic index, anti-inflammatory properties, hormone impact, and nutritional profile based on PCOS research.',
-      },
-      step3: {
-        title: 'Get Results',
-        description: 'Receive a clear rating (Safe, Caution, or Avoid) with detailed explanations of how the food may affect your PCOS symptoms.',
-      },
-    },
-    whatWeAnalyze: 'What We Analyze',
-    disclaimer: {
-      title: 'Important Note',
-      message: 'This app is for informational purposes only and is not a substitute for professional medical advice. Always consult with your healthcare provider or a registered dietitian before making significant dietary changes.',
-    },
-    sources: {
-      title: 'Medical Sources & Research',
-      description: 'Our recommendations are based on peer-reviewed research and guidelines from trusted medical institutions.',
-    },
-  },
-
-  // Nutrition Guide
-  nutritionGuide: {
-    title: 'Nutrition Guide',
-    intro: {
-      title: 'Understanding Your Scan Results',
-      description: 'Learn what each nutritional metric means and how it can affect your PCOS symptoms.',
-    },
-    howItAffects: 'How It Affects PCOS',
-    good: 'Good',
-    limit: 'Limit',
-    remember: {
-      title: 'Remember',
-      message: "Everyone's body responds differently. Use these guidelines as a starting point and work with your healthcare provider to find what works best for you.",
-    },
-    references: {
-      title: 'Medical References',
-      intro: 'The information in this guide is based on peer-reviewed research and guidelines from the following reputable medical sources:',
-      disclaimer: 'This app provides general information only and is not a substitute for professional medical advice. Always consult your healthcare provider for personalized guidance.',
-    },
-  },
-
-  // Feedback
   feedback: {
     title: 'Give Feedback',
-    subtitle: 'We\'d love to hear your thoughts on how we can improve.',
+    subtitle: 'We would love to hear from you',
     label: 'Your Feedback',
-    placeholder: 'Share your feedback...',
-    submit: 'Send',
+    placeholder: 'Tell us what you think...',
+    submit: 'Submit Feedback',
     success: 'Thank you for your feedback!',
-    error: 'Failed to send feedback',
+    error: 'Failed to submit feedback',
     signInRequired: 'Please sign in to submit feedback',
   },
-
-  // Profile
   profile: {
     title: 'Profile',
     name: 'Name',
-    username: 'Username',
-    email: 'Email',
-    save: 'Save Changes',
-    uploadAvatar: 'Upload Avatar',
-    changeAvatar: 'Change Avatar',
-    removeAvatar: 'Remove Avatar',
     namePlaceholder: 'Enter your name',
-    usernamePlaceholder: 'Enter username',
+    username: 'Username',
+    usernamePlaceholder: 'Enter your username',
+    email: 'Email',
+    editProfile: 'Edit Profile',
+    saveChanges: 'Save Changes',
   },
-
-  // Referral
-  referral: {
-    title: 'Help a Friend',
-    codeCopied: 'Link copied to clipboard',
-    shareMessage: 'I found this app that helps with PCOS-friendly food choices! Check it out: {{link}}',
-    hero: {
-      title: 'Spread the Word',
-      subtitle: 'Help someone you care about take control of their PCOS journey',
-    },
-    yourCode: 'Share This Link',
-    shareButton: 'Share with Friends',
-    howToEarn: 'Why share',
-    steps: {
-      step1: 'PCOS affects 1 in 10 women, and many feel lost about what to eat',
-      step2: 'Your recommendation could help someone discover foods that work for them',
-    },
-    terms: 'Thank you for helping spread awareness about PCOS-friendly nutrition.',
-  },
-
-  // Notifications
   notifications: {
     title: 'Notifications',
     pushNotifications: 'Push Notifications',
-    pushDescription: 'Get notified when your food scan is complete',
-    helpText: 'Notifications help you know when your food analysis is ready, so you can continue with your day while we process your scan.',
+    pushDescription: 'Receive push notifications for important updates',
+    emailNotifications: 'Email Notifications',
+    reminders: 'Reminders',
+    updates: 'App Updates',
     enabled: 'Notifications enabled',
     disabledTitle: 'Notifications Disabled',
-    disabledMessage: 'To enable notifications, please go to Settings and allow notifications for PCOS Food Scanner.',
+    disabledMessage: 'Please enable notifications in your device settings to receive updates.',
     disableTitle: 'Disable Notifications',
-    disableMessage: 'To disable notifications, please go to Settings and turn off notifications for PCOS Food Scanner.',
+    disableMessage: 'To disable notifications, please go to your device settings.',
+    helpText: 'Manage your notification preferences to stay updated.',
   },
-
-  // Errors
   errors: {
-    generic: 'Something went wrong. Please try again.',
-    network: 'Network error. Please check your connection.',
-    camera: 'Failed to capture photo. Please try again.',
-    notAuthenticated: 'Please sign in to continue.',
-  },
-
-  // Auth Toasts
-  authToasts: {
-    signInFailed: 'Failed to complete sign in',
-    signInAppleFailed: 'Failed to sign in with Apple',
-    signInGoogleFailed: 'Failed to sign in with Google',
-    signOutFailed: 'Failed to sign out',
-    accountDeleted: 'Account deleted successfully',
-    accountDeleteFailed: 'Failed to delete account',
-    authFailed: 'Authentication failed',
-    completingSignIn: 'Completing sign in...',
+    generic: 'Something went wrong',
+    network: 'Network error. Please try again.',
+    unauthorized: 'Please sign in to continue',
+    notFound: 'Not found',
   },
 };

@@ -8,12 +8,10 @@ import { Toaster } from 'sonner-native';
 import { AuthProvider } from './auth-provider';
 import { RevenueCatProvider } from './revenuecat-provider';
 import { NotificationProvider } from './notification-provider';
-import { PendingScanProvider } from './pending-scan-provider';
-import { ThemeProvider } from './theme-provider';
+import { ThemeProvider, useTheme } from './theme-provider';
 import { TabBarProvider } from './tab-bar-provider';
+import { DevModeProvider } from './dev-mode-provider';
 import { LanguageProvider } from './language-provider';
-import { OnboardingProvider } from './onboarding-provider';
-import '@/lib/i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,48 +23,53 @@ const queryClient = new QueryClient({
   },
 });
 
+function ThemedToaster() {
+  const { isDark } = useTheme();
+  return (
+    <Toaster
+      theme={isDark ? 'dark' : 'light'}
+      toastOptions={{
+        style: {
+          paddingVertical: 12,
+          paddingHorizontal: 16,
+        },
+        titleStyle: {
+          fontSize: 14,
+          fontWeight: '600',
+        },
+        descriptionStyle: {
+          fontSize: 12,
+        },
+      }}
+    />
+  );
+}
+
 export const RootProvider = ({ children }: PropsWithChildren) => {
   useReactQueryDevTools(queryClient);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <LanguageProvider>
-          <AuthProvider>
-            <OnboardingProvider>
+      <LanguageProvider>
+        <DevModeProvider>
+          <ThemeProvider>
+            <AuthProvider>
               <RevenueCatProvider>
                 <NotificationProvider>
-                  <PendingScanProvider>
-                    <GestureHandlerRootView style={{ flex: 1 }}>
-                      <BottomSheetModalProvider>
-                        <TabBarProvider>
-                          {children}
-                          <Toaster
-                            theme="light"
-                            toastOptions={{
-                              style: {
-                                paddingVertical: 12,
-                                paddingHorizontal: 16,
-                              },
-                              titleStyle: {
-                                fontSize: 14,
-                                fontWeight: '600',
-                              },
-                              descriptionStyle: {
-                                fontSize: 12,
-                              },
-                            }}
-                          />
-                        </TabBarProvider>
-                      </BottomSheetModalProvider>
-                    </GestureHandlerRootView>
-                  </PendingScanProvider>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <BottomSheetModalProvider>
+                      <TabBarProvider>
+                        {children}
+                        <ThemedToaster />
+                      </TabBarProvider>
+                    </BottomSheetModalProvider>
+                  </GestureHandlerRootView>
                 </NotificationProvider>
               </RevenueCatProvider>
-            </OnboardingProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </ThemeProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </DevModeProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 };

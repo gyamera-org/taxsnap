@@ -3,7 +3,6 @@ export const queryKeys = {
     all: ['accounts'] as const,
     detail: () => [...queryKeys.accounts.all, 'detail'] as const,
     subscription: () => [...queryKeys.accounts.all, 'subscription'] as const,
-    onboardingProfile: () => [...queryKeys.accounts.all, 'onboarding-profile'] as const,
   },
   subscription: {
     all: ['subscription'] as const,
@@ -14,6 +13,5 @@ export const queryKeys = {
     all: ['settings'] as const,
     detail: () => [...queryKeys.settings.all, 'detail'] as const,
     avatar: () => [...queryKeys.settings.all, 'avatar'] as const,
-    reminderSettings: ['settings', 'reminder-settings'] as const,
   },
 } as const;

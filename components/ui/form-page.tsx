@@ -11,6 +11,7 @@ import {
   Switch,
 } from 'react-native';
 import { PageLayout } from '@/components/layouts';
+import { useThemedColors } from '@/lib/utils/theme';
 
 import type { KeyboardTypeOptions } from 'react-native';
 
@@ -35,27 +36,38 @@ export function FormField({
   numberOfLines = 1,
   keyboardType = 'default',
 }: FormFieldProps) {
+  const colors = useThemedColors();
   const height = multiline ? 56 * numberOfLines : 56;
 
   return (
     <View style={styles.fieldContainer}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <View style={[styles.inputWrapper, { height }]}>
+      <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <View
+        style={[
+          styles.inputWrapper,
+          {
+            height,
+            backgroundColor: colors.inputBackground,
+            borderColor: colors.inputBorder,
+          },
+        ]}
+      >
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.inputPlaceholder}
           editable={editable}
           multiline={multiline}
           numberOfLines={numberOfLines}
           keyboardType={keyboardType}
-          keyboardAppearance="light"
+          keyboardAppearance={colors.isDark ? 'dark' : 'light'}
           textAlignVertical={multiline ? 'top' : 'center'}
           style={[
             styles.input,
+            { color: colors.inputText },
             multiline && styles.inputMultiline,
-            !editable && styles.inputDisabled,
+            !editable && { color: colors.textMuted },
           ]}
         />
       </View>
@@ -76,20 +88,32 @@ export function ToggleField({
   value,
   onValueChange,
 }: ToggleFieldProps) {
+  const colors = useThemedColors();
+
   return (
-    <View style={styles.toggleWrapper}>
+    <View
+      style={[
+        styles.toggleWrapper,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.cardBorder,
+        },
+      ]}
+    >
       <View style={styles.toggleContent}>
         <View style={styles.toggleTextContainer}>
-          <Text style={styles.toggleLabel}>{label}</Text>
+          <Text style={[styles.toggleLabel, { color: colors.text }]}>{label}</Text>
           {description && (
-            <Text style={styles.toggleDescription}>{description}</Text>
+            <Text style={[styles.toggleDescription, { color: colors.textSecondary }]}>
+              {description}
+            </Text>
           )}
         </View>
         <Switch
           value={value}
           onValueChange={onValueChange}
-          trackColor={{ false: '#D1D5DB', true: '#0D9488' }}
-          thumbColor="#FFFFFF"
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor={colors.card}
         />
       </View>
     </View>
@@ -97,6 +121,7 @@ export function ToggleField({
 }
 
 function SkeletonField() {
+  const colors = useThemedColors();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -121,10 +146,10 @@ function SkeletonField() {
   return (
     <View style={styles.fieldContainer}>
       <Animated.View
-        style={[styles.skeletonLabel, { opacity }]}
+        style={[styles.skeletonLabel, { opacity, backgroundColor: colors.border }]}
       />
       <Animated.View
-        style={[styles.skeletonInput, { opacity }]}
+        style={[styles.skeletonInput, { opacity, backgroundColor: colors.backgroundSecondary }]}
       />
     </View>
   );
@@ -190,6 +215,8 @@ export function SaveButton({
   loading = false,
   label = 'Save',
 }: SaveButtonProps) {
+  const colors = useThemedColors();
+
   return (
     <Pressable
       onPress={onPress}
@@ -197,9 +224,9 @@ export function SaveButton({
       style={{ opacity: !disabled && !loading ? 1 : 0.4 }}
     >
       {loading ? (
-        <ActivityIndicator size="small" color="#0D9488" />
+        <ActivityIndicator size="small" color={colors.primary} />
       ) : (
-        <Text style={styles.saveButtonText}>{label}</Text>
+        <Text style={[styles.saveButtonText, { color: colors.primary }]}>{label}</Text>
       )}
     </Pressable>
   );
@@ -223,44 +250,25 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6B7280',
     marginLeft: 4,
   },
   inputWrapper: {
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.95)',
     overflow: 'hidden',
-    shadowColor: '#0D9488',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
   input: {
     flex: 1,
     fontSize: 16,
     paddingHorizontal: 16,
-    color: '#111827',
   },
   inputMultiline: {
     paddingVertical: 16,
   },
-  inputDisabled: {
-    color: '#9CA3AF',
-  },
   toggleWrapper: {
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.95)',
     overflow: 'hidden',
-    shadowColor: '#0D9488',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
   toggleContent: {
     flexDirection: 'row',
@@ -275,28 +283,23 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 16,
-    color: '#111827',
   },
   toggleDescription: {
     fontSize: 14,
-    color: '#6B7280',
     marginTop: 4,
   },
   skeletonLabel: {
     height: 16,
     width: 80,
     borderRadius: 4,
-    backgroundColor: '#E5E7EB',
     marginLeft: 4,
   },
   skeletonInput: {
     height: 56,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#0D9488',
   },
 });

@@ -18,7 +18,7 @@ import { useAuth } from '@/context/auth-provider';
 import * as Haptics from 'expo-haptics';
 import { AppleIcon, GoogleIcon } from '@/components/icons/tab-icons';
 import { APP_URLS } from '@/lib/config/urls';
-import { PCOSLogo } from '@/components/icons/pcos-logo';
+import { AppLogo } from '@/components/icons/app-logo';
 import { useTranslation } from 'react-i18next';
 
 export default function AuthScreen() {
@@ -82,7 +82,7 @@ export default function AuthScreen() {
               <BlurView intensity={40} tint="light" style={styles.blurContainer}>
                 {/* Logo */}
                 <View style={styles.logoContainer}>
-                  <PCOSLogo size={64} color="#0D9488" textColor="#ffffff" />
+                  <AppLogo size={64} color="#0D9488" textColor="#ffffff" />
                 </View>
 
                 {/* Title */}

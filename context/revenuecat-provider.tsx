@@ -7,6 +7,7 @@ import Purchases, {
 } from 'react-native-purchases';
 import { useAuth } from './auth-provider';
 import { supabase } from '@/lib/supabase/client';
+import { DEV_MODE_CONFIG, isBypassActive } from '@/lib/config/dev-mode';
 
 const APIKeys = {
   apple: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
@@ -40,15 +41,21 @@ const SubscriptionContext = createContext<SubscriptionContextValue | undefined>(
 
 export function RevenueCatProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
+  const isPaywallBypassed = isBypassActive('PAYWALL');
+  const isUnlimitedScansBypassed = isBypassActive('UNLIMITED_FREE_SCANS');
+
+  // In dev mode with paywall bypass, start with subscribed state
   const [state, setState] = useState<SubscriptionState>({
-    isSubscribed: false,
-    isTrialing: false,
-    loading: true,
+    isSubscribed: isPaywallBypassed ? DEV_MODE_CONFIG.mockSubscription.isSubscribed : false,
+    isTrialing: isPaywallBypassed ? DEV_MODE_CONFIG.mockSubscription.isTrialing : false,
+    loading: !isPaywallBypassed,
     customerInfo: null,
     error: null,
     offerings: null,
     freeScansUsed: 0,
-    freeScansRemaining: MAX_FREE_SCANS,
+    freeScansRemaining: isUnlimitedScansBypassed
+      ? DEV_MODE_CONFIG.mockSubscription.freeScansRemaining
+      : MAX_FREE_SCANS,
     canScan: true,
   });
 
@@ -127,20 +134,33 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loadFreeScanCount]);
 
-  // Initialize RevenueCat on mount
+  // Initialize RevenueCat on mount (skip in dev mode with paywall bypass)
   useEffect(() => {
+    if (isPaywallBypassed) {
+      console.log('🔧 Paywall bypassed - skipping RevenueCat initialization');
+      return;
+    }
     initializeRevenueCat();
-  }, []);
+  }, [isPaywallBypassed]);
 
-  // Load free scan count when user changes
+  // Load free scan count when user changes (skip in dev mode with unlimited scans)
   useEffect(() => {
+    if (isUnlimitedScansBypassed) {
+      console.log('🔧 Unlimited scans enabled - skipping scan count load');
+      return;
+    }
     if (user) {
       loadFreeScanCount();
     }
-  }, [user, loadFreeScanCount]);
+  }, [user, loadFreeScanCount, isUnlimitedScansBypassed]);
 
-  // Load subscription when user changes
+  // Load subscription when user changes (skip in dev mode with paywall bypass)
   useEffect(() => {
+    // Skip RevenueCat in dev mode with paywall bypass
+    if (isPaywallBypassed) {
+      return;
+    }
+
     // Don't do anything until auth is done loading
     if (authLoading) {
       return;
@@ -167,7 +187,7 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         loading: false,
       }));
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, isPaywallBypassed]);
 
   const initializeRevenueCat = async () => {
     try {

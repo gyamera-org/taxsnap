@@ -5,10 +5,12 @@ import { toast } from 'sonner-native';
 import { FormPage, FormField, SaveButton } from '@/components/ui/form-page';
 import { supabase } from '@/lib/supabase/client';
 import { useTranslation } from 'react-i18next';
+import { useThemedColors } from '@/lib/utils/theme';
 
 export default function FeedbackScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const colors = useThemedColors();
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,7 +55,7 @@ export default function FeedbackScreen() {
         />
       }
     >
-      <Text className="text-gray-500 text-base -mt-2 mb-2">
+      <Text style={{ color: colors.textSecondary, fontSize: 16, marginTop: -8, marginBottom: 8 }}>
         {t('feedback.subtitle')}
       </Text>
 

@@ -1,5 +1,6 @@
 import { View, Modal, Pressable, StyleSheet } from 'react-native';
 import { Text } from '@/components/ui/text';
+import { useThemedColors } from '@/lib/utils/theme';
 
 type Props = {
   visible: boolean;
@@ -22,28 +23,48 @@ export function ConfirmationModal({
   cancelText = 'Cancel',
   destructive = false,
 }: Props) {
+  const colors = useThemedColors();
+
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.modalContainer} onPress={(e) => e.stopPropagation()}>
+      <Pressable
+        style={[styles.overlay, { backgroundColor: colors.modalOverlay }]}
+        onPress={onClose}
+      >
+        <Pressable
+          style={[
+            styles.modalContainer,
+            {
+              backgroundColor: colors.modalBackground,
+              shadowColor: colors.shadowColor,
+            },
+          ]}
+          onPress={(e) => e.stopPropagation()}
+        >
           <View style={styles.content}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.message}>{message}</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+            <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
 
             <View style={styles.buttons}>
               <Pressable
                 onPress={onConfirm}
                 style={[
                   styles.button,
-                  styles.confirmButton,
-                  destructive && styles.destructiveButton,
+                  {
+                    backgroundColor: destructive ? colors.danger : colors.primary,
+                  },
                 ]}
               >
                 <Text style={styles.confirmButtonText}>{confirmText}</Text>
               </Pressable>
 
-              <Pressable onPress={onClose} style={[styles.button, styles.cancelButton]}>
-                <Text style={styles.cancelButtonText}>{cancelText}</Text>
+              <Pressable
+                onPress={onClose}
+                style={[styles.button, { backgroundColor: colors.backgroundSecondary }]}
+              >
+                <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
+                  {cancelText}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -59,14 +80,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   modalContainer: {
     width: '100%',
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 24,
@@ -80,13 +98,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 8,
-    color: '#111827',
   },
   message: {
     fontSize: 15,
     textAlign: 'center',
     marginBottom: 24,
-    color: '#6B7280',
     lineHeight: 22,
   },
   buttons: {
@@ -97,22 +113,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
   },
-  confirmButton: {
-    backgroundColor: '#0D9488',
-  },
-  destructiveButton: {
-    backgroundColor: '#EF4444',
-  },
   confirmButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
-  cancelButton: {
-    backgroundColor: 'rgba(243, 244, 246, 0.95)',
-  },
   cancelButtonText: {
-    color: '#6B7280',
     fontSize: 16,
     fontWeight: '500',
   },

@@ -5,9 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { FormPage, ToggleField } from '@/components/ui/form-page';
 import { showSettingsAlert } from '@/lib/utils/alert';
 import { toast } from 'sonner-native';
+import { useThemedColors } from '@/lib/utils/theme';
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
+  const colors = useThemedColors();
   const [pushEnabled, setPushEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -67,7 +69,7 @@ export default function NotificationsScreen() {
       />
 
       <View className="mt-4 px-1">
-        <Text className="text-gray-500 text-sm">
+        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>
           {t('notifications.helpText')}
         </Text>
       </View>

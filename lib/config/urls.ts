@@ -1,8 +1,9 @@
 export const APP_URLS = {
-  baseUrl: 'https://pcos-friendly.vercel.app',
-  terms: 'https://pcos-friendly.vercel.app/terms',
-  privacy: 'https://pcos-friendly.vercel.app/privacy',
-  appStore: 'https://apps.apple.com/app/id6756167013',
+  // TODO: Update these URLs for your app
+  baseUrl: 'https://your-app.vercel.app',
+  terms: 'https://your-app.vercel.app/terms',
+  privacy: 'https://your-app.vercel.app/privacy',
+  appStore: 'https://apps.apple.com/app/YOUR_APP_ID',
   // RevenueCat Stripe checkout URL
   stripeCheckout: 'https://pay.rev.cat',
 } as const;

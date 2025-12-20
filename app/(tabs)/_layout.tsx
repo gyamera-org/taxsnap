@@ -1,10 +1,11 @@
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, G } from 'react-native-svg';
 import { useTabBar } from '@/context/tab-bar-provider';
 import * as Haptics from 'expo-haptics';
 import { useResponsive } from '@/lib/utils/responsive';
+import { useThemedColors } from '@/lib/utils/theme';
 
 // Custom Home Icon
 function HomeIcon({ color, size = 24 }: { color: string; size?: number }) {
@@ -32,33 +33,19 @@ function SettingsIcon({ color, size = 24 }: { color: string; size?: number }) {
   );
 }
 
-// Custom Scan Icon
-function ScanIcon({ color, size = 24 }: { color: string; size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 32 32" fill={color}>
-      <Path d="m12 3c0 .5522461-.4477539 1-1 1h-4c-1.6542969 0-3 1.3457031-3 3v4c0 .5522461-.4477539 1-1 1s-1-.4477539-1-1v-4c0-2.7568359 2.2431641-5 5-5h4c.5522461 0 1 .4477539 1 1zm13-1h-4c-.5527344 0-1 .4477539-1 1s.4472656 1 1 1h4c1.6542969 0 3 1.3457031 3 3v4c0 .5522461.4472656 1 1 1s1-.4477539 1-1v-4c0-2.7568359-2.2431641-5-5-5zm-14 26h-4c-1.6542969 0-3-1.3457031-3-3v-4c0-.5527344-.4477539-1-1-1s-1 .4472656-1 1v4c0 2.7568359 2.2431641 5 5 5h4c.5522461 0 1-.4472656 1-1s-.4477539-1-1-1zm18-8c-.5527344 0-1 .4472656-1 1v4c0 1.6542969-1.3457031 3-3 3h-4c-.5527344 0-1 .4472656-1 1s.4472656 1 1 1h4c2.7568359 0 5-2.2431641 5-5v-4c0-.5527344-.4472656-1-1-1z" />
-    </Svg>
-  );
-}
-
 interface TabBarProps {
   state: any;
   navigation: any;
 }
 
 function CustomTabBar({ state, navigation }: TabBarProps) {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { tabBarWidth } = useResponsive();
-
-  const handleScanPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/(tabs)/scan');
-  };
+  const colors = useThemedColors();
 
   const getTabColor = (routeName: string) => {
     const currentIndex = state.routes.findIndex((r: any) => r.name === routeName);
-    return state.index === currentIndex ? '#0D9488' : '#6B7280';
+    return state.index === currentIndex ? colors.tabBarActive : colors.tabBarInactive;
   };
 
   const handleTabPress = (routeName: string) => {
@@ -83,8 +70,18 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
         { paddingBottom: insets.bottom > 0 ? insets.bottom : 12 },
       ]}
     >
-      {/* Liquid Glass Tab Bar */}
-      <View style={[styles.tabBarWrapper, { maxWidth: tabBarWidth }]}>
+      {/* Tab Bar */}
+      <View
+        style={[
+          styles.tabBarWrapper,
+          {
+            maxWidth: tabBarWidth,
+            backgroundColor: colors.tabBar,
+            borderColor: colors.tabBarBorder,
+            shadowColor: colors.shadowColor,
+          },
+        ]}
+      >
         <View style={styles.tabBarContent}>
           {/* Home Tab */}
           <Pressable
@@ -92,13 +89,6 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
             style={styles.tabButton}
           >
             <HomeIcon color={getTabColor('home/index')} size={24} />
-          </Pressable>
-
-          {/* Scan Button */}
-          <Pressable onPress={handleScanPress} style={styles.scanButtonWrapper}>
-            <View style={styles.scanButton}>
-              <ScanIcon color="#FFFFFF" size={24} />
-            </View>
           </Pressable>
 
           {/* Settings Tab */}
@@ -127,42 +117,22 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 32,
     overflow: 'hidden',
-    // Liquid glass effect with backdrop blur simulation
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-    shadowColor: '#0D9488',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   tabBarContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
+    justifyContent: 'space-around',
+    paddingVertical: 12,
     paddingHorizontal: 20,
   },
   tabButton: {
     padding: 8,
     borderRadius: 16,
-  },
-  scanButtonWrapper: {
-    marginHorizontal: 8,
-  },
-  scanButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#0D9488',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0D9488',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
   },
 });
 
@@ -171,19 +141,13 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      tabBar={(props) => (isTabBarVisible ? <CustomTabBar {...props} /> : null)}
+      tabBar={(props: TabBarProps) => (isTabBarVisible ? <CustomTabBar {...props} /> : null)}
       screenOptions={{
         sceneStyle: { backgroundColor: 'transparent' },
         headerShown: false,
       }}
     >
       <Tabs.Screen name="home/index" />
-      <Tabs.Screen
-        name="scan/index"
-        options={{
-          href: null,
-        }}
-      />
       <Tabs.Screen name="settings/index" />
     </Tabs>
   );

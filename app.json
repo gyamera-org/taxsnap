@@ -1,21 +1,19 @@
 {
   "expo": {
-    "name": "PCOS Friendly",
-    "slug": "pcos-food-scanner",
-    "version": "1.0.1",
+    "name": "App Base",
+    "slug": "app-base",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
-    "scheme": "pcos-food-scanner",
+    "scheme": "app-base",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "userInterfaceStyle": "automatic",
-      "bundleIdentifier": "com.pcos-food-scanner.app",
+      "bundleIdentifier": "com.yourcompany.appbase",
       "usesAppleSignIn": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "PCOS Food Scanner uses your camera to scan food items.",
-        "NSPhotoLibraryUsageDescription": "PCOS Food Scanner accesses your photo library to analyze food items.",
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"]
       }
@@ -25,7 +23,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.pcosfoodscanner.app"
+      "package": "com.yourcompany.appbase"
     },
     "web": {
       "bundler": "metro",
@@ -34,8 +32,6 @@
     },
     "plugins": [
       "expo-router",
-      "expo-camera",
-      "expo-image-picker",
       "expo-apple-authentication",
       [
         "expo-splash-screen",
@@ -62,7 +58,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a7121311-8424-431f-b230-00dd96e02324"
+        "projectId": "YOUR_PROJECT_ID"
       }
     }
   }

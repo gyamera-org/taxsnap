@@ -8,7 +8,7 @@ import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
-import i18n from '@/lib/i18n';
+import { DEV_MODE_CONFIG, isBypassActive } from '@/lib/config/dev-mode';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -24,10 +24,22 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Create a mock user for dev mode
+const createMockUser = (): User => ({
+  id: DEV_MODE_CONFIG.MOCK_USER.id,
+  email: DEV_MODE_CONFIG.MOCK_USER.email,
+  app_metadata: {},
+  user_metadata: { full_name: DEV_MODE_CONFIG.MOCK_USER.name },
+  aud: 'authenticated',
+  created_at: new Date().toISOString(),
+});
+
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const isAuthBypassed = isBypassActive('AUTH');
+
   const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(isAuthBypassed ? createMockUser() : null);
+  const [loading, setLoading] = useState(!isAuthBypassed);
 
   // Helper function to ensure account exists in database
   const ensureAccountExists = async (
@@ -80,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (error) {
             console.error('Error setting session:', error);
-            toast.error(i18n.t('authToasts.signInFailed'));
+            toast.error('Sign in failed');
           }
         }
       }
@@ -101,8 +113,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Listen for auth state changes
+  // Listen for auth state changes (skip in dev mode with auth bypass)
   useEffect(() => {
+    if (isAuthBypassed) {
+      console.log('🔧 Auth bypassed - using mock user:', DEV_MODE_CONFIG.MOCK_USER.email);
+      return;
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
@@ -135,11 +152,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getSession();
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isAuthBypassed]);
 
   const signInWithApple = async (): Promise<boolean> => {
+    // In dev mode, skip Apple auth and go directly to home
+    if (isAuthBypassed) {
+      console.log('🔧 Bypassing Apple sign-in, navigating to home');
+      router.replace('/(tabs)/home');
+      return true;
+    }
+
     setLoading(true);
-    // router.replace('/paywall');
     try {
       const nonce = Math.random().toString(36).substring(2, 10);
       const hashedNonce = await Crypto.digestStringAsync(
@@ -188,7 +211,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false; // Cancelled
       }
       console.error('Apple sign-in error:', error);
-      toast.error(error.message || i18n.t('authToasts.signInAppleFailed'));
+      toast.error(error.message || 'Apple sign in failed');
       throw error;
     } finally {
       setLoading(false);
@@ -196,11 +219,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
+    // In dev mode, skip Google auth and go directly to home
+    if (isAuthBypassed) {
+      console.log('🔧 Bypassing Google sign-in, navigating to home');
+      router.replace('/(tabs)/home');
+      return;
+    }
+
     setLoading(true);
     try {
       // Create redirect URI for OAuth
       const redirectUri = makeRedirectUri({
-        scheme: 'pcos-food-scanner',
+        scheme: 'YOUR_APP_SCHEME',
         path: 'auth/callback',
       });
 
@@ -238,7 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: any) {
       console.error('Google sign-in error:', error);
-      toast.error(error.message || i18n.t('authToasts.signInGoogleFailed'));
+      toast.error(error.message || 'Google sign in failed');
     } finally {
       setLoading(false);
     }
@@ -256,7 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // toast.success('Signed out successfully');
     } catch (error: any) {
       console.error('Sign out error:', error);
-      toast.error(i18n.t('authToasts.signOutFailed'));
+      toast.error('Sign out failed');
     } finally {
       setLoading(false);
     }
@@ -274,11 +304,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(null);
       setUser(null);
-      toast.success(i18n.t('authToasts.accountDeleted'));
+      toast.success('Account deleted successfully');
       router.replace('/auth');
     } catch (error: any) {
       console.error('Delete account error:', error);
-      toast.error(error.message || i18n.t('authToasts.accountDeleteFailed'));
+      toast.error(error.message || 'Failed to delete account');
       throw error;
     } finally {
       setLoading(false);
