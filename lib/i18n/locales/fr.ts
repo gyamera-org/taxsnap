@@ -56,29 +56,29 @@ export const fr = {
     title: 'Débloquer Premium',
     subtitle: 'Accédez à toutes les fonctionnalités sans limite',
     features: {
-      unlimitedScans: {
-        title: 'Scans Illimités',
-        description: 'Scannez autant d\'articles que vous voulez',
+      feature1: {
+        title: 'Accès Illimité',
+        description: 'Accès complet à toutes les fonctionnalités premium',
       },
-      bloodSugar: {
-        title: 'Analyse Glycémique',
-        description: 'Comprenez l\'impact glycémique',
+      feature2: {
+        title: 'Support Prioritaire',
+        description: 'Obtenez de l\'aide quand vous en avez le plus besoin',
       },
-      inflammation: {
-        title: 'Suivi de l\'Inflammation',
-        description: 'Surveillez les marqueurs inflammatoires',
+      feature3: {
+        title: 'Sécurité Avancée',
+        description: 'Protection renforcée pour vos données',
       },
-      hormones: {
-        title: 'Insights Hormonaux',
-        description: 'Suivez votre santé hormonale',
+      feature4: {
+        title: 'Synchronisation Cloud',
+        description: 'Accédez à vos données sur tous vos appareils',
       },
-      hiddenSugars: {
-        title: 'Sucres Cachés',
-        description: 'Détectez les sucres cachés dans les aliments',
+      feature5: {
+        title: 'Sans Publicité',
+        description: 'Profitez d\'une expérience sans publicité',
       },
-      personalizedTips: {
-        title: 'Conseils Personnalisés',
-        description: 'Recevez des recommandations sur mesure',
+      feature6: {
+        title: 'Fonctionnalités Exclusives',
+        description: 'Accès aux fonctionnalités réservées aux premium',
       },
     },
     plans: {
@@ -86,7 +86,10 @@ export const fr = {
       monthly: 'Mensuel',
       perMonth: '/mois',
       perMonthFull: 'par mois',
+      perYear: '/an',
       save: 'Économisez {{percent}}%',
+      freeTrial: '{{days}} jours d\'essai gratuit',
+      saveWithTrial: '{{percent}}% + {{days}} jours gratuits',
     },
     cta: {
       startTrial: 'Démarrer l\'Essai de {{days}} Jours',

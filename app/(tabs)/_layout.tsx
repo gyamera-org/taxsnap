@@ -64,12 +64,7 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingBottom: insets.bottom > 0 ? insets.bottom : 12 },
-      ]}
-    >
+    <View style={[styles.container, { paddingBottom: insets.bottom > 0 ? insets.bottom : 12 }]}>
       {/* Tab Bar */}
       <View
         style={[
@@ -84,18 +79,12 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
       >
         <View style={styles.tabBarContent}>
           {/* Home Tab */}
-          <Pressable
-            onPress={() => handleTabPress('home/index')}
-            style={styles.tabButton}
-          >
+          <Pressable onPress={() => handleTabPress('home/index')} style={styles.tabButton}>
             <HomeIcon color={getTabColor('home/index')} size={24} />
           </Pressable>
 
           {/* Settings Tab */}
-          <Pressable
-            onPress={() => handleTabPress('settings/index')}
-            style={styles.tabButton}
-          >
+          <Pressable onPress={() => handleTabPress('settings/index')} style={styles.tabButton}>
             <SettingsIcon color={getTabColor('settings/index')} size={24} />
           </Pressable>
         </View>

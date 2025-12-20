@@ -13,16 +13,18 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Gauge, Flame, HeartPulse, Candy, Activity, Check, ScanLine } from 'lucide-react-native';
+import { Sparkles, Zap, Shield, Cloud, Star, Crown, Check } from 'lucide-react-native';
 import { useRevenueCat } from '@/context/revenuecat-provider';
 import { APP_URLS } from '@/lib/config/urls';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner-native';
 import { useResponsive } from '@/lib/utils/responsive';
+import { useThemedColors } from '@/lib/utils/theme';
 
 // Fallback prices if RevenueCat fails to load
-const FALLBACK_MONTHLY_PRICE = 3.99;
+const FALLBACK_MONTHLY_PRICE = 2.99;
 const FALLBACK_YEARLY_PRICE = 29.99;
+const FALLBACK_YEARLY_PER_MONTH = 2.5;
 const TRIAL_DAYS = 3;
 
 type PlanType = 'monthly' | 'yearly';
@@ -30,6 +32,7 @@ type PlanType = 'monthly' | 'yearly';
 export default function PaywallScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const colors = useThemedColors();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
   const { offerings, purchasePackage, restorePurchases } = useRevenueCat();
@@ -37,34 +40,34 @@ export default function PaywallScreen() {
 
   const features = [
     {
-      icon: ScanLine,
-      title: t('paywall.features.unlimitedScans.title'),
-      description: t('paywall.features.unlimitedScans.description'),
+      icon: Sparkles,
+      title: t('paywall.features.feature1.title'),
+      description: t('paywall.features.feature1.description'),
     },
     {
-      icon: Gauge,
-      title: t('paywall.features.bloodSugar.title'),
-      description: t('paywall.features.bloodSugar.description'),
+      icon: Zap,
+      title: t('paywall.features.feature2.title'),
+      description: t('paywall.features.feature2.description'),
     },
     {
-      icon: Flame,
-      title: t('paywall.features.inflammation.title'),
-      description: t('paywall.features.inflammation.description'),
+      icon: Shield,
+      title: t('paywall.features.feature3.title'),
+      description: t('paywall.features.feature3.description'),
     },
     {
-      icon: HeartPulse,
-      title: t('paywall.features.hormones.title'),
-      description: t('paywall.features.hormones.description'),
+      icon: Cloud,
+      title: t('paywall.features.feature4.title'),
+      description: t('paywall.features.feature4.description'),
     },
     {
-      icon: Candy,
-      title: t('paywall.features.hiddenSugars.title'),
-      description: t('paywall.features.hiddenSugars.description'),
+      icon: Star,
+      title: t('paywall.features.feature5.title'),
+      description: t('paywall.features.feature5.description'),
     },
     {
-      icon: Activity,
-      title: t('paywall.features.personalizedTips.title'),
-      description: t('paywall.features.personalizedTips.description'),
+      icon: Crown,
+      title: t('paywall.features.feature6.title'),
+      description: t('paywall.features.feature6.description'),
     },
   ];
 
@@ -76,7 +79,7 @@ export default function PaywallScreen() {
   const monthlyPriceString = monthlyPackage?.product.priceString ?? `$${FALLBACK_MONTHLY_PRICE}`;
   const yearlyPriceString = yearlyPackage?.product.priceString ?? `$${FALLBACK_YEARLY_PRICE}`;
   const yearlyPerMonthString =
-    yearlyPackage?.product.pricePerMonthString ?? `$${(FALLBACK_YEARLY_PRICE / 12).toFixed(2)}`;
+    yearlyPackage?.product.pricePerMonthString ?? `$${FALLBACK_YEARLY_PER_MONTH.toFixed(2)}`;
 
   // Numeric prices for calculations
   const monthlyPrice = monthlyPackage?.product.price ?? FALLBACK_MONTHLY_PRICE;
@@ -120,22 +123,91 @@ export default function PaywallScreen() {
     }
   };
 
-  // Dynamic styles for responsive layout
+  // Theme-aware gradient colors
+  const gradientColors = colors.isDark
+    ? (['#0D0D0D', '#1A1A1A', '#262626', '#0D0D0D'] as const)
+    : (['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA'] as const);
+
+  // Dynamic styles for responsive layout and theming
   const dynamicStyles = {
     contentWrapper: {
       maxWidth: isTablet ? contentMaxWidth : undefined,
       alignSelf: isTablet ? ('center' as const) : undefined,
       width: '100%' as const,
     },
+    headerTitle: {
+      color: colors.text,
+    },
+    featuresCard: {
+      backgroundColor: colors.isDark ? 'rgba(26, 26, 26, 0.8)' : 'rgba(255, 255, 255, 0.6)',
+      borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.8)',
+    },
+    featureItemBorder: {
+      borderBottomColor: colors.isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)',
+    },
+    featureIconContainer: {
+      backgroundColor: colors.primaryLight,
+    },
+    featureTitle: {
+      color: colors.text,
+    },
+    featureDescription: {
+      color: colors.textSecondary,
+    },
+    planCard: {
+      borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.7)',
+      backgroundColor: colors.isDark ? 'rgba(26, 26, 26, 0.6)' : 'rgba(255, 255, 255, 0.5)',
+    },
+    planCardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.isDark ? 'rgba(13, 148, 136, 0.15)' : 'rgba(240, 253, 250, 0.7)',
+    },
+    saveBadge: {
+      backgroundColor: colors.primary,
+    },
+    radioButton: {
+      borderColor: colors.isDark ? '#52525B' : '#D1D5DB',
+    },
+    radioButtonSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primary,
+    },
+    planName: {
+      color: colors.text,
+    },
+    planPriceTotal: {
+      color: colors.text,
+    },
+    planPeriod: {
+      color: colors.textSecondary,
+    },
+    continueButtonText: {
+      color: colors.textSecondary,
+    },
+    legalLink: {
+      color: colors.textMuted,
+    },
+    legalDot: {
+      color: colors.textMuted,
+    },
+    orb1: {
+      backgroundColor: colors.isDark ? 'rgba(13, 148, 136, 0.08)' : 'rgba(20, 184, 166, 0.12)',
+    },
+    orb2: {
+      backgroundColor: colors.isDark ? 'rgba(13, 148, 136, 0.06)' : 'rgba(45, 212, 191, 0.1)',
+    },
+    orb3: {
+      backgroundColor: colors.isDark ? 'rgba(13, 148, 136, 0.04)' : 'rgba(94, 234, 212, 0.08)',
+    },
   };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle={colors.isDark ? 'light-content' : 'dark-content'} />
 
       {/* Background gradient */}
       <LinearGradient
-        colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
+        colors={gradientColors}
         locations={[0, 0.3, 0.7, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -143,9 +215,18 @@ export default function PaywallScreen() {
       />
 
       {/* Floating orbs for liquid glass effect */}
-      <Animated.View entering={FadeIn.delay(100).duration(1000)} style={styles.orb1} />
-      <Animated.View entering={FadeIn.delay(200).duration(1000)} style={styles.orb2} />
-      <Animated.View entering={FadeIn.delay(300).duration(1000)} style={styles.orb3} />
+      <Animated.View
+        entering={FadeIn.delay(100).duration(1000)}
+        style={[styles.orb1, dynamicStyles.orb1]}
+      />
+      <Animated.View
+        entering={FadeIn.delay(200).duration(1000)}
+        style={[styles.orb2, dynamicStyles.orb2]}
+      />
+      <Animated.View
+        entering={FadeIn.delay(300).duration(1000)}
+        style={[styles.orb3, dynamicStyles.orb3]}
+      />
 
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
@@ -156,39 +237,36 @@ export default function PaywallScreen() {
           <View style={[styles.content, dynamicStyles.contentWrapper]}>
             {/* Header */}
             <View style={styles.headerSection}>
-              {/* <View style={styles.iconContainer}>
-                <ScanLine size={40} color="#14B8A6" />
-              </View> */}
-              <Text style={[styles.headerTitle, isTablet && styles.headerTitleTablet]}>
+              <Text
+                style={[styles.headerTitle, isTablet && styles.headerTitleTablet, dynamicStyles.headerTitle]}
+              >
                 {t('paywall.title')}
               </Text>
-              {/* <Text style={[styles.headerSubtitle, isTablet && styles.headerSubtitleTablet]}>
-                {t('paywall.subtitle')}
-              </Text> */}
             </View>
 
             {/* Features Card */}
-            <View style={styles.featuresCard}>
+            <View style={[styles.featuresCard, dynamicStyles.featuresCard]}>
               {features.map((feature, index) => (
                 <View
                   key={index}
                   style={[
                     styles.featureItem,
                     index < features.length - 1 && styles.featureItemBorder,
+                    index < features.length - 1 && dynamicStyles.featureItemBorder,
                   ]}
                 >
-                  <View style={styles.featureIconContainer}>
-                    <feature.icon size={20} color="#14B8A6" />
+                  <View style={[styles.featureIconContainer, dynamicStyles.featureIconContainer]}>
+                    <feature.icon size={20} color={colors.primary} />
                   </View>
                   <View style={styles.featureTextContainer}>
-                    <Text style={styles.featureTitle} numberOfLines={1}>
+                    <Text style={[styles.featureTitle, dynamicStyles.featureTitle]} numberOfLines={1}>
                       {feature.title}
                     </Text>
-                    <Text style={styles.featureDescription} numberOfLines={2}>
+                    <Text style={[styles.featureDescription, dynamicStyles.featureDescription]} numberOfLines={2}>
                       {feature.description}
                     </Text>
                   </View>
-                  <Check size={18} color="#14B8A6" />
+                  <Check size={18} color={colors.primary} />
                 </View>
               ))}
             </View>
@@ -198,11 +276,16 @@ export default function PaywallScreen() {
               {/* Yearly Plan */}
               <Pressable onPress={() => setSelectedPlan('yearly')} style={styles.planWrapper}>
                 <View
-                  style={[styles.planCard, selectedPlan === 'yearly' && styles.planCardSelected]}
+                  style={[
+                    styles.planCard,
+                    dynamicStyles.planCard,
+                    selectedPlan === 'yearly' && styles.planCardSelected,
+                    selectedPlan === 'yearly' && dynamicStyles.planCardSelected,
+                  ]}
                 >
                   {/* Save Badge */}
                   {savingsPercent > 0 && (
-                    <View style={styles.saveBadge}>
+                    <View style={[styles.saveBadge, dynamicStyles.saveBadge]}>
                       <Text style={styles.saveBadgeText} numberOfLines={1}>
                         {t('paywall.plans.save', { percent: savingsPercent })}
                       </Text>
@@ -211,20 +294,23 @@ export default function PaywallScreen() {
                   <View
                     style={[
                       styles.radioButton,
+                      dynamicStyles.radioButton,
                       selectedPlan === 'yearly' && styles.radioButtonSelected,
+                      selectedPlan === 'yearly' && dynamicStyles.radioButtonSelected,
                     ]}
                   >
                     {selectedPlan === 'yearly' && <Check size={10} color="#fff" />}
                   </View>
-                  <Text style={styles.planName} numberOfLines={1}>
+                  <Text style={[styles.planName, dynamicStyles.planName]} numberOfLines={1}>
                     {t('paywall.plans.yearly')}
                   </Text>
-                  <Text style={styles.planPriceTotal} numberOfLines={1} adjustsFontSizeToFit>
-                    {yearlyPriceString}
-                  </Text>
-                  <Text style={styles.planPeriod} numberOfLines={1}>
+                  <Text style={[styles.planPriceTotal, dynamicStyles.planPriceTotal]} numberOfLines={1} adjustsFontSizeToFit>
                     {yearlyPerMonthString}
                     {t('paywall.plans.perMonth')}
+                  </Text>
+                  <Text style={[styles.planPeriod, dynamicStyles.planPeriod]} numberOfLines={1}>
+                    {yearlyPriceString}
+                    {t('paywall.plans.perYear')}
                   </Text>
                 </View>
               </Pressable>
@@ -232,23 +318,30 @@ export default function PaywallScreen() {
               {/* Monthly Plan */}
               <Pressable onPress={() => setSelectedPlan('monthly')} style={styles.planWrapper}>
                 <View
-                  style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
+                  style={[
+                    styles.planCard,
+                    dynamicStyles.planCard,
+                    selectedPlan === 'monthly' && styles.planCardSelected,
+                    selectedPlan === 'monthly' && dynamicStyles.planCardSelected,
+                  ]}
                 >
                   <View
                     style={[
                       styles.radioButton,
+                      dynamicStyles.radioButton,
                       selectedPlan === 'monthly' && styles.radioButtonSelected,
+                      selectedPlan === 'monthly' && dynamicStyles.radioButtonSelected,
                     ]}
                   >
                     {selectedPlan === 'monthly' && <Check size={10} color="#fff" />}
                   </View>
-                  <Text style={styles.planName} numberOfLines={1}>
+                  <Text style={[styles.planName, dynamicStyles.planName]} numberOfLines={1}>
                     {t('paywall.plans.monthly')}
                   </Text>
-                  <Text style={styles.planPriceTotal} numberOfLines={1} adjustsFontSizeToFit>
+                  <Text style={[styles.planPriceTotal, dynamicStyles.planPriceTotal]} numberOfLines={1} adjustsFontSizeToFit>
                     {monthlyPriceString}
                   </Text>
-                  <Text style={styles.planPeriod} numberOfLines={1}>
+                  <Text style={[styles.planPeriod, dynamicStyles.planPeriod]} numberOfLines={1}>
                     {t('paywall.plans.perMonthFull')}
                   </Text>
                 </View>
@@ -289,27 +382,22 @@ export default function PaywallScreen() {
             )}
           </Pressable>
 
-          {/* Continue for Free */}
-          <Pressable onPress={() => router.replace('/(tabs)/home')} style={styles.continueButton}>
-            <Text style={styles.continueButtonText}>{t('paywall.continueForFree')}</Text>
-          </Pressable>
-
           {/* Legal Links */}
           <View style={styles.legalContainer}>
             <View style={styles.legalLinks}>
               <Pressable onPress={() => Linking.openURL(APP_URLS.terms)}>
-                <Text style={styles.legalLink}>{t('paywall.legal.terms')}</Text>
+                <Text style={[styles.legalLink, dynamicStyles.legalLink]}>{t('paywall.legal.terms')}</Text>
               </Pressable>
-              <Text style={styles.legalDot}>|</Text>
+              <Text style={[styles.legalDot, dynamicStyles.legalDot]}>|</Text>
               <Pressable onPress={() => Linking.openURL(APP_URLS.privacy)}>
-                <Text style={styles.legalLink}>{t('paywall.legal.privacy')}</Text>
+                <Text style={[styles.legalLink, dynamicStyles.legalLink]}>{t('paywall.legal.privacy')}</Text>
               </Pressable>
-              <Text style={styles.legalDot}>|</Text>
+              <Text style={[styles.legalDot, dynamicStyles.legalDot]}>|</Text>
               <Pressable onPress={handleRestore} disabled={isLoading}>
                 {isLoading ? (
-                  <ActivityIndicator size="small" color="#9CA3AF" />
+                  <ActivityIndicator size="small" color={colors.textMuted} />
                 ) : (
-                  <Text style={styles.legalLink}>{t('paywall.restore')}</Text>
+                  <Text style={[styles.legalLink, dynamicStyles.legalLink]}>{t('paywall.restore')}</Text>
                 )}
               </Pressable>
             </View>
@@ -342,43 +430,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 24,
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: 'rgba(20, 184, 166, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
     textAlign: 'center',
     marginBottom: 8,
   },
   headerTitleTablet: {
     fontSize: 28,
   },
-  headerSubtitle: {
-    fontSize: 15,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  headerSubtitleTablet: {
-    fontSize: 17,
-    lineHeight: 24,
-  },
   featuresCard: {
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
     padding: 16,
     marginBottom: 20,
-    shadowColor: '#0D9488',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -391,13 +456,11 @@ const styles = StyleSheet.create({
   },
   featureItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
   },
   featureIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(20, 184, 166, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -409,12 +472,10 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 2,
   },
   featureDescription: {
     fontSize: 13,
-    color: '#6B7280',
     lineHeight: 18,
   },
   plansContainer: {
@@ -432,15 +493,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     padding: 14,
     alignItems: 'center',
   },
   planCardSelected: {
-    borderColor: '#14B8A6',
-    backgroundColor: 'rgba(240, 253, 250, 0.7)',
-    shadowColor: '#0D9488',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -450,7 +506,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    backgroundColor: '#14B8A6',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderBottomLeftRadius: 10,
@@ -466,31 +521,29 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
-  radioButtonSelected: {
-    borderColor: '#14B8A6',
-    backgroundColor: '#14B8A6',
-  },
+  radioButtonSelected: {},
   planName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#111827',
     marginBottom: 2,
   },
   planPriceTotal: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
     marginBottom: 2,
   },
   planPeriod: {
     fontSize: 12,
-    color: '#6B7280',
+  },
+  trialText: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 4,
   },
   bottomSection: {
     paddingHorizontal: 20,
@@ -532,7 +585,6 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#6B7280',
   },
   legalContainer: {
     alignItems: 'center',
@@ -543,12 +595,10 @@ const styles = StyleSheet.create({
   },
   legalLink: {
     fontSize: 12,
-    color: '#9CA3AF',
     textDecorationLine: 'underline',
   },
   legalDot: {
     fontSize: 12,
-    color: '#9CA3AF',
     marginHorizontal: 8,
   },
   orb1: {
@@ -556,7 +606,6 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(20, 184, 166, 0.12)',
     top: -60,
     right: -60,
   },
@@ -565,7 +614,6 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(45, 212, 191, 0.1)',
     bottom: 180,
     left: -50,
   },
@@ -574,7 +622,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(94, 234, 212, 0.08)',
     top: '35%',
     right: -25,
   },

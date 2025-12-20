@@ -56,29 +56,29 @@ export const es = {
     title: 'Desbloquear Premium',
     subtitle: 'Obtén acceso ilimitado a todas las funciones',
     features: {
-      unlimitedScans: {
-        title: 'Escaneos Ilimitados',
-        description: 'Escanea todos los artículos que quieras',
+      feature1: {
+        title: 'Acceso Ilimitado',
+        description: 'Acceso completo a todas las funciones premium',
       },
-      bloodSugar: {
-        title: 'Análisis de Azúcar en Sangre',
-        description: 'Comprende el impacto glucémico',
+      feature2: {
+        title: 'Soporte Prioritario',
+        description: 'Obtén ayuda cuando más la necesites',
       },
-      inflammation: {
-        title: 'Seguimiento de Inflamación',
-        description: 'Monitorea marcadores inflamatorios',
+      feature3: {
+        title: 'Seguridad Avanzada',
+        description: 'Protección mejorada para tus datos',
       },
-      hormones: {
-        title: 'Información Hormonal',
-        description: 'Rastrea la salud hormonal',
+      feature4: {
+        title: 'Sincronización en la Nube',
+        description: 'Accede a tus datos en todos tus dispositivos',
       },
-      hiddenSugars: {
-        title: 'Azúcares Ocultos',
-        description: 'Detecta azúcares ocultos en alimentos',
+      feature5: {
+        title: 'Sin Anuncios',
+        description: 'Disfruta de una experiencia sin publicidad',
       },
-      personalizedTips: {
-        title: 'Consejos Personalizados',
-        description: 'Obtén recomendaciones a tu medida',
+      feature6: {
+        title: 'Funciones Exclusivas',
+        description: 'Acceso a funciones solo para premium',
       },
     },
     plans: {
@@ -86,7 +86,10 @@ export const es = {
       monthly: 'Mensual',
       perMonth: '/mes',
       perMonthFull: 'por mes',
+      perYear: '/año',
       save: 'Ahorra {{percent}}%',
+      freeTrial: '{{days}} días de prueba gratis',
+      saveWithTrial: 'Ahorra {{percent}}% + {{days}} días gratis',
     },
     cta: {
       startTrial: 'Iniciar Prueba de {{days}} Días',

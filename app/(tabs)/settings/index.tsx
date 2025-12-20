@@ -67,7 +67,10 @@ function SettingsItem({
       >
         <Icon size={18} color={danger ? colors.dangerText : colors.textSecondary} />
       </View>
-      <Text className="flex-1 text-base" style={{ color: danger ? colors.dangerText : colors.text }}>
+      <Text
+        className="flex-1 text-base"
+        style={{ color: danger ? colors.dangerText : colors.text }}
+      >
         {label}
       </Text>
       {rightElement}

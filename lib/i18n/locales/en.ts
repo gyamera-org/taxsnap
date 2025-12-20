@@ -56,29 +56,29 @@ export const en = {
     title: 'Unlock Premium',
     subtitle: 'Get unlimited access to all features',
     features: {
-      unlimitedScans: {
-        title: 'Unlimited Scans',
-        description: 'Scan as many items as you want',
+      feature1: {
+        title: 'Unlimited Access',
+        description: 'Full access to all premium features',
       },
-      bloodSugar: {
-        title: 'Blood Sugar Analysis',
-        description: 'Understand glycemic impact',
+      feature2: {
+        title: 'Priority Support',
+        description: 'Get help when you need it most',
       },
-      inflammation: {
-        title: 'Inflammation Tracking',
-        description: 'Monitor inflammatory markers',
+      feature3: {
+        title: 'Advanced Security',
+        description: 'Enhanced protection for your data',
       },
-      hormones: {
-        title: 'Hormone Insights',
-        description: 'Track hormonal health',
+      feature4: {
+        title: 'Cloud Sync',
+        description: 'Access your data across all devices',
       },
-      hiddenSugars: {
-        title: 'Hidden Sugars',
-        description: 'Detect hidden sugars in foods',
+      feature5: {
+        title: 'No Ads',
+        description: 'Enjoy an ad-free experience',
       },
-      personalizedTips: {
-        title: 'Personalized Tips',
-        description: 'Get tailored recommendations',
+      feature6: {
+        title: 'Exclusive Features',
+        description: 'Access to premium-only features',
       },
     },
     plans: {
@@ -86,7 +86,10 @@ export const en = {
       monthly: 'Monthly',
       perMonth: '/mo',
       perMonthFull: 'per month',
+      perYear: '/year',
       save: 'Save {{percent}}%',
+      freeTrial: '{{days}}-day free trial',
+      saveWithTrial: 'Save {{percent}}% + {{days}} days free',
     },
     cta: {
       startTrial: 'Start {{days}}-Day Free Trial',

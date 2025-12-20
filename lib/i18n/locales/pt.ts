@@ -56,29 +56,29 @@ export const pt = {
     title: 'Desbloquear Premium',
     subtitle: 'Tenha acesso ilimitado a todos os recursos',
     features: {
-      unlimitedScans: {
-        title: 'Scans Ilimitados',
-        description: 'Escaneie quantos itens quiser',
+      feature1: {
+        title: 'Acesso Ilimitado',
+        description: 'Acesso completo a todos os recursos premium',
       },
-      bloodSugar: {
-        title: 'Análise de Glicemia',
-        description: 'Entenda o impacto glicêmico',
+      feature2: {
+        title: 'Suporte Prioritário',
+        description: 'Obtenha ajuda quando mais precisar',
       },
-      inflammation: {
-        title: 'Rastreamento de Inflamação',
-        description: 'Monitore marcadores inflamatórios',
+      feature3: {
+        title: 'Segurança Avançada',
+        description: 'Proteção aprimorada para seus dados',
       },
-      hormones: {
-        title: 'Insights Hormonais',
-        description: 'Acompanhe a saúde hormonal',
+      feature4: {
+        title: 'Sincronização na Nuvem',
+        description: 'Acesse seus dados em todos os dispositivos',
       },
-      hiddenSugars: {
-        title: 'Açúcares Ocultos',
-        description: 'Detecte açúcares ocultos nos alimentos',
+      feature5: {
+        title: 'Sem Anúncios',
+        description: 'Aproveite uma experiência sem publicidade',
       },
-      personalizedTips: {
-        title: 'Dicas Personalizadas',
-        description: 'Receba recomendações sob medida',
+      feature6: {
+        title: 'Recursos Exclusivos',
+        description: 'Acesso a recursos exclusivos para premium',
       },
     },
     plans: {
@@ -86,7 +86,10 @@ export const pt = {
       monthly: 'Mensal',
       perMonth: '/mês',
       perMonthFull: 'por mês',
+      perYear: '/ano',
       save: 'Economize {{percent}}%',
+      freeTrial: '{{days}} dias de teste grátis',
+      saveWithTrial: '{{percent}}% + {{days}} dias grátis',
     },
     cta: {
       startTrial: 'Iniciar Teste de {{days}} Dias',

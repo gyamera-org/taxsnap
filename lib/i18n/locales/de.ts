@@ -56,29 +56,29 @@ export const de = {
     title: 'Premium freischalten',
     subtitle: 'Erhalte unbegrenzten Zugang zu allen Funktionen',
     features: {
-      unlimitedScans: {
-        title: 'Unbegrenzte Scans',
-        description: 'Scanne so viele Artikel wie du möchtest',
+      feature1: {
+        title: 'Unbegrenzter Zugang',
+        description: 'Voller Zugang zu allen Premium-Funktionen',
       },
-      bloodSugar: {
-        title: 'Blutzucker-Analyse',
-        description: 'Verstehe die glykämische Wirkung',
+      feature2: {
+        title: 'Prioritäts-Support',
+        description: 'Hilfe, wenn du sie am meisten brauchst',
       },
-      inflammation: {
-        title: 'Entzündungs-Tracking',
-        description: 'Überwache Entzündungsmarker',
+      feature3: {
+        title: 'Erweiterte Sicherheit',
+        description: 'Verbesserter Schutz für deine Daten',
       },
-      hormones: {
-        title: 'Hormon-Einblicke',
-        description: 'Verfolge die Hormongesundheit',
+      feature4: {
+        title: 'Cloud-Synchronisation',
+        description: 'Greife auf allen Geräten auf deine Daten zu',
       },
-      hiddenSugars: {
-        title: 'Versteckte Zucker',
-        description: 'Erkenne versteckte Zucker in Lebensmitteln',
+      feature5: {
+        title: 'Keine Werbung',
+        description: 'Genieße ein werbefreies Erlebnis',
       },
-      personalizedTips: {
-        title: 'Personalisierte Tipps',
-        description: 'Erhalte maßgeschneiderte Empfehlungen',
+      feature6: {
+        title: 'Exklusive Funktionen',
+        description: 'Zugang zu Premium-exklusiven Funktionen',
       },
     },
     plans: {
@@ -86,7 +86,10 @@ export const de = {
       monthly: 'Monatlich',
       perMonth: '/Mo.',
       perMonthFull: 'pro Monat',
+      perYear: '/Jahr',
       save: '{{percent}}% sparen',
+      freeTrial: '{{days}} Tage kostenlos testen',
+      saveWithTrial: '{{percent}}% sparen + {{days}} Tage gratis',
     },
     cta: {
       startTrial: '{{days}}-Tage-Testversion starten',
