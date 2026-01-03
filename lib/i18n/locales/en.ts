@@ -33,8 +33,9 @@ export const en = {
   },
   auth: {
     createAccount: 'Create Account',
+    signUpTitle: 'One last step',
     welcomeBack: 'Welcome Back',
-    signUpSubtitle: 'Start tracking your tax deductions',
+    signUpSubtitle: 'Sign in to save your deductions and access them anywhere.',
     signInSubtitle: 'Continue tracking your deductions',
     continueWithApple: 'Continue with Apple',
     continueWithGoogle: 'Continue with Google',
@@ -174,6 +175,7 @@ export const en = {
       buyNow: 'Buy Now',
       thenPrice: 'then {{price}}/year',
       perWeek: '{{price}}/week',
+      perWeekly: '{{price}}/week',
       perMonthly: '{{price}}/month',
       perYearly: '{{price}}/year',
       oneTimePayment: 'One-time purchase',

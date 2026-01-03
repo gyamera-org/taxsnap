@@ -31,11 +31,23 @@ import {
   Briefcase,
   FolderOpen,
   Receipt,
-  Sparkles,
   TrendingUp,
   Check,
   Star,
   User,
+  FileText,
+  Megaphone,
+  Car,
+  Users,
+  Shield,
+  Scale,
+  Laptop,
+  Building,
+  Package,
+  Plane,
+  Utensils,
+  Wifi,
+  Home,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -45,15 +57,33 @@ import { useTheme } from '@/context/theme-provider';
 import { useTranslation } from 'react-i18next';
 import { PRIMARY } from '@/lib/theme/colors';
 import { saveOnboardingData, saveUserName } from '@/lib/utils/onboarding-storage';
+import { ScrollView } from 'react-native';
 
-type Step = 'q1' | 'q2' | 'q3' | 'q4' | 'results' | 'rateApp' | 'nameInput';
+type Step = 'q1' | 'q2' | 'q3' | 'q4' | 'categories' | 'results' | 'rateApp' | 'nameInput';
 
 interface QuizAnswers {
   income: string | null;
   workType: string | null;
   currentTracking: string | null;
   monthlyExpenses: string | null;
+  expenseCategories: string[];
 }
+
+// Category options for onboarding selection
+const ONBOARDING_CATEGORIES = [
+  { id: 'office_expense', name: 'Office & Software', icon: Laptop, color: '#F59E0B' },
+  { id: 'travel', name: 'Travel', icon: Plane, color: '#0EA5E9' },
+  { id: 'meals', name: 'Meals', icon: Utensils, color: '#F97316' },
+  { id: 'car_truck', name: 'Car & Mileage', icon: Car, color: '#8B5CF6' },
+  { id: 'supplies', name: 'Supplies', icon: Package, color: '#84CC16' },
+  { id: 'advertising', name: 'Marketing & Ads', icon: Megaphone, color: '#EC4899' },
+  { id: 'home_office', name: 'Home Office', icon: Home, color: '#14B8A6' },
+  { id: 'utilities', name: 'Phone & Internet', icon: Wifi, color: '#A855F7' },
+  { id: 'legal_professional', name: 'Professional Services', icon: Scale, color: '#6366F1' },
+  { id: 'insurance', name: 'Insurance', icon: Shield, color: '#10B981' },
+  { id: 'contract_labor', name: 'Contractors', icon: Users, color: '#3B82F6' },
+  { id: 'rent_property', name: 'Rent & Coworking', icon: Building, color: '#EF4444' },
+] as const;
 
 interface QuestionOption {
   id: string;
@@ -496,6 +526,158 @@ interface NameInputSlideProps {
   colors: ReturnType<typeof useThemedColors>;
 }
 
+// Categories Selection Slide
+interface CategoriesSlideProps {
+  selectedCategories: string[];
+  onToggle: (id: string) => void;
+  onNext: () => void;
+  onBack: () => void;
+  colors: ReturnType<typeof useThemedColors>;
+}
+
+function CategoriesSlide({ selectedCategories, onToggle, onNext, onBack, colors }: CategoriesSlideProps) {
+  const handleToggle = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onToggle(id);
+  };
+
+  return (
+    <Animated.View
+      entering={FadeInRight.duration(300)}
+      exiting={FadeOutLeft.duration(300)}
+      style={[styles.slideContainer, { backgroundColor: colors.background }]}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable
+            onPress={onBack}
+            style={[styles.backButton, { backgroundColor: colors.backgroundSecondary }]}
+          >
+            <ChevronLeft size={20} color={colors.primary} />
+          </Pressable>
+
+          {/* Progress bar */}
+          <View style={[styles.progressBarContainer, { backgroundColor: colors.border }]}>
+            <Animated.View
+              style={[
+                styles.progressBarFill,
+                {
+                  backgroundColor: colors.primary,
+                  width: '100%',
+                },
+              ]}
+            />
+          </View>
+
+          <View style={styles.backButtonPlaceholder} />
+        </View>
+
+        {/* Content */}
+        <View style={styles.categoriesContent}>
+          <Animated.View
+            entering={FadeIn.delay(100).duration(400)}
+            style={[styles.categoriesHeaderIcon, { backgroundColor: `${colors.primary}15` }]}
+          >
+            <FileText size={32} color={colors.primary} />
+          </Animated.View>
+
+          <Animated.Text
+            entering={FadeInUp.delay(150).duration(400)}
+            style={[styles.questionTitle, { color: colors.text, textAlign: 'center' }]}
+          >
+            What expenses do you have?
+          </Animated.Text>
+          <Animated.Text
+            entering={FadeInUp.delay(200).duration(400)}
+            style={[styles.questionSubtitle, { color: colors.textSecondary, textAlign: 'center' }]}
+          >
+            Select all that apply. We'll help you track these.
+          </Animated.Text>
+
+          {/* Counter */}
+          <Animated.View
+            entering={FadeIn.delay(250).duration(400)}
+            style={[styles.categoriesCounter, { backgroundColor: `${colors.primary}10` }]}
+          >
+            <Text style={[styles.categoriesCounterText, { color: colors.primary }]}>
+              {selectedCategories.length} selected
+            </Text>
+          </Animated.View>
+
+          {/* Categories Grid */}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesScrollContent}
+          >
+            <View style={styles.categoriesGrid}>
+              {ONBOARDING_CATEGORIES.map((category, index) => {
+                const isSelected = selectedCategories.includes(category.id);
+                const Icon = category.icon;
+                return (
+                  <Animated.View
+                    key={category.id}
+                    entering={FadeInUp.delay(300 + index * 30).duration(300)}
+                  >
+                    <Pressable
+                      onPress={() => handleToggle(category.id)}
+                      style={[
+                        styles.categoryItem,
+                        {
+                          backgroundColor: isSelected ? `${category.color}12` : colors.card,
+                          borderColor: isSelected ? category.color : colors.cardBorder,
+                          borderWidth: isSelected ? 2 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={[styles.categoryItemIcon, { backgroundColor: `${category.color}15` }]}>
+                        <Icon size={18} color={category.color} />
+                      </View>
+                      <Text
+                        style={[
+                          styles.categoryItemText,
+                          { color: isSelected ? category.color : colors.text },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {category.name}
+                      </Text>
+                      {isSelected && (
+                        <View style={[styles.categoryItemCheck, { backgroundColor: category.color }]}>
+                          <Check size={10} color="#fff" strokeWidth={3} />
+                        </View>
+                      )}
+                    </Pressable>
+                  </Animated.View>
+                );
+              })}
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* Next button */}
+        <Animated.View entering={FadeInDown.delay(500).duration(400)} style={styles.footer}>
+          <Pressable
+            onPress={onNext}
+            disabled={selectedCategories.length === 0}
+            style={[
+              styles.primaryButton,
+              { backgroundColor: colors.primary },
+              selectedCategories.length === 0 && styles.buttonDisabled,
+            ]}
+          >
+            <Text style={styles.buttonText}>Continue</Text>
+            <ChevronRight size={20} color="#ffffff" />
+          </Pressable>
+          <Text style={[styles.skipHint, { color: colors.textMuted }]}>
+            You can always change this later
+          </Text>
+        </Animated.View>
+      </SafeAreaView>
+    </Animated.View>
+  );
+}
+
 function NameInputSlide({ name, onNameChange, onContinue, colors }: NameInputSlideProps) {
   const { t } = useTranslation();
 
@@ -596,19 +778,29 @@ export default function OnboardingScreen() {
     workType: null,
     currentTracking: null,
     monthlyExpenses: null,
+    expenseCategories: [],
   });
 
-  const quizSteps: Step[] = ['q1', 'q2', 'q3', 'q4'];
+  const quizSteps: Step[] = ['q1', 'q2', 'q3', 'q4', 'categories'];
 
   const goBack = () => {
     const i = quizSteps.indexOf(step);
     if (i > 0) {
       setStep(quizSteps[i - 1]);
     } else if (step === 'results') {
-      setStep('q4');
+      setStep('categories');
     } else {
       router.back();
     }
+  };
+
+  const toggleCategory = (categoryId: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      expenseCategories: prev.expenseCategories.includes(categoryId)
+        ? prev.expenseCategories.filter((id) => id !== categoryId)
+        : [...prev.expenseCategories, categoryId],
+    }));
   };
 
   const goNext = () => {
@@ -628,7 +820,11 @@ export default function OnboardingScreen() {
     // Save onboarding data
     const { missed, savings } = calculateSavings(answers);
     await saveOnboardingData({
-      ...answers,
+      income: answers.income,
+      workType: answers.workType,
+      currentTracking: answers.currentTracking,
+      monthlyExpenses: answers.monthlyExpenses,
+      expenseCategories: answers.expenseCategories,
       estimatedSavings: savings,
       estimatedMissedDeductions: missed,
       completedAt: new Date().toISOString(),
@@ -665,12 +861,12 @@ export default function OnboardingScreen() {
     router.push('/auth?mode=signup');
   };
 
-  // Question configurations
-  const questions: Record<Exclude<Step, 'results' | 'rateApp' | 'nameInput'>, {
+  // Question configurations (excludes categories which has its own slide)
+  const questions: Record<'q1' | 'q2' | 'q3' | 'q4', {
     title: string;
     subtitle: string;
     options: QuestionOption[];
-    answerKey: keyof QuizAnswers;
+    answerKey: 'income' | 'workType' | 'currentTracking' | 'monthlyExpenses';
   }> = {
     q1: {
       title: t('onboarding.quiz.question1.title'),
@@ -762,7 +958,23 @@ export default function OnboardingScreen() {
     );
   }
 
-  const currentQuestion = questions[step];
+  if (step === 'categories') {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+        <CategoriesSlide
+          selectedCategories={answers.expenseCategories}
+          onToggle={toggleCategory}
+          onNext={goNext}
+          onBack={goBack}
+          colors={colors}
+        />
+      </View>
+    );
+  }
+
+  // For regular question steps (q1-q4)
+  const currentQuestion = questions[step as 'q1' | 'q2' | 'q3' | 'q4'];
   const currentIndex = quizSteps.indexOf(step);
 
   return (
@@ -1089,5 +1301,73 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 16,
     borderWidth: 2,
+  },
+  // Categories Slide Styles
+  categoriesContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+  },
+  categoriesHeaderIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  categoriesCounter: {
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  categoriesCounterText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  categoriesScrollContent: {
+    paddingBottom: 20,
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'space-between',
+  },
+  categoryItem: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 2,
+    gap: 10,
+  },
+  categoryItemIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryItemText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  categoryItemCheck: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skipHint: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 12,
   },
 });

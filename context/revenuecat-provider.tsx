@@ -68,10 +68,21 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
         .from('accounts')
         .select('free_scans_used')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error loading free scan count:', error);
+        return;
+      }
+
+      // If no account row exists yet, treat as 0 scans used
+      if (!data) {
+        setState((prev) => ({
+          ...prev,
+          freeScansUsed: 0,
+          freeScansRemaining: MAX_FREE_SCANS,
+          canScan: prev.isSubscribed || MAX_FREE_SCANS > 0,
+        }));
         return;
       }
 

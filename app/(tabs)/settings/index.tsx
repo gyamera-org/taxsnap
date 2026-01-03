@@ -193,7 +193,7 @@ export default function SettingsScreen() {
             <SettingsItem
               icon={Calculator}
               label="Tax Profile"
-              onPress={() => router.push('/tax-profile')}
+              onPress={() => router.push('/tax-profile' as any)}
               colors={colors}
             />
             <View className="h-px mx-1" style={{ backgroundColor: colors.borderLight }} />

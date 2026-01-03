@@ -8,6 +8,7 @@ export interface OnboardingData {
   workType: string | null;
   currentTracking: string | null;
   monthlyExpenses: string | null;
+  expenseCategories: string[];
   estimatedSavings: number;
   estimatedMissedDeductions: number;
   completedAt: string;

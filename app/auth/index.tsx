@@ -11,16 +11,15 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import Animated, { FadeIn, FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { useAuth } from '@/context/auth-provider';
 import * as Haptics from 'expo-haptics';
-import { AppleIcon, GoogleIcon } from '@/components/icons/tab-icons';
+import { AppleIcon } from '@/components/icons/tab-icons';
 import { APP_URLS } from '@/lib/config/urls';
-import { AppLogo } from '@/components/icons/app-logo';
 import { useTranslation } from 'react-i18next';
-import { PRIMARY } from '@/lib/theme/colors';
+import { useThemedColors } from '@/lib/utils/theme';
+import { useTheme } from '@/context/theme-provider';
+import { Shield } from 'lucide-react-native';
 
 export default function AuthScreen() {
   const router = useRouter();
@@ -28,17 +27,17 @@ export default function AuthScreen() {
   const { mode } = useLocalSearchParams<{ mode?: 'signin' | 'signup' }>();
   const { signInWithApple, loading: authLoading } = useAuth();
   const [appleLoading, setAppleLoading] = useState(false);
-  const [googleLoading] = useState(false);
+  const colors = useThemedColors();
+  const { isDark } = useTheme();
 
   const isSignUp = mode === 'signup';
-  const isLoading = authLoading || appleLoading || googleLoading;
+  const isLoading = authLoading || appleLoading;
 
   const handleAppleAuth = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setAppleLoading(true);
     try {
       await signInWithApple();
-      // Navigation is handled by auth state change listener
     } catch (error) {
       console.error('Apple auth error:', error);
     } finally {
@@ -47,135 +46,105 @@ export default function AuthScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-
-      {/* Liquid Glass Background */}
-      <LinearGradient
-        colors={['#F0FCFF', '#CCF5FB', '#99ECFA', '#F0FCFF']}
-        locations={[0, 0.3, 0.7, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* Floating orbs */}
-      <Animated.View entering={FadeIn.duration(1000)} style={styles.orb1} />
-      <Animated.View entering={FadeIn.duration(1000).delay(200)} style={styles.orb2} />
-      <Animated.View entering={FadeIn.duration(1000).delay(400)} style={styles.orb3} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
-          <View style={styles.centerContent}>
-            {/* Glass Card */}
-            <Animated.View entering={FadeIn.delay(200).duration(600)} style={styles.glassCard}>
-              <BlurView intensity={40} tint="light" style={styles.blurContainer}>
-                {/* Logo */}
-                <View style={styles.logoContainer}>
-                  <AppLogo size={64} color={PRIMARY} />
-                </View>
-
-                {/* Title */}
-                <Animated.Text entering={FadeInUp.delay(300).duration(600)} style={styles.title}>
-                  {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
-                </Animated.Text>
-
-                {/* Subtitle */}
-                <Animated.Text entering={FadeInUp.delay(400).duration(600)} style={styles.subtitle}>
-                  {isSignUp ? t('auth.signUpSubtitle') : t('auth.signInSubtitle')}
-                </Animated.Text>
-
-                {/* Auth Buttons */}
-                <Animated.View
-                  entering={FadeInUp.delay(500).duration(500)}
-                  style={styles.buttonsContainer}
-                >
-                  {/* Apple Sign In - iOS only */}
-                  {Platform.OS === 'ios' && (
-                    <Pressable
-                      onPress={handleAppleAuth}
-                      disabled={isLoading}
-                      style={[styles.appleButton, isLoading && styles.buttonDisabled]}
-                    >
-                      <LinearGradient
-                        colors={['#00D4F5', PRIMARY, '#00A8C6']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={StyleSheet.absoluteFill}
-                      />
-                      {appleLoading ? (
-                        <ActivityIndicator color="#ffffff" />
-                      ) : (
-                        <>
-                          <AppleIcon size={20} color="#ffffff" />
-                          <Text style={styles.appleButtonText}>{t('auth.continueWithApple')}</Text>
-                        </>
-                      )}
-                    </Pressable>
-                  )}
-
-                  {/* Google Sign In - temporarily disabled */}
-                  {/* <Pressable
-                    onPress={handleGoogleAuth}
-                    disabled={isLoading}
-                    style={[styles.googleButton, isLoading && styles.buttonDisabled]}
-                  >
-                    {googleLoading ? (
-                      <ActivityIndicator color="#111827" />
-                    ) : (
-                      <>
-                        <GoogleIcon size={20} />
-                        <Text style={styles.googleButtonText}>Continue with Google</Text>
-                      </>
-                    )}
-                  </Pressable> */}
-                </Animated.View>
-
-                {/* Toggle Auth Mode */}
-                <Animated.View entering={FadeInUp.delay(600).duration(500)}>
-                  <Pressable
-                    onPress={() => {
-                      if (isSignUp) {
-                        router.setParams({ mode: 'signin' });
-                      } else {
-                        router.push('/onboarding');
-                      }
-                    }}
-                    style={styles.toggleButton}
-                  >
-                    <Text style={styles.toggleText}>
-                      {isSignUp ? (
-                        <>
-                          {t('auth.alreadyHaveAccount')}{' '}
-                          <Text style={styles.toggleTextHighlight}>{t('welcome.signIn')}</Text>
-                        </>
-                      ) : (
-                        <>
-                          {t('auth.dontHaveAccount')}{' '}
-                          <Text style={styles.toggleTextHighlight}>{t('welcome.getStarted')}</Text>
-                        </>
-                      )}
-                    </Text>
-                  </Pressable>
-                </Animated.View>
-              </BlurView>
+          {/* Main Content */}
+          <View style={styles.mainContent}>
+            {/* Icon */}
+            <Animated.View
+              entering={FadeIn.delay(200).duration(500)}
+              style={[styles.iconContainer, { backgroundColor: colors.primaryLight }]}
+            >
+              <Shield size={40} color={colors.primary} />
             </Animated.View>
+
+            {/* Title */}
+            <Animated.Text
+              entering={FadeInUp.delay(300).duration(600)}
+              style={[styles.title, { color: colors.text }]}
+            >
+              {isSignUp ? t('auth.signUpTitle') : t('auth.welcomeBack')}
+            </Animated.Text>
+
+            {/* Subtitle */}
+            <Animated.Text
+              entering={FadeInUp.delay(400).duration(600)}
+              style={[styles.subtitle, { color: colors.textSecondary }]}
+            >
+              {isSignUp ? t('auth.signUpSubtitle') : t('auth.signInSubtitle')}
+            </Animated.Text>
           </View>
 
-          {/* Terms */}
-          <Animated.View
-            entering={FadeInDown.delay(700).duration(500)}
-            style={styles.termsContainer}
-          >
-            <Text style={styles.termsText}>
-              {t('auth.terms')}{' '}
-              <Text style={styles.termsLink} onPress={() => Linking.openURL(APP_URLS.terms)}>
-                {t('auth.termsLink')}
-              </Text>{' '}
-              {t('auth.and')}{' '}
-              <Text style={styles.termsLink} onPress={() => Linking.openURL(APP_URLS.privacy)}>
-                {t('auth.privacyLink')}
+          {/* Bottom Section */}
+          <View style={styles.bottomSection}>
+            {/* Apple Sign In Button */}
+            {Platform.OS === 'ios' && (
+              <Animated.View entering={FadeInUp.delay(500).duration(500)}>
+                <Pressable
+                  onPress={handleAppleAuth}
+                  disabled={isLoading}
+                  style={[
+                    styles.appleButton,
+                    { backgroundColor: colors.primary, shadowColor: colors.primary },
+                    isLoading && styles.buttonDisabled,
+                  ]}
+                >
+                  {appleLoading ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <>
+                      <AppleIcon size={20} color="#ffffff" />
+                      <Text style={styles.appleButtonText}>{t('auth.continueWithApple')}</Text>
+                    </>
+                  )}
+                </Pressable>
+              </Animated.View>
+            )}
+
+            {/* Toggle Auth Mode */}
+            <Animated.View entering={FadeIn.delay(600).duration(500)}>
+              <Pressable
+                onPress={() => {
+                  if (isSignUp) {
+                    router.setParams({ mode: 'signin' });
+                  } else {
+                    router.push('/onboarding');
+                  }
+                }}
+                style={styles.toggleButton}
+              >
+                <Text style={[styles.toggleText, { color: colors.textSecondary }]}>
+                  {isSignUp ? t('auth.alreadyHaveAccount') : t('auth.dontHaveAccount')}{' '}
+                  <Text style={[styles.toggleTextHighlight, { color: colors.primary }]}>
+                    {isSignUp ? t('welcome.signIn') : t('welcome.getStarted')}
+                  </Text>
+                </Text>
+              </Pressable>
+            </Animated.View>
+
+            {/* Terms */}
+            <Animated.View entering={FadeInDown.delay(700).duration(500)} style={styles.termsContainer}>
+              <Text style={[styles.termsText, { color: colors.textMuted }]}>
+                {t('auth.terms')}{' '}
+                <Text
+                  style={[styles.termsLink, { color: colors.textSecondary }]}
+                  onPress={() => Linking.openURL(APP_URLS.terms)}
+                >
+                  {t('auth.termsLink')}
+                </Text>{' '}
+                {t('auth.and')}{' '}
+                <Text
+                  style={[styles.termsLink, { color: colors.textSecondary }]}
+                  onPress={() => Linking.openURL(APP_URLS.privacy)}
+                >
+                  {t('auth.privacyLink')}
+                </Text>
               </Text>
-            </Text>
-          </Animated.View>
+            </Animated.View>
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -193,62 +162,43 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: 'space-between',
-    paddingBottom: 32,
   },
-  centerContent: {
+  mainContent: {
     flex: 1,
     justifyContent: 'center',
-  },
-  glassCard: {
-    borderRadius: 28,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.6)',
-    shadowColor: PRIMARY,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 8,
-  },
-  blurContainer: {
-    padding: 28,
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
-  logoContainer: {
-    marginBottom: 24,
-    shadowColor: PRIMARY,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
+  iconContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: 17,
     textAlign: 'center',
-    marginBottom: 32,
+    lineHeight: 26,
+    paddingHorizontal: 16,
   },
-  buttonsContainer: {
-    width: '100%',
-    gap: 12,
+  bottomSection: {
+    paddingBottom: 32,
   },
   appleButton: {
     borderRadius: 16,
-    overflow: 'hidden',
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -256,24 +206,7 @@ const styles = StyleSheet.create({
   },
   appleButtonText: {
     color: '#ffffff',
-    fontWeight: '600',
-    fontSize: 18,
-    marginLeft: 12,
-  },
-  googleButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(209, 213, 219, 0.5)',
-  },
-  googleButtonText: {
-    color: '#111827',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 18,
     marginLeft: 12,
   },
@@ -282,54 +215,25 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     paddingVertical: 16,
-    marginTop: 8,
+    alignItems: 'center',
   },
   toggleText: {
     fontSize: 15,
-    color: '#6B7280',
     textAlign: 'center',
   },
   toggleTextHighlight: {
-    color: PRIMARY,
     fontWeight: '600',
   },
   termsContainer: {
     alignItems: 'center',
+    paddingTop: 8,
   },
   termsText: {
     fontSize: 12,
-    color: '#9CA3AF',
     textAlign: 'center',
+    lineHeight: 18,
   },
   termsLink: {
-    color: '#6B7280',
     textDecorationLine: 'underline',
-  },
-  orb1: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(0, 192, 232, 0.15)',
-    top: -50,
-    right: -50,
-  },
-  orb2: {
-    position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(0, 212, 245, 0.1)',
-    bottom: 100,
-    left: -30,
-  },
-  orb3: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(0, 232, 255, 0.12)',
-    top: '40%',
-    right: 20,
   },
 });

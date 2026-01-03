@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner-native';
 import { useResponsive } from '@/lib/utils/responsive';
 import { useThemedColors } from '@/lib/utils/theme';
+import { PRIMARY } from '@/lib/theme/colors';
 import {
   pricingConfig,
   getEnabledPlans,
@@ -191,10 +192,10 @@ export default function PaywallScreen() {
     });
   };
 
-  // Theme-aware gradient colors
+  // Theme-aware gradient colors using primary color
   const gradientColors = colors.isDark
     ? (['#0D0D0D', '#1A1A1A', '#262626', '#0D0D0D'] as const)
-    : (['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA'] as const);
+    : ([`${PRIMARY}08`, `${PRIMARY}15`, `${PRIMARY}20`, `${PRIMARY}08`] as const);
 
   // Dynamic styles for responsive layout and theming
   const dynamicStyles = {
@@ -228,10 +229,10 @@ export default function PaywallScreen() {
     },
     planCardSelected: {
       borderColor: colors.primary,
-      backgroundColor: colors.isDark ? 'rgba(13, 148, 136, 0.15)' : 'rgba(240, 253, 250, 0.7)',
+      backgroundColor: colors.isDark ? `${PRIMARY}20` : `${PRIMARY}10`,
     },
     saveBadge: {
-      backgroundColor: colors.primary,
+      backgroundColor: '#E53935',
     },
     radioButton: {
       borderColor: colors.isDark ? '#52525B' : '#D1D5DB',
@@ -259,13 +260,13 @@ export default function PaywallScreen() {
       color: colors.textMuted,
     },
     orb1: {
-      backgroundColor: colors.isDark ? 'rgba(13, 148, 136, 0.08)' : 'rgba(20, 184, 166, 0.12)',
+      backgroundColor: colors.isDark ? `${PRIMARY}15` : `${PRIMARY}20`,
     },
     orb2: {
-      backgroundColor: colors.isDark ? 'rgba(13, 148, 136, 0.06)' : 'rgba(45, 212, 191, 0.1)',
+      backgroundColor: colors.isDark ? `${PRIMARY}10` : `${PRIMARY}18`,
     },
     orb3: {
-      backgroundColor: colors.isDark ? 'rgba(13, 148, 136, 0.04)' : 'rgba(94, 234, 212, 0.08)',
+      backgroundColor: colors.isDark ? `${PRIMARY}08` : `${PRIMARY}15`,
     },
   };
 
@@ -297,17 +298,6 @@ export default function PaywallScreen() {
               </Text>
             </View>
           )}
-
-          <View
-            style={[
-              styles.radioButton,
-              dynamicStyles.radioButton,
-              isSelected && styles.radioButtonSelected,
-              isSelected && dynamicStyles.radioButtonSelected,
-            ]}
-          >
-            {isSelected && <Check size={10} color="#fff" />}
-          </View>
 
           <Text style={[styles.planName, dynamicStyles.planName]} numberOfLines={1}>
             {t(`paywall.plans.${planData.id}`)}
@@ -425,10 +415,10 @@ export default function PaywallScreen() {
           <Pressable
             onPress={handleSubscribe}
             disabled={isLoading}
-            style={[styles.ctaButton, isLoading && styles.buttonDisabled]}
+            style={[styles.ctaButton, { shadowColor: PRIMARY }, isLoading && styles.buttonDisabled]}
           >
             <LinearGradient
-              colors={['#14B8A6', '#0D9488', '#0F766E']}
+              colors={[PRIMARY, `${PRIMARY}E6`, `${PRIMARY}CC`]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
@@ -580,6 +570,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 2,
     padding: 14,
+    paddingTop: 28,
     alignItems: 'center',
   },
   planCardSelected: {
@@ -592,14 +583,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderBottomLeftRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderBottomLeftRadius: 12,
     borderTopRightRadius: 14,
   },
   saveBadgeText: {
     color: '#FFFFFF',
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
   },
   radioButton: {
@@ -641,7 +632,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#0D9488',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
