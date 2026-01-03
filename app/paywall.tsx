@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,17 +20,21 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner-native';
 import { useResponsive } from '@/lib/utils/responsive';
 import { useThemedColors } from '@/lib/utils/theme';
-
-const TRIAL_DAYS = 3;
-
-type PlanType = 'weekly' | 'yearly';
+import {
+  pricingConfig,
+  getEnabledPlans,
+  getDefaultSelectedPlan,
+  calculateSavingsPercent,
+  type PricingPlan,
+} from '@/lib/config/app.config';
 
 export default function PaywallScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const colors = useThemedColors();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>('yearly');
+  const enabledPlans = useMemo(() => getEnabledPlans(), []);
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>(getDefaultSelectedPlan());
   const { offerings, purchasePackage, restorePurchases } = useRevenueCat();
   const { isTablet, contentMaxWidth } = useResponsive();
 
@@ -67,25 +71,70 @@ export default function PaywallScreen() {
     },
   ];
 
-  // Get packages from RevenueCat offerings
-  const weeklyPackage = offerings?.current?.weekly;
-  const yearlyPackage = offerings?.current?.annual;
+  // Map plan IDs to RevenueCat package keys
+  const getRevenueCatPackage = (planId: PricingPlan) => {
+    const current = offerings?.current;
+    if (!current) return undefined;
 
-  // Use RevenueCat formatted price strings (includes currency symbol)
-  const weeklyPriceString = weeklyPackage?.product.priceString ?? '';
-  const yearlyPriceString = yearlyPackage?.product.priceString ?? '';
-  const yearlyPerMonthString = yearlyPackage?.product.pricePerMonthString ?? '';
+    switch (planId) {
+      case 'weekly':
+        return current.weekly;
+      case 'monthly':
+        return current.monthly;
+      case 'yearly':
+        return current.annual;
+      case 'lifetime':
+        return current.lifetime;
+      default:
+        return undefined;
+    }
+  };
 
-  // Numeric prices for calculations
-  const weeklyPrice = weeklyPackage?.product.price ?? 0;
-  const yearlyPrice = yearlyPackage?.product.price ?? 0;
+  // Get package data for enabled plans
+  const planPackages = useMemo(() => {
+    return enabledPlans.map((plan) => {
+      const pkg = getRevenueCatPackage(plan.id);
+      return {
+        ...plan,
+        package: pkg,
+        priceString: pkg?.product.priceString ?? '',
+        price: pkg?.product.price ?? 0,
+        pricePerMonthString: pkg?.product.pricePerMonthString ?? '',
+      };
+    });
+  }, [enabledPlans, offerings]);
 
-  const currentPriceString = selectedPlan === 'yearly' ? yearlyPriceString : weeklyPriceString;
-  // Calculate savings: yearly vs 52 weeks
-  const savingsPercent = Math.round((1 - yearlyPrice / (weeklyPrice * 52)) * 100);
+  // Get selected plan config
+  const selectedPlanConfig = pricingConfig.plans[selectedPlan]?.config;
+  const selectedPackage = getRevenueCatPackage(selectedPlan);
+  const selectedPriceString = selectedPackage?.product.priceString ?? '';
+
+  // Calculate savings for a plan
+  const getSavingsPercent = (planId: PricingPlan): number => {
+    const planConfig = pricingConfig.plans[planId]?.config;
+    if (!planConfig?.showSavings || !planConfig.savingsComparedTo) return 0;
+
+    const planPackage = getRevenueCatPackage(planId);
+    const comparisonPackage = getRevenueCatPackage(planConfig.savingsComparedTo);
+
+    if (!planPackage || !comparisonPackage) return 0;
+
+    const planPrice = planPackage.product.price;
+    const comparisonPrice = comparisonPackage.product.price;
+
+    // Determine period multiplier based on plan type
+    const periodWeeks: Record<PricingPlan, number> = {
+      weekly: 1,
+      monthly: 4,
+      yearly: 52,
+      lifetime: 0, // Lifetime doesn't have a period
+    };
+
+    return calculateSavingsPercent(planPrice, comparisonPrice, periodWeeks[planId]);
+  };
 
   const handleSubscribe = async () => {
-    const packageToPurchase = selectedPlan === 'yearly' ? yearlyPackage : weeklyPackage;
+    const packageToPurchase = selectedPackage;
 
     if (!packageToPurchase) {
       router.replace('/(tabs)/home');
@@ -117,6 +166,29 @@ export default function PaywallScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Get CTA text based on selected plan
+  const getCtaText = () => {
+    if (selectedPlanConfig?.hasTrial && selectedPlanConfig.trialDays) {
+      return t('paywall.cta.startTrial', { days: selectedPlanConfig.trialDays });
+    }
+    if (selectedPlan === 'lifetime') {
+      return t('paywall.cta.buyNow');
+    }
+    return t('paywall.cta.subscribeNow');
+  };
+
+  const getCtaSubtext = () => {
+    if (selectedPlanConfig?.hasTrial) {
+      return t('paywall.cta.thenPrice', { price: selectedPriceString });
+    }
+    if (selectedPlan === 'lifetime') {
+      return t('paywall.cta.oneTimePayment');
+    }
+    return t(`paywall.cta.per${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)}`, {
+      price: selectedPriceString,
+    });
   };
 
   // Theme-aware gradient colors
@@ -197,6 +269,78 @@ export default function PaywallScreen() {
     },
   };
 
+  // Render a plan card
+  const renderPlanCard = (planData: (typeof planPackages)[0]) => {
+    const isSelected = selectedPlan === planData.id;
+    const savings = getSavingsPercent(planData.id);
+    const badgeText = planData.badge ? t(`paywall.plans.badges.${planData.badge}`) : null;
+
+    return (
+      <Pressable
+        key={planData.id}
+        onPress={() => setSelectedPlan(planData.id)}
+        style={styles.planWrapper}
+      >
+        <View
+          style={[
+            styles.planCard,
+            dynamicStyles.planCard,
+            isSelected && styles.planCardSelected,
+            isSelected && dynamicStyles.planCardSelected,
+          ]}
+        >
+          {/* Badge (savings or custom badge) */}
+          {(savings > 0 || badgeText) && (
+            <View style={[styles.saveBadge, dynamicStyles.saveBadge]}>
+              <Text style={styles.saveBadgeText} numberOfLines={1}>
+                {savings > 0 ? t('paywall.plans.save', { percent: savings }) : badgeText}
+              </Text>
+            </View>
+          )}
+
+          <View
+            style={[
+              styles.radioButton,
+              dynamicStyles.radioButton,
+              isSelected && styles.radioButtonSelected,
+              isSelected && dynamicStyles.radioButtonSelected,
+            ]}
+          >
+            {isSelected && <Check size={10} color="#fff" />}
+          </View>
+
+          <Text style={[styles.planName, dynamicStyles.planName]} numberOfLines={1}>
+            {t(`paywall.plans.${planData.id}`)}
+          </Text>
+
+          <Text
+            style={[styles.planPriceTotal, dynamicStyles.planPriceTotal]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {planData.id === 'yearly' && planData.pricePerMonthString
+              ? `${planData.pricePerMonthString}${t('paywall.plans.perMonth')}`
+              : planData.priceString}
+          </Text>
+
+          <Text style={[styles.planPeriod, dynamicStyles.planPeriod]} numberOfLines={1}>
+            {planData.id === 'yearly'
+              ? `${planData.priceString}${t('paywall.plans.perYear')}`
+              : planData.id === 'lifetime'
+                ? t('paywall.plans.oneTime')
+                : t(`paywall.plans.per${planData.id.charAt(0).toUpperCase() + planData.id.slice(1)}`)}
+          </Text>
+
+          {planData.hasTrial && planData.trialDays && (
+            <Text style={[styles.trialText, { color: colors.primary }]}>
+              {t('paywall.plans.freeTrial', { days: planData.trialDays })}
+            </Text>
+          )}
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle={colors.isDark ? 'light-content' : 'dark-content'} />
@@ -234,7 +378,11 @@ export default function PaywallScreen() {
             {/* Header */}
             <View style={styles.headerSection}>
               <Text
-                style={[styles.headerTitle, isTablet && styles.headerTitleTablet, dynamicStyles.headerTitle]}
+                style={[
+                  styles.headerTitle,
+                  isTablet && styles.headerTitleTablet,
+                  dynamicStyles.headerTitle,
+                ]}
               >
                 {t('paywall.title')}
               </Text>
@@ -258,7 +406,10 @@ export default function PaywallScreen() {
                     <Text style={[styles.featureTitle, dynamicStyles.featureTitle]} numberOfLines={1}>
                       {feature.title}
                     </Text>
-                    <Text style={[styles.featureDescription, dynamicStyles.featureDescription]} numberOfLines={2}>
+                    <Text
+                      style={[styles.featureDescription, dynamicStyles.featureDescription]}
+                      numberOfLines={2}
+                    >
                       {feature.description}
                     </Text>
                   </View>
@@ -267,81 +418,9 @@ export default function PaywallScreen() {
               ))}
             </View>
 
-            {/* Plan Selection - Row Layout */}
+            {/* Plan Selection - Dynamic based on config */}
             <View style={[styles.plansContainer, isTablet && styles.plansContainerTablet]}>
-              {/* Yearly Plan */}
-              <Pressable onPress={() => setSelectedPlan('yearly')} style={styles.planWrapper}>
-                <View
-                  style={[
-                    styles.planCard,
-                    dynamicStyles.planCard,
-                    selectedPlan === 'yearly' && styles.planCardSelected,
-                    selectedPlan === 'yearly' && dynamicStyles.planCardSelected,
-                  ]}
-                >
-                  {/* Save Badge */}
-                  {savingsPercent > 0 && (
-                    <View style={[styles.saveBadge, dynamicStyles.saveBadge]}>
-                      <Text style={styles.saveBadgeText} numberOfLines={1}>
-                        {t('paywall.plans.save', { percent: savingsPercent })}
-                      </Text>
-                    </View>
-                  )}
-                  <View
-                    style={[
-                      styles.radioButton,
-                      dynamicStyles.radioButton,
-                      selectedPlan === 'yearly' && styles.radioButtonSelected,
-                      selectedPlan === 'yearly' && dynamicStyles.radioButtonSelected,
-                    ]}
-                  >
-                    {selectedPlan === 'yearly' && <Check size={10} color="#fff" />}
-                  </View>
-                  <Text style={[styles.planName, dynamicStyles.planName]} numberOfLines={1}>
-                    {t('paywall.plans.yearly')}
-                  </Text>
-                  <Text style={[styles.planPriceTotal, dynamicStyles.planPriceTotal]} numberOfLines={1} adjustsFontSizeToFit>
-                    {yearlyPerMonthString}
-                    {t('paywall.plans.perMonth')}
-                  </Text>
-                  <Text style={[styles.planPeriod, dynamicStyles.planPeriod]} numberOfLines={1}>
-                    {yearlyPriceString}
-                    {t('paywall.plans.perYear')}
-                  </Text>
-                </View>
-              </Pressable>
-
-              {/* Weekly Plan */}
-              <Pressable onPress={() => setSelectedPlan('weekly')} style={styles.planWrapper}>
-                <View
-                  style={[
-                    styles.planCard,
-                    dynamicStyles.planCard,
-                    selectedPlan === 'weekly' && styles.planCardSelected,
-                    selectedPlan === 'weekly' && dynamicStyles.planCardSelected,
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.radioButton,
-                      dynamicStyles.radioButton,
-                      selectedPlan === 'weekly' && styles.radioButtonSelected,
-                      selectedPlan === 'weekly' && dynamicStyles.radioButtonSelected,
-                    ]}
-                  >
-                    {selectedPlan === 'weekly' && <Check size={10} color="#fff" />}
-                  </View>
-                  <Text style={[styles.planName, dynamicStyles.planName]} numberOfLines={1}>
-                    {t('paywall.plans.weekly')}
-                  </Text>
-                  <Text style={[styles.planPriceTotal, dynamicStyles.planPriceTotal]} numberOfLines={1} adjustsFontSizeToFit>
-                    {weeklyPriceString}
-                  </Text>
-                  <Text style={[styles.planPeriod, dynamicStyles.planPeriod]} numberOfLines={1}>
-                    {t('paywall.plans.perWeek')}
-                  </Text>
-                </View>
-              </Pressable>
+              {planPackages.map(renderPlanCard)}
             </View>
           </View>
         </ScrollView>
@@ -364,38 +443,53 @@ export default function PaywallScreen() {
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <View style={styles.ctaContent}>
-                <Text style={styles.ctaButtonText}>
-                  {selectedPlan === 'yearly'
-                    ? t('paywall.cta.startTrial', { days: TRIAL_DAYS })
-                    : t('paywall.cta.subscribeNow')}
-                </Text>
-                <Text style={styles.ctaSubtext}>
-                  {selectedPlan === 'yearly'
-                    ? t('paywall.cta.thenPrice', { price: currentPriceString })
-                    : t('paywall.cta.perWeek', { price: currentPriceString })}
-                </Text>
+                <Text style={styles.ctaButtonText}>{getCtaText()}</Text>
+                <Text style={styles.ctaSubtext}>{getCtaSubtext()}</Text>
               </View>
             )}
           </Pressable>
+
+          {/* Continue for Free */}
+          {pricingConfig.showContinueForFree && (
+            <Pressable
+              onPress={() => router.replace('/(tabs)/home')}
+              style={styles.continueButton}
+              disabled={isLoading}
+            >
+              <Text style={[styles.continueButtonText, dynamicStyles.continueButtonText]}>
+                {t('paywall.continueForFree')}
+              </Text>
+            </Pressable>
+          )}
 
           {/* Legal Links */}
           <View style={styles.legalContainer}>
             <View style={styles.legalLinks}>
               <Pressable onPress={() => Linking.openURL(APP_URLS.terms)}>
-                <Text style={[styles.legalLink, dynamicStyles.legalLink]}>{t('paywall.legal.terms')}</Text>
+                <Text style={[styles.legalLink, dynamicStyles.legalLink]}>
+                  {t('paywall.legal.terms')}
+                </Text>
               </Pressable>
               <Text style={[styles.legalDot, dynamicStyles.legalDot]}>|</Text>
               <Pressable onPress={() => Linking.openURL(APP_URLS.privacy)}>
-                <Text style={[styles.legalLink, dynamicStyles.legalLink]}>{t('paywall.legal.privacy')}</Text>
+                <Text style={[styles.legalLink, dynamicStyles.legalLink]}>
+                  {t('paywall.legal.privacy')}
+                </Text>
               </Pressable>
-              <Text style={[styles.legalDot, dynamicStyles.legalDot]}>|</Text>
-              <Pressable onPress={handleRestore} disabled={isLoading}>
-                {isLoading ? (
-                  <ActivityIndicator size="small" color={colors.textMuted} />
-                ) : (
-                  <Text style={[styles.legalLink, dynamicStyles.legalLink]}>{t('paywall.restore')}</Text>
-                )}
-              </Pressable>
+              {pricingConfig.showRestorePurchases && (
+                <>
+                  <Text style={[styles.legalDot, dynamicStyles.legalDot]}>|</Text>
+                  <Pressable onPress={handleRestore} disabled={isLoading}>
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color={colors.textMuted} />
+                    ) : (
+                      <Text style={[styles.legalLink, dynamicStyles.legalLink]}>
+                        {t('paywall.restore')}
+                      </Text>
+                    )}
+                  </Pressable>
+                </>
+              )}
             </View>
           </View>
         </View>
@@ -478,12 +572,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   plansContainerTablet: {
     gap: 16,
   },
   planWrapper: {
     flex: 1,
+    minWidth: 140,
   },
   planCard: {
     borderRadius: 16,
