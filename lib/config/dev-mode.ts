@@ -13,7 +13,7 @@ export const DEV_MODE_CONFIG = {
    * Master switch for dev mode.
    * When true (and __DEV__ is true), bypasses auth, onboarding, and paywall.
    */
-  ENABLED: true,
+  ENABLED: false,
 
   /**
    * Mock user data used when dev mode is enabled.
