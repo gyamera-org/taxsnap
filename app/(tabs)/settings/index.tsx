@@ -29,6 +29,7 @@ import {
   Bell,
   Sun,
   Moon,
+  Calculator,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useThemedColors } from '@/lib/utils/theme';
@@ -186,6 +187,13 @@ export default function SettingsScreen() {
               icon={User}
               label="Profile"
               onPress={() => router.push('/profile')}
+              colors={colors}
+            />
+            <View className="h-px mx-1" style={{ backgroundColor: colors.borderLight }} />
+            <SettingsItem
+              icon={Calculator}
+              label="Tax Profile"
+              onPress={() => router.push('/tax-profile')}
               colors={colors}
             />
             <View className="h-px mx-1" style={{ backgroundColor: colors.borderLight }} />

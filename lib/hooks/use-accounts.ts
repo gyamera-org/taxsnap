@@ -12,6 +12,13 @@ export interface Account {
   avatar_url: string | null;
   onboarding_completed: boolean;
   date_of_birth: string | null;
+  // Onboarding questionnaire fields
+  onboarding_income: string | null;
+  onboarding_work_type: string | null;
+  onboarding_current_tracking: string | null;
+  onboarding_monthly_expenses: string | null;
+  onboarding_estimated_savings: number | null;
+  onboarding_estimated_missed_deductions: number | null;
   // Subscription
   subscription_status: string;
   subscription_plan: string;
@@ -56,6 +63,13 @@ interface UpdateAccountPayload {
   onboarding_completed?: boolean;
   date_of_birth?: string;
   avatar_url?: string | null;
+  // Onboarding questionnaire fields
+  onboarding_income?: string | null;
+  onboarding_work_type?: string | null;
+  onboarding_current_tracking?: string | null;
+  onboarding_monthly_expenses?: string | null;
+  onboarding_estimated_savings?: number | null;
+  onboarding_estimated_missed_deductions?: number | null;
 }
 
 export function useUpdateAccount() {

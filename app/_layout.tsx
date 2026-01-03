@@ -50,9 +50,8 @@ export default function Layout() {
           <Stack.Screen name="feedback" />
           <Stack.Screen name="referral" />
           <Stack.Screen name="how-it-works" />
-          <Stack.Screen name="nutrition-guide" />
           <Stack.Screen name="language" />
-
+          <Stack.Screen name="tax-profile" />
           {/* Error Handling */}
           <Stack.Screen name="+not-found" />
         </Stack>

@@ -9,6 +9,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
 import { DEV_MODE_CONFIG, isBypassActive } from '@/lib/config/dev-mode';
+import { getOnboardingData, getUserName, clearOnboardingData } from '@/lib/utils/onboarding-storage';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -55,18 +56,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (!existing) {
+        // Get onboarding data from AsyncStorage
+        const onboardingData = await getOnboardingData();
+        const storedName = await getUserName();
+
         // Generate username from email (before @)
         const username = userEmail?.split('@')[0] || '';
 
         const { error } = await supabase.from('accounts').insert({
           id: userId,
-          name: userName || '',
+          name: storedName || userName || '',
           email: userEmail || '',
           username: username,
-          onboarding_completed: false,
+          onboarding_completed: !!onboardingData,
+          // Save onboarding questionnaire data
+          onboarding_income: onboardingData?.income || null,
+          onboarding_work_type: onboardingData?.workType || null,
+          onboarding_current_tracking: onboardingData?.currentTracking || null,
+          onboarding_monthly_expenses: onboardingData?.monthlyExpenses || null,
+          onboarding_estimated_savings: onboardingData?.estimatedSavings || null,
+          onboarding_estimated_missed_deductions: onboardingData?.estimatedMissedDeductions || null,
         });
+
         if (error) {
           console.error('Error creating account:', error);
+        } else {
+          // Clear local storage after saving to DB
+          await clearOnboardingData();
         }
       }
     } catch (error) {

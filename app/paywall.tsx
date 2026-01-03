@@ -330,12 +330,6 @@ export default function PaywallScreen() {
                 ? t('paywall.plans.oneTime')
                 : t(`paywall.plans.per${planData.id.charAt(0).toUpperCase() + planData.id.slice(1)}`)}
           </Text>
-
-          {planData.hasTrial && planData.trialDays && (
-            <Text style={[styles.trialText, { color: colors.primary }]}>
-              {t('paywall.plans.freeTrial', { days: planData.trialDays })}
-            </Text>
-          )}
         </View>
       </Pressable>
     );

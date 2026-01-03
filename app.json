@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "userInterfaceStyle": "automatic",
-      "bundleIdentifier": "com.taxsnap.app",
+      "bundleIdentifier": "com.tax-snap.app",
       "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#00C0E8"
       },
-      "package": "com.taxsnap.app"
+      "package": "com.tax-snap.app"
     },
     "web": {
       "bundler": "metro",
@@ -56,7 +56,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "e676ea88-a985-4e19-ab17-a0cfc88715e2"
+      }
     }
   }
 }
