@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Sparkles, Zap, Shield, Cloud, Star, Crown, Check } from 'lucide-react-native';
+import { Receipt, Tags, Calculator, Shield, FileText, Infinity, Check } from 'lucide-react-native';
 import { useRevenueCat } from '@/context/revenuecat-provider';
 import { APP_URLS } from '@/lib/config/urls';
 import { useTranslation } from 'react-i18next';
@@ -40,32 +40,32 @@ export default function PaywallScreen() {
 
   const features = [
     {
-      icon: Sparkles,
+      icon: Receipt,
       title: t('paywall.features.feature1.title'),
       description: t('paywall.features.feature1.description'),
     },
     {
-      icon: Zap,
+      icon: Tags,
       title: t('paywall.features.feature2.title'),
       description: t('paywall.features.feature2.description'),
     },
     {
-      icon: Shield,
+      icon: Calculator,
       title: t('paywall.features.feature3.title'),
       description: t('paywall.features.feature3.description'),
     },
     {
-      icon: Cloud,
+      icon: Shield,
       title: t('paywall.features.feature4.title'),
       description: t('paywall.features.feature4.description'),
     },
     {
-      icon: Star,
+      icon: FileText,
       title: t('paywall.features.feature5.title'),
       description: t('paywall.features.feature5.description'),
     },
     {
-      icon: Crown,
+      icon: Infinity,
       title: t('paywall.features.feature6.title'),
       description: t('paywall.features.feature6.description'),
     },

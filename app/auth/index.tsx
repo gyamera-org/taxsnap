@@ -20,14 +20,15 @@ import { AppleIcon, GoogleIcon } from '@/components/icons/tab-icons';
 import { APP_URLS } from '@/lib/config/urls';
 import { AppLogo } from '@/components/icons/app-logo';
 import { useTranslation } from 'react-i18next';
+import { PRIMARY } from '@/lib/theme/colors';
 
 export default function AuthScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { mode } = useLocalSearchParams<{ mode?: 'signin' | 'signup' }>();
-  const { signInWithApple, signInWithGoogle, loading: authLoading } = useAuth();
+  const { signInWithApple, loading: authLoading } = useAuth();
   const [appleLoading, setAppleLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleLoading] = useState(false);
 
   const isSignUp = mode === 'signup';
   const isLoading = authLoading || appleLoading || googleLoading;
@@ -45,26 +46,13 @@ export default function AuthScreen() {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-      // Navigation is handled by auth state change listener
-    } catch (error) {
-      console.error('Google auth error:', error);
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
       {/* Liquid Glass Background */}
       <LinearGradient
-        colors={['#F0FDFA', '#CCFBF1', '#99F6E4', '#F0FDFA']}
+        colors={['#F0FCFF', '#CCF5FB', '#99ECFA', '#F0FCFF']}
         locations={[0, 0.3, 0.7, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -82,22 +70,16 @@ export default function AuthScreen() {
               <BlurView intensity={40} tint="light" style={styles.blurContainer}>
                 {/* Logo */}
                 <View style={styles.logoContainer}>
-                  <AppLogo size={64} color="#0D9488" textColor="#ffffff" />
+                  <AppLogo size={64} color={PRIMARY} />
                 </View>
 
                 {/* Title */}
-                <Animated.Text
-                  entering={FadeInUp.delay(300).duration(600)}
-                  style={styles.title}
-                >
+                <Animated.Text entering={FadeInUp.delay(300).duration(600)} style={styles.title}>
                   {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
                 </Animated.Text>
 
                 {/* Subtitle */}
-                <Animated.Text
-                  entering={FadeInUp.delay(400).duration(600)}
-                  style={styles.subtitle}
-                >
+                <Animated.Text entering={FadeInUp.delay(400).duration(600)} style={styles.subtitle}>
                   {isSignUp ? t('auth.signUpSubtitle') : t('auth.signInSubtitle')}
                 </Animated.Text>
 
@@ -114,7 +96,7 @@ export default function AuthScreen() {
                       style={[styles.appleButton, isLoading && styles.buttonDisabled]}
                     >
                       <LinearGradient
-                        colors={['#14B8A6', '#0D9488', '#0F766E']}
+                        colors={['#00D4F5', PRIMARY, '#00A8C6']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={StyleSheet.absoluteFill}
@@ -179,20 +161,17 @@ export default function AuthScreen() {
           </View>
 
           {/* Terms */}
-          <Animated.View entering={FadeInDown.delay(700).duration(500)} style={styles.termsContainer}>
+          <Animated.View
+            entering={FadeInDown.delay(700).duration(500)}
+            style={styles.termsContainer}
+          >
             <Text style={styles.termsText}>
               {t('auth.terms')}{' '}
-              <Text
-                style={styles.termsLink}
-                onPress={() => Linking.openURL(APP_URLS.terms)}
-              >
+              <Text style={styles.termsLink} onPress={() => Linking.openURL(APP_URLS.terms)}>
                 {t('auth.termsLink')}
-              </Text>
-              {' '}{t('auth.and')}{' '}
-              <Text
-                style={styles.termsLink}
-                onPress={() => Linking.openURL(APP_URLS.privacy)}
-              >
+              </Text>{' '}
+              {t('auth.and')}{' '}
+              <Text style={styles.termsLink} onPress={() => Linking.openURL(APP_URLS.privacy)}>
                 {t('auth.privacyLink')}
               </Text>
             </Text>
@@ -225,7 +204,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.6)',
-    shadowColor: '#0D9488',
+    shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 24,
@@ -238,7 +217,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginBottom: 24,
-    shadowColor: '#0D9488',
+    shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
@@ -269,7 +248,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0D9488',
+    shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -311,7 +290,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   toggleTextHighlight: {
-    color: '#0D9488',
+    color: PRIMARY,
     fontWeight: '600',
   },
   termsContainer: {
@@ -331,7 +310,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(20, 184, 166, 0.15)',
+    backgroundColor: 'rgba(0, 192, 232, 0.15)',
     top: -50,
     right: -50,
   },
@@ -340,7 +319,7 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: 'rgba(45, 212, 191, 0.1)',
+    backgroundColor: 'rgba(0, 212, 245, 0.1)',
     bottom: 100,
     left: -30,
   },
@@ -349,7 +328,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'rgba(94, 234, 212, 0.12)',
+    backgroundColor: 'rgba(0, 232, 255, 0.12)',
     top: '40%',
     right: 20,
   },

@@ -1,57 +1,144 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
   Pressable,
   StatusBar,
-  Platform,
-  ActivityIndicator,
-  Linking,
   StyleSheet,
+  TextInput,
+  Keyboard,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { APP_URLS } from '@/lib/config/urls';
 import Animated, {
   FadeIn,
   FadeInUp,
   FadeInRight,
   FadeOutLeft,
   FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withDelay,
+  withTiming,
 } from 'react-native-reanimated';
-import { ChevronLeft, ChevronRight, Check, Sparkles, Shield, Zap, Star } from 'lucide-react-native';
-import * as StoreReview from 'expo-store-review';
-import { useAuth } from '@/context/auth-provider';
+import {
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Briefcase,
+  FolderOpen,
+  Receipt,
+  Sparkles,
+  TrendingUp,
+  Check,
+  Star,
+  User,
+} from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { AppleIcon } from '@/components/icons/tab-icons';
+import * as StoreReview from 'expo-store-review';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
+import { useTranslation } from 'react-i18next';
+import { PRIMARY } from '@/lib/theme/colors';
+import { saveOnboardingData, saveUserName } from '@/lib/utils/onboarding-storage';
 
-type Step = 'slide1' | 'slide2' | 'slide3' | 'rating' | 'signup';
+type Step = 'q1' | 'q2' | 'q3' | 'q4' | 'results' | 'rateApp' | 'nameInput';
 
-interface SlideProps {
-  icon: React.ReactNode;
+interface QuizAnswers {
+  income: string | null;
+  workType: string | null;
+  currentTracking: string | null;
+  monthlyExpenses: string | null;
+}
+
+interface QuestionOption {
+  id: string;
+  label: string;
+  icon?: React.ReactNode;
+}
+
+// Calculate estimated savings based on quiz answers - INCREASED VALUES
+function calculateSavings(answers: QuizAnswers): { missed: number; savings: number } {
+  // Base missed deductions by income level - SIGNIFICANTLY INCREASED
+  const incomeMultiplier: Record<string, number> = {
+    under75k: 4800,
+    '75k150k': 8500,
+    '150k300k': 14200,
+    over300k: 22000,
+  };
+
+  // Work type bonus
+  const workTypeBonus: Record<string, number> = {
+    freelancer: 1.2,
+    contractor: 1.35,
+    smallBiz: 1.55,
+    sideHustle: 0.9,
+  };
+
+  // Current tracking penalty (worse tracking = more missed)
+  const trackingMultiplier: Record<string, number> = {
+    nowhere: 1.6,
+    shoebox: 1.35,
+    spreadsheet: 1.15,
+    otherApp: 1.0,
+  };
+
+  // Monthly expenses multiplier - INCREASED
+  const expenseMultiplier: Record<string, number> = {
+    under1k: 0.8,
+    '1kto2k': 1.1,
+    '2kto5k': 1.4,
+    over5k: 1.8,
+  };
+
+  const base = incomeMultiplier[answers.income || 'under75k'] || 4800;
+  const workBonus = workTypeBonus[answers.workType || 'freelancer'] || 1.0;
+  const trackingPenalty = trackingMultiplier[answers.currentTracking || 'shoebox'] || 1.0;
+  const expenseBonus = expenseMultiplier[answers.monthlyExpenses || '1kto2k'] || 1.0;
+
+  const missed = Math.round(base * workBonus * trackingPenalty * expenseBonus);
+  // Assuming ~28% effective tax rate for self-employed (SE tax + income tax)
+  const savings = Math.round(missed * 0.28);
+
+  return { missed, savings };
+}
+
+interface QuestionSlideProps {
   title: string;
   subtitle: string;
-  currentStep: number;
-  totalSteps: number;
+  options: QuestionOption[];
+  selectedOption: string | null;
+  onSelect: (id: string) => void;
   onNext: () => void;
   onBack: () => void;
+  currentStep: number;
+  totalSteps: number;
   isFirst?: boolean;
   colors: ReturnType<typeof useThemedColors>;
 }
 
-function OnboardingSlide({
-  icon,
+function QuestionSlide({
   title,
   subtitle,
-  currentStep,
-  totalSteps,
+  options,
+  selectedOption,
+  onSelect,
   onNext,
   onBack,
+  currentStep,
+  totalSteps,
   isFirst,
   colors,
-}: SlideProps) {
+}: QuestionSlideProps) {
+  const handleSelect = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onSelect(id);
+  };
+
   return (
     <Animated.View
       entering={FadeInRight.duration(300)}
@@ -59,7 +146,7 @@ function OnboardingSlide({
       style={[styles.slideContainer, { backgroundColor: colors.background }]}
     >
       <SafeAreaView style={styles.safeArea}>
-        {/* Header with back button and progress */}
+        {/* Header */}
         <View style={styles.header}>
           {!isFirst ? (
             <Pressable
@@ -72,58 +159,96 @@ function OnboardingSlide({
             <View style={styles.backButtonPlaceholder} />
           )}
 
-          {/* Progress dots */}
-          <View style={styles.progressContainer}>
-            {Array.from({ length: totalSteps }).map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.progressDot,
-                  { backgroundColor: colors.border },
-                  index < currentStep && { backgroundColor: colors.primary },
-                  index === currentStep - 1 && styles.progressDotActive,
-                ]}
-              />
-            ))}
+          {/* Progress bar */}
+          <View style={[styles.progressBarContainer, { backgroundColor: colors.border }]}>
+            <Animated.View
+              style={[
+                styles.progressBarFill,
+                {
+                  backgroundColor: colors.primary,
+                  width: `${(currentStep / totalSteps) * 100}%`,
+                },
+              ]}
+            />
           </View>
 
           <View style={styles.backButtonPlaceholder} />
         </View>
 
-        {/* Content */}
-        <View style={styles.content}>
-          <Animated.View
-            entering={FadeIn.delay(100).duration(500)}
-            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
+        {/* Question Content */}
+        <View style={styles.questionContent}>
+          <Animated.Text
+            entering={FadeInUp.delay(100).duration(400)}
+            style={[styles.questionTitle, { color: colors.text }]}
           >
-            {/* Icon */}
-            <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-              {icon}
-            </View>
+            {title}
+          </Animated.Text>
+          <Animated.Text
+            entering={FadeInUp.delay(150).duration(400)}
+            style={[styles.questionSubtitle, { color: colors.textSecondary }]}
+          >
+            {subtitle}
+          </Animated.Text>
 
-            {/* Title */}
-            <Animated.Text
-              entering={FadeInUp.delay(200).duration(500)}
-              style={[styles.title, { color: colors.text }]}
-            >
-              {title}
-            </Animated.Text>
-
-            {/* Subtitle */}
-            <Animated.Text
-              entering={FadeInUp.delay(300).duration(500)}
-              style={[styles.subtitle, { color: colors.textSecondary }]}
-            >
-              {subtitle}
-            </Animated.Text>
-          </Animated.View>
+          {/* Options */}
+          <View style={styles.optionsContainer}>
+            {options.map((option, index) => {
+              const isSelected = selectedOption === option.id;
+              return (
+                <Animated.View
+                  key={option.id}
+                  entering={FadeInUp.delay(200 + index * 50).duration(400)}
+                >
+                  <Pressable
+                    onPress={() => handleSelect(option.id)}
+                    style={[
+                      styles.optionButton,
+                      {
+                        backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
+                        borderColor: isSelected ? colors.primary : colors.cardBorder,
+                      },
+                    ]}
+                  >
+                    {option.icon && (
+                      <View
+                        style={[
+                          styles.optionIcon,
+                          { backgroundColor: isSelected ? colors.primary : colors.backgroundSecondary },
+                        ]}
+                      >
+                        {option.icon}
+                      </View>
+                    )}
+                    <Text
+                      style={[
+                        styles.optionLabel,
+                        { color: isSelected ? colors.primary : colors.text },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {isSelected && (
+                      <View style={[styles.checkCircle, { backgroundColor: colors.primary }]}>
+                        <Check size={14} color="#fff" strokeWidth={3} />
+                      </View>
+                    )}
+                  </Pressable>
+                </Animated.View>
+              );
+            })}
+          </View>
         </View>
 
         {/* Next button */}
-        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.footer}>
+        <Animated.View entering={FadeInDown.delay(400).duration(400)} style={styles.footer}>
           <Pressable
             onPress={onNext}
-            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+            disabled={!selectedOption}
+            style={[
+              styles.primaryButton,
+              { backgroundColor: colors.primary },
+              !selectedOption && styles.buttonDisabled,
+            ]}
           >
             <Text style={styles.buttonText}>Continue</Text>
             <ChevronRight size={20} color="#ffffff" />
@@ -134,24 +259,353 @@ function OnboardingSlide({
   );
 }
 
+interface ResultsSlideProps {
+  savings: number;
+  missed: number;
+  onContinue: () => void;
+  colors: ReturnType<typeof useThemedColors>;
+}
+
+function ResultsSlide({ savings, missed, onContinue, colors }: ResultsSlideProps) {
+  const { t } = useTranslation();
+  const [displayedSavings, setDisplayedSavings] = useState(0);
+  const scale = useSharedValue(0.8);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    // Start animation after a brief delay
+    const timer = setTimeout(() => {
+      // Animate the number counting up
+      let current = 0;
+      const target = savings;
+      const duration = 2000; // 2 seconds
+      const steps = 60;
+      const increment = target / steps;
+      const stepDuration = duration / steps;
+
+      const interval = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          setDisplayedSavings(target);
+          clearInterval(interval);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else {
+          setDisplayedSavings(Math.round(current));
+        }
+      }, stepDuration);
+
+      return () => clearInterval(interval);
+    }, 500);
+
+    scale.value = withDelay(600, withSpring(1, { damping: 12 }));
+    opacity.value = withDelay(600, withTiming(1, { duration: 400 }));
+
+    return () => clearTimeout(timer);
+  }, [savings]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      entering={FadeIn.duration(400)}
+      style={[styles.slideContainer, { backgroundColor: colors.background }]}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        {/* Decorative elements */}
+        <View style={styles.decorativeContainer}>
+          <Animated.View
+            entering={FadeIn.delay(800).duration(600)}
+            style={[styles.confettiDot, styles.confetti1, { backgroundColor: colors.primary }]}
+          />
+          <Animated.View
+            entering={FadeIn.delay(900).duration(600)}
+            style={[styles.confettiDot, styles.confetti2, { backgroundColor: `${colors.primary}80` }]}
+          />
+          <Animated.View
+            entering={FadeIn.delay(1000).duration(600)}
+            style={[styles.confettiDot, styles.confetti3, { backgroundColor: colors.primary }]}
+          />
+          <Animated.View
+            entering={FadeIn.delay(1100).duration(600)}
+            style={[styles.confettiDot, styles.confetti4, { backgroundColor: `${colors.primary}60` }]}
+          />
+        </View>
+
+        <View style={styles.resultsContent}>
+          {/* Icon */}
+          <Animated.View
+            entering={FadeIn.delay(200).duration(500)}
+            style={[styles.resultsIconContainer, { backgroundColor: `${colors.primary}15` }]}
+          >
+            <TrendingUp size={48} color={colors.primary} />
+          </Animated.View>
+
+          {/* Title */}
+          <Animated.Text
+            entering={FadeInUp.delay(400).duration(500)}
+            style={[styles.resultsLabel, { color: colors.textSecondary }]}
+          >
+            {t('onboarding.results.title')}
+          </Animated.Text>
+
+          {/* Animated Savings Number */}
+          <Animated.View style={animatedStyle}>
+            <Text style={[styles.savingsAmount, { color: colors.primary }]}>
+              ${displayedSavings.toLocaleString()}
+            </Text>
+          </Animated.View>
+
+          <Animated.Text
+            entering={FadeInUp.delay(800).duration(500)}
+            style={[styles.perYear, { color: colors.textSecondary }]}
+          >
+            {t('onboarding.results.perYear')}
+          </Animated.Text>
+
+          {/* Breakdown Card */}
+          <Animated.View
+            entering={FadeInUp.delay(1200).duration(500)}
+            style={[styles.breakdownCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
+          >
+            <View style={styles.breakdownRow}>
+              <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>
+                {t('onboarding.results.missedDeductions')}
+              </Text>
+              <Text style={[styles.breakdownValue, { color: colors.text }]}>
+                ${missed.toLocaleString()}
+              </Text>
+            </View>
+            <View style={[styles.breakdownDivider, { backgroundColor: colors.border }]} />
+            <View style={styles.breakdownRow}>
+              <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>
+                {t('onboarding.results.taxSavings')}
+              </Text>
+              <Text style={[styles.breakdownValueHighlight, { color: colors.primary }]}>
+                ${savings.toLocaleString()}
+              </Text>
+            </View>
+          </Animated.View>
+
+          {/* Subtitle */}
+          <Animated.Text
+            entering={FadeInUp.delay(1400).duration(500)}
+            style={[styles.resultsSubtitle, { color: colors.textSecondary }]}
+          >
+            {t('onboarding.results.subtitle')}
+          </Animated.Text>
+        </View>
+
+        {/* CTA */}
+        <Animated.View entering={FadeInDown.delay(1600).duration(500)} style={styles.footer}>
+          <Pressable
+            onPress={onContinue}
+            style={[styles.ctaButton, { backgroundColor: colors.primary }]}
+          >
+            <Text style={styles.ctaButtonText}>{t('onboarding.results.cta')}</Text>
+          </Pressable>
+
+          <Text style={[styles.disclaimer, { color: colors.textMuted }]}>
+            {t('onboarding.results.disclaimer')}
+          </Text>
+        </Animated.View>
+      </SafeAreaView>
+    </Animated.View>
+  );
+}
+
+interface RateAppSlideProps {
+  onRate: () => void;
+  onSkip: () => void;
+  colors: ReturnType<typeof useThemedColors>;
+}
+
+function RateAppSlide({ onRate, onSkip, colors }: RateAppSlideProps) {
+  const { t } = useTranslation();
+
+  return (
+    <Animated.View
+      entering={FadeIn.duration(400)}
+      style={[styles.slideContainer, { backgroundColor: colors.background }]}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.rateAppContent}>
+          {/* Stars */}
+          <Animated.View
+            entering={FadeIn.delay(200).duration(500)}
+            style={styles.starsContainer}
+          >
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Animated.View
+                key={star}
+                entering={FadeIn.delay(200 + star * 100).duration(400)}
+              >
+                <Star
+                  size={40}
+                  color={colors.primary}
+                  fill={colors.primary}
+                />
+              </Animated.View>
+            ))}
+          </Animated.View>
+
+          {/* Title */}
+          <Animated.Text
+            entering={FadeInUp.delay(600).duration(500)}
+            style={[styles.rateAppTitle, { color: colors.text }]}
+          >
+            {t('onboarding.rateApp.title')}
+          </Animated.Text>
+
+          {/* Subtitle */}
+          <Animated.Text
+            entering={FadeInUp.delay(700).duration(500)}
+            style={[styles.rateAppSubtitle, { color: colors.textSecondary }]}
+          >
+            {t('onboarding.rateApp.subtitle')}
+          </Animated.Text>
+        </View>
+
+        {/* Buttons */}
+        <Animated.View entering={FadeInDown.delay(800).duration(500)} style={styles.footer}>
+          <Pressable
+            onPress={onRate}
+            style={[styles.ctaButton, { backgroundColor: colors.primary }]}
+          >
+            <Star size={20} color="#ffffff" fill="#ffffff" />
+            <Text style={styles.ctaButtonText}>{t('onboarding.rateApp.rateNow')}</Text>
+          </Pressable>
+
+          <Pressable onPress={onSkip} style={styles.skipButton}>
+            <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
+              {t('onboarding.rateApp.maybeLater')}
+            </Text>
+          </Pressable>
+        </Animated.View>
+      </SafeAreaView>
+    </Animated.View>
+  );
+}
+
+interface NameInputSlideProps {
+  name: string;
+  onNameChange: (name: string) => void;
+  onContinue: () => void;
+  colors: ReturnType<typeof useThemedColors>;
+}
+
+function NameInputSlide({ name, onNameChange, onContinue, colors }: NameInputSlideProps) {
+  const { t } = useTranslation();
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={[styles.slideContainer, { backgroundColor: colors.background }]}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <Animated.View
+          entering={FadeIn.duration(400)}
+          style={styles.slideContainer}
+        >
+          <SafeAreaView style={styles.safeArea}>
+            <View style={styles.nameInputContent}>
+              {/* Icon */}
+              <Animated.View
+                entering={FadeIn.delay(200).duration(500)}
+                style={[styles.nameIconContainer, { backgroundColor: `${colors.primary}15` }]}
+              >
+                <User size={40} color={colors.primary} />
+              </Animated.View>
+
+              {/* Title */}
+              <Animated.Text
+                entering={FadeInUp.delay(300).duration(500)}
+                style={[styles.nameInputTitle, { color: colors.text }]}
+              >
+                {t('onboarding.nameInput.title')}
+              </Animated.Text>
+
+              {/* Subtitle */}
+              <Animated.Text
+                entering={FadeInUp.delay(400).duration(500)}
+                style={[styles.nameInputSubtitle, { color: colors.textSecondary }]}
+              >
+                {t('onboarding.nameInput.subtitle')}
+              </Animated.Text>
+
+              {/* Text Input */}
+              <Animated.View
+                entering={FadeInUp.delay(500).duration(500)}
+                style={styles.inputContainer}
+              >
+                <TextInput
+                  value={name}
+                  onChangeText={onNameChange}
+                  placeholder={t('onboarding.nameInput.placeholder')}
+                  placeholderTextColor={colors.textMuted}
+                  style={[
+                    styles.nameInput,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: name ? colors.primary : colors.cardBorder,
+                      color: colors.text,
+                    },
+                  ]}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={() => name.trim() && onContinue()}
+                />
+              </Animated.View>
+            </View>
+
+            {/* Continue button */}
+            <Animated.View entering={FadeInDown.delay(600).duration(500)} style={styles.footer}>
+              <Pressable
+                onPress={onContinue}
+                disabled={!name.trim()}
+                style={[
+                  styles.ctaButton,
+                  { backgroundColor: colors.primary },
+                  !name.trim() && styles.buttonDisabled,
+                ]}
+              >
+                <Text style={styles.ctaButtonText}>{t('onboarding.nameInput.continue')}</Text>
+                <ChevronRight size={20} color="#ffffff" />
+              </Pressable>
+            </Animated.View>
+          </SafeAreaView>
+        </Animated.View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  );
+}
+
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { signInWithApple, loading: authLoading } = useAuth();
   const colors = useThemedColors();
   const { isDark } = useTheme();
+  const { t } = useTranslation();
 
-  const [step, setStep] = useState<Step>('slide1');
-  const [appleLoading, setAppleLoading] = useState(false);
-  const [ratingLoading, setRatingLoading] = useState(false);
+  const [step, setStep] = useState<Step>('q1');
+  const [userName, setUserName] = useState('');
+  const [answers, setAnswers] = useState<QuizAnswers>({
+    income: null,
+    workType: null,
+    currentTracking: null,
+    monthlyExpenses: null,
+  });
 
-  const isLoading = authLoading || appleLoading;
-
-  const steps: Step[] = ['slide1', 'slide2', 'slide3', 'rating', 'signup'];
+  const quizSteps: Step[] = ['q1', 'q2', 'q3', 'q4'];
 
   const goBack = () => {
-    const i = steps.indexOf(step);
+    const i = quizSteps.indexOf(step);
     if (i > 0) {
-      setStep(steps[i - 1]);
+      setStep(quizSteps[i - 1]);
+    } else if (step === 'results') {
+      setStep('q4');
     } else {
       router.back();
     }
@@ -159,265 +613,174 @@ export default function OnboardingScreen() {
 
   const goNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const i = steps.indexOf(step);
-    if (i < steps.length - 1) {
-      setStep(steps[i + 1]);
+    const i = quizSteps.indexOf(step);
+    if (i < quizSteps.length - 1) {
+      setStep(quizSteps[i + 1]);
+    } else if (i === quizSteps.length - 1) {
+      // Last quiz question - go to results
+      setStep('results');
     }
   };
 
-  const handleAppleAuth = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setAppleLoading(true);
-    try {
-      await signInWithApple();
-    } catch (error) {
-      console.error('Auth error:', error);
-    } finally {
-      setAppleLoading(false);
-    }
+  const handleResultsContinue = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Save onboarding data
+    const { missed, savings } = calculateSavings(answers);
+    await saveOnboardingData({
+      ...answers,
+      estimatedSavings: savings,
+      estimatedMissedDeductions: missed,
+      completedAt: new Date().toISOString(),
+    });
+
+    setStep('rateApp');
   };
 
   const handleRateApp = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setRatingLoading(true);
-    try {
-      const isAvailable = await StoreReview.isAvailableAsync();
-      if (isAvailable) {
-        await StoreReview.requestReview();
-      }
-    } catch (error) {
-      console.error('Rating error:', error);
-    } finally {
-      setRatingLoading(false);
-      goNext();
+
+    // Try to open the native review prompt
+    if (await StoreReview.hasAction()) {
+      await StoreReview.requestReview();
     }
+
+    setStep('nameInput');
   };
 
   const handleSkipRating = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    goNext();
+    setStep('nameInput');
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 'slide1':
-        return (
-          <OnboardingSlide
-            icon={<Sparkles size={32} color="#ffffff" />}
-            title="Welcome to Your App"
-            subtitle="Discover amazing features designed just for you."
-            currentStep={1}
-            totalSteps={3}
-            onNext={goNext}
-            onBack={goBack}
-            isFirst
-            colors={colors}
-          />
-        );
+  const handleNameContinue = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      case 'slide2':
-        return (
-          <OnboardingSlide
-            icon={<Zap size={32} color="#ffffff" />}
-            title="Fast & Simple"
-            subtitle="Get things done quickly with our intuitive interface."
-            currentStep={2}
-            totalSteps={3}
-            onNext={goNext}
-            onBack={goBack}
-            colors={colors}
-          />
-        );
-
-      case 'slide3':
-        return (
-          <OnboardingSlide
-            icon={<Shield size={32} color="#ffffff" />}
-            title="Secure & Private"
-            subtitle="Your data is protected with industry-leading security."
-            currentStep={3}
-            totalSteps={3}
-            onNext={goNext}
-            onBack={goBack}
-            colors={colors}
-          />
-        );
-
-      case 'rating':
-        return (
-          <Animated.View
-            entering={FadeInRight.duration(300)}
-            exiting={FadeOutLeft.duration(300)}
-            style={[styles.slideContainer, { backgroundColor: colors.background }]}
-          >
-            <SafeAreaView style={styles.safeArea}>
-              {/* Header with back button */}
-              <View style={styles.headerSimple}>
-                <Pressable
-                  onPress={goBack}
-                  style={[styles.backButton, { backgroundColor: colors.backgroundSecondary }]}
-                >
-                  <ChevronLeft size={20} color={colors.primary} />
-                </Pressable>
-              </View>
-
-              <View style={styles.content}>
-                <Animated.View
-                  entering={FadeIn.delay(100).duration(500)}
-                  style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
-                >
-                  {/* Star icon */}
-                  <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-                    <Star size={32} color="#ffffff" fill="#ffffff" />
-                  </View>
-
-                  <Animated.Text
-                    entering={FadeInUp.delay(200).duration(500)}
-                    style={[styles.title, { color: colors.text }]}
-                  >
-                    Enjoying the app?
-                  </Animated.Text>
-
-                  <Animated.Text
-                    entering={FadeInUp.delay(300).duration(500)}
-                    style={[styles.subtitle, { color: colors.textSecondary }]}
-                  >
-                    Your feedback helps us improve. Would you like to rate us on the App Store?
-                  </Animated.Text>
-                </Animated.View>
-
-                {/* Rating buttons */}
-                <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.ratingButtonsContainer}>
-                  <Pressable
-                    onPress={handleRateApp}
-                    disabled={ratingLoading}
-                    style={[
-                      styles.primaryButton,
-                      { backgroundColor: colors.primary },
-                      ratingLoading && { opacity: 0.7 },
-                    ]}
-                  >
-                    {ratingLoading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <>
-                        <Star size={20} color="#ffffff" fill="#ffffff" />
-                        <Text style={[styles.buttonText, { marginLeft: 8, marginRight: 0 }]}>Rate App</Text>
-                      </>
-                    )}
-                  </Pressable>
-
-                  <Pressable
-                    onPress={handleSkipRating}
-                    style={[styles.skipButton, { borderColor: colors.border }]}
-                  >
-                    <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>Maybe Later</Text>
-                  </Pressable>
-                </Animated.View>
-              </View>
-            </SafeAreaView>
-          </Animated.View>
-        );
-
-      case 'signup':
-        return (
-          <Animated.View
-            entering={FadeInRight.duration(300)}
-            style={[styles.slideContainer, { backgroundColor: colors.background }]}
-          >
-            <SafeAreaView style={styles.safeArea}>
-              {/* Back button */}
-              <View style={styles.headerSimple}>
-                <Pressable
-                  onPress={goBack}
-                  style={[styles.backButton, { backgroundColor: colors.backgroundSecondary }]}
-                >
-                  <ChevronLeft size={20} color={colors.primary} />
-                </Pressable>
-              </View>
-
-              <View style={styles.content}>
-                {/* Card */}
-                <Animated.View
-                  entering={FadeIn.delay(100).duration(500)}
-                  style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
-                >
-                  {/* Success icon */}
-                  <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-                    <Check size={32} color="#ffffff" />
-                  </View>
-
-                  <Animated.Text
-                    entering={FadeInUp.delay(200).duration(500)}
-                    style={[styles.title, { color: colors.text }]}
-                  >
-                    You're all set!
-                  </Animated.Text>
-
-                  <Animated.Text
-                    entering={FadeInUp.delay(300).duration(500)}
-                    style={[styles.subtitle, { color: colors.textSecondary }]}
-                  >
-                    Create an account to get started.
-                  </Animated.Text>
-                </Animated.View>
-
-                {/* Apple Sign In Button */}
-                <Animated.View entering={FadeInUp.delay(400).duration(500)} style={styles.authButtonContainer}>
-                  {Platform.OS === 'ios' && (
-                    <Pressable
-                      onPress={handleAppleAuth}
-                      disabled={isLoading}
-                      style={[
-                        styles.appleButton,
-                        { backgroundColor: colors.primary },
-                        isLoading && { opacity: 0.7 },
-                      ]}
-                    >
-                      {appleLoading ? (
-                        <ActivityIndicator color="#fff" />
-                      ) : (
-                        <>
-                          <AppleIcon size={20} color="#fff" />
-                          <Text style={styles.appleButtonText}>Continue with Apple</Text>
-                        </>
-                      )}
-                    </Pressable>
-                  )}
-                </Animated.View>
-              </View>
-
-              <Animated.View entering={FadeIn.delay(500).duration(500)} style={styles.termsContainer}>
-                <Text style={[styles.termsText, { color: colors.textMuted }]}>
-                  By continuing, you agree to our{' '}
-                  <Text
-                    style={[styles.termsLink, { color: colors.primary }]}
-                    onPress={() => Linking.openURL(APP_URLS.terms)}
-                  >
-                    Terms
-                  </Text>
-                  {' & '}
-                  <Text
-                    style={[styles.termsLink, { color: colors.primary }]}
-                    onPress={() => Linking.openURL(APP_URLS.privacy)}
-                  >
-                    Privacy Policy
-                  </Text>
-                </Text>
-              </Animated.View>
-            </SafeAreaView>
-          </Animated.View>
-        );
-
-      default:
-        return null;
+    // Save the user's name
+    if (userName.trim()) {
+      await saveUserName(userName.trim());
     }
+
+    // Navigate to auth with signup mode
+    router.push('/auth?mode=signup');
   };
+
+  // Question configurations
+  const questions: Record<Exclude<Step, 'results' | 'rateApp' | 'nameInput'>, {
+    title: string;
+    subtitle: string;
+    options: QuestionOption[];
+    answerKey: keyof QuizAnswers;
+  }> = {
+    q1: {
+      title: t('onboarding.quiz.question1.title'),
+      subtitle: t('onboarding.quiz.question1.subtitle'),
+      answerKey: 'income',
+      options: [
+        { id: 'under75k', label: t('onboarding.quiz.question1.options.under75k'), icon: <DollarSign size={20} color={answers.income === 'under75k' ? '#fff' : colors.textSecondary} /> },
+        { id: '75k150k', label: t('onboarding.quiz.question1.options.75k150k'), icon: <DollarSign size={20} color={answers.income === '75k150k' ? '#fff' : colors.textSecondary} /> },
+        { id: '150k300k', label: t('onboarding.quiz.question1.options.150k300k'), icon: <DollarSign size={20} color={answers.income === '150k300k' ? '#fff' : colors.textSecondary} /> },
+        { id: 'over300k', label: t('onboarding.quiz.question1.options.over300k'), icon: <DollarSign size={20} color={answers.income === 'over300k' ? '#fff' : colors.textSecondary} /> },
+      ],
+    },
+    q2: {
+      title: t('onboarding.quiz.question2.title'),
+      subtitle: t('onboarding.quiz.question2.subtitle'),
+      answerKey: 'workType',
+      options: [
+        { id: 'freelancer', label: t('onboarding.quiz.question2.options.freelancer'), icon: <Briefcase size={20} color={answers.workType === 'freelancer' ? '#fff' : colors.textSecondary} /> },
+        { id: 'contractor', label: t('onboarding.quiz.question2.options.contractor'), icon: <Briefcase size={20} color={answers.workType === 'contractor' ? '#fff' : colors.textSecondary} /> },
+        { id: 'smallBiz', label: t('onboarding.quiz.question2.options.smallBiz'), icon: <Briefcase size={20} color={answers.workType === 'smallBiz' ? '#fff' : colors.textSecondary} /> },
+        { id: 'sideHustle', label: t('onboarding.quiz.question2.options.sideHustle'), icon: <Briefcase size={20} color={answers.workType === 'sideHustle' ? '#fff' : colors.textSecondary} /> },
+      ],
+    },
+    q3: {
+      title: t('onboarding.quiz.question3.title'),
+      subtitle: t('onboarding.quiz.question3.subtitle'),
+      answerKey: 'currentTracking',
+      options: [
+        { id: 'nowhere', label: t('onboarding.quiz.question3.options.nowhere'), icon: <FolderOpen size={20} color={answers.currentTracking === 'nowhere' ? '#fff' : colors.textSecondary} /> },
+        { id: 'shoebox', label: t('onboarding.quiz.question3.options.shoebox'), icon: <FolderOpen size={20} color={answers.currentTracking === 'shoebox' ? '#fff' : colors.textSecondary} /> },
+        { id: 'spreadsheet', label: t('onboarding.quiz.question3.options.spreadsheet'), icon: <FolderOpen size={20} color={answers.currentTracking === 'spreadsheet' ? '#fff' : colors.textSecondary} /> },
+        { id: 'otherApp', label: t('onboarding.quiz.question3.options.otherApp'), icon: <FolderOpen size={20} color={answers.currentTracking === 'otherApp' ? '#fff' : colors.textSecondary} /> },
+      ],
+    },
+    q4: {
+      title: t('onboarding.quiz.question4.title'),
+      subtitle: t('onboarding.quiz.question4.subtitle'),
+      answerKey: 'monthlyExpenses',
+      options: [
+        { id: 'under1k', label: t('onboarding.quiz.question4.options.under1k'), icon: <Receipt size={20} color={answers.monthlyExpenses === 'under1k' ? '#fff' : colors.textSecondary} /> },
+        { id: '1kto2k', label: t('onboarding.quiz.question4.options.1kto2k'), icon: <Receipt size={20} color={answers.monthlyExpenses === '1kto2k' ? '#fff' : colors.textSecondary} /> },
+        { id: '2kto5k', label: t('onboarding.quiz.question4.options.2kto5k'), icon: <Receipt size={20} color={answers.monthlyExpenses === '2kto5k' ? '#fff' : colors.textSecondary} /> },
+        { id: 'over5k', label: t('onboarding.quiz.question4.options.over5k'), icon: <Receipt size={20} color={answers.monthlyExpenses === 'over5k' ? '#fff' : colors.textSecondary} /> },
+      ],
+    },
+  };
+
+  const { missed, savings } = calculateSavings(answers);
+
+  // Render current step
+  if (step === 'results') {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+        <ResultsSlide
+          savings={savings}
+          missed={missed}
+          onContinue={handleResultsContinue}
+          colors={colors}
+        />
+      </View>
+    );
+  }
+
+  if (step === 'rateApp') {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+        <RateAppSlide
+          onRate={handleRateApp}
+          onSkip={handleSkipRating}
+          colors={colors}
+        />
+      </View>
+    );
+  }
+
+  if (step === 'nameInput') {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+        <NameInputSlide
+          name={userName}
+          onNameChange={setUserName}
+          onContinue={handleNameContinue}
+          colors={colors}
+        />
+      </View>
+    );
+  }
+
+  const currentQuestion = questions[step];
+  const currentIndex = quizSteps.indexOf(step);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      {renderStep()}
+      <QuestionSlide
+        title={currentQuestion.title}
+        subtitle={currentQuestion.subtitle}
+        options={currentQuestion.options}
+        selectedOption={answers[currentQuestion.answerKey]}
+        onSelect={(id) => setAnswers({ ...answers, [currentQuestion.answerKey]: id })}
+        onNext={goNext}
+        onBack={goBack}
+        currentStep={currentIndex + 1}
+        totalSteps={4}
+        isFirst={currentIndex === 0}
+        colors={colors}
+      />
     </View>
   );
 }
@@ -438,10 +801,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 16,
-  },
-  headerSimple: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    gap: 16,
   },
   backButton: {
     width: 40,
@@ -454,48 +814,61 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-  progressContainer: {
+  progressBarContainer: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  questionContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+  },
+  questionTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  questionSubtitle: {
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  optionsContainer: {
+    gap: 12,
+  },
+  optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
   },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  optionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
-  progressDotActive: {
-    width: 24,
-  },
-  content: {
+  optionLabel: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
+    fontSize: 17,
+    fontWeight: '600',
   },
-  card: {
-    borderRadius: 24,
-    padding: 28,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
+  checkCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
   },
   footer: {
     paddingHorizontal: 24,
@@ -503,58 +876,218 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     borderRadius: 16,
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: PRIMARY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
     color: '#ffffff',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     marginRight: 8,
   },
-  authButtonContainer: {
-    marginTop: 24,
+  // Results Slide Styles
+  decorativeContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
   },
-  ratingButtonsContainer: {
-    marginTop: 24,
-    gap: 12,
+  confettiDot: {
+    position: 'absolute',
+    borderRadius: 50,
   },
-  skipButton: {
-    borderRadius: 16,
-    paddingVertical: 16,
+  confetti1: {
+    width: 12,
+    height: 12,
+    top: '15%',
+    left: '10%',
+  },
+  confetti2: {
+    width: 8,
+    height: 8,
+    top: '20%',
+    right: '15%',
+  },
+  confetti3: {
+    width: 10,
+    height: 10,
+    top: '35%',
+    left: '85%',
+  },
+  confetti4: {
+    width: 14,
+    height: 14,
+    top: '25%',
+    left: '20%',
+  },
+  resultsContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  resultsIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 24,
+  },
+  resultsLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  savingsAmount: {
+    fontSize: 72,
+    fontWeight: '800',
+    letterSpacing: -2,
+  },
+  perYear: {
+    fontSize: 20,
+    fontWeight: '500',
+    marginBottom: 32,
+  },
+  breakdownCard: {
+    width: '100%',
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
+    marginBottom: 24,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  breakdownLabel: {
+    fontSize: 15,
+  },
+  breakdownValue: {
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  breakdownValueHighlight: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  breakdownDivider: {
+    height: 1,
+    marginVertical: 8,
+  },
+  resultsSubtitle: {
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: 16,
+  },
+  ctaButton: {
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: PRIMARY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  ctaButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  disclaimer: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 16,
+    paddingHorizontal: 24,
+  },
+  // Rate App Styles
+  rateAppContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 32,
+  },
+  rateAppTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 12,
+    letterSpacing: -0.5,
+  },
+  rateAppSubtitle: {
+    fontSize: 17,
+    textAlign: 'center',
+    lineHeight: 26,
+    paddingHorizontal: 16,
+  },
+  skipButton: {
+    paddingVertical: 16,
+    alignItems: 'center',
   },
   skipButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },
-  appleButton: {
-    borderRadius: 16,
-    paddingVertical: 16,
-    flexDirection: 'row',
+  // Name Input Styles
+  nameInputContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  nameIconContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 32,
   },
-  appleButtonText: {
-    color: '#ffffff',
+  nameInputTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 12,
+    letterSpacing: -0.5,
+  },
+  nameInputSubtitle: {
+    fontSize: 17,
+    textAlign: 'center',
+    lineHeight: 26,
+    marginBottom: 32,
+  },
+  inputContainer: {
+    width: '100%',
+  },
+  nameInput: {
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: 12,
-  },
-  termsContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-  },
-  termsText: {
-    fontSize: 12,
     textAlign: 'center',
-  },
-  termsLink: {
-    fontWeight: '500',
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    borderWidth: 2,
   },
 });

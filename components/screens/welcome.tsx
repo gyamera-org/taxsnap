@@ -2,10 +2,10 @@ import { View, Text, Pressable, StatusBar, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
-import { Sparkles } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
+import { AppLogo } from '@/components/icons/app-logo';
 
 export function WelcomeScreen() {
   const router = useRouter();
@@ -29,12 +29,12 @@ export function WelcomeScreen() {
         <View style={styles.content}>
           {/* Main Content */}
           <View style={styles.mainContent}>
-            {/* Icon */}
+            {/* Logo */}
             <Animated.View
               entering={FadeIn.delay(200).duration(600)}
-              style={[styles.iconContainer, { backgroundColor: colors.primary }]}
+              style={styles.logoContainer}
             >
-              <Sparkles size={40} color="#ffffff" />
+              <AppLogo size={80} color={colors.primary} />
             </Animated.View>
 
             {/* Title */}
@@ -98,13 +98,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: 24,
+  logoContainer: {
+    marginBottom: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 32,
   },
   title: {
     fontSize: 32,
