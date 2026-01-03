@@ -8,7 +8,7 @@
 // ============================================
 // PRIMARY COLOR - CHANGE THIS FOR YOUR APP
 // ============================================
-export const PRIMARY = '#0D9488'; // Teal - change to your brand color
+export const PRIMARY = '#00C0E8'; // Cyan - change to your brand color
 
 // ============================================
 // BASE COLORS (don't change these)
