@@ -21,13 +21,9 @@ import { toast } from 'sonner-native';
 import { useResponsive } from '@/lib/utils/responsive';
 import { useThemedColors } from '@/lib/utils/theme';
 
-// Fallback prices if RevenueCat fails to load
-const FALLBACK_MONTHLY_PRICE = 2.99;
-const FALLBACK_YEARLY_PRICE = 29.99;
-const FALLBACK_YEARLY_PER_MONTH = 2.5;
 const TRIAL_DAYS = 3;
 
-type PlanType = 'monthly' | 'yearly';
+type PlanType = 'weekly' | 'yearly';
 
 export default function PaywallScreen() {
   const router = useRouter();
@@ -72,24 +68,24 @@ export default function PaywallScreen() {
   ];
 
   // Get packages from RevenueCat offerings
-  const monthlyPackage = offerings?.current?.monthly;
+  const weeklyPackage = offerings?.current?.weekly;
   const yearlyPackage = offerings?.current?.annual;
 
   // Use RevenueCat formatted price strings (includes currency symbol)
-  const monthlyPriceString = monthlyPackage?.product.priceString ?? `$${FALLBACK_MONTHLY_PRICE}`;
-  const yearlyPriceString = yearlyPackage?.product.priceString ?? `$${FALLBACK_YEARLY_PRICE}`;
-  const yearlyPerMonthString =
-    yearlyPackage?.product.pricePerMonthString ?? `$${FALLBACK_YEARLY_PER_MONTH.toFixed(2)}`;
+  const weeklyPriceString = weeklyPackage?.product.priceString ?? '';
+  const yearlyPriceString = yearlyPackage?.product.priceString ?? '';
+  const yearlyPerMonthString = yearlyPackage?.product.pricePerMonthString ?? '';
 
   // Numeric prices for calculations
-  const monthlyPrice = monthlyPackage?.product.price ?? FALLBACK_MONTHLY_PRICE;
-  const yearlyPrice = yearlyPackage?.product.price ?? FALLBACK_YEARLY_PRICE;
+  const weeklyPrice = weeklyPackage?.product.price ?? 0;
+  const yearlyPrice = yearlyPackage?.product.price ?? 0;
 
-  const currentPriceString = selectedPlan === 'yearly' ? yearlyPriceString : monthlyPriceString;
-  const savingsPercent = Math.round((1 - yearlyPrice / 12 / monthlyPrice) * 100);
+  const currentPriceString = selectedPlan === 'yearly' ? yearlyPriceString : weeklyPriceString;
+  // Calculate savings: yearly vs 52 weeks
+  const savingsPercent = Math.round((1 - yearlyPrice / (weeklyPrice * 52)) * 100);
 
   const handleSubscribe = async () => {
-    const packageToPurchase = selectedPlan === 'yearly' ? yearlyPackage : monthlyPackage;
+    const packageToPurchase = selectedPlan === 'yearly' ? yearlyPackage : weeklyPackage;
 
     if (!packageToPurchase) {
       router.replace('/(tabs)/home');
@@ -315,34 +311,34 @@ export default function PaywallScreen() {
                 </View>
               </Pressable>
 
-              {/* Monthly Plan */}
-              <Pressable onPress={() => setSelectedPlan('monthly')} style={styles.planWrapper}>
+              {/* Weekly Plan */}
+              <Pressable onPress={() => setSelectedPlan('weekly')} style={styles.planWrapper}>
                 <View
                   style={[
                     styles.planCard,
                     dynamicStyles.planCard,
-                    selectedPlan === 'monthly' && styles.planCardSelected,
-                    selectedPlan === 'monthly' && dynamicStyles.planCardSelected,
+                    selectedPlan === 'weekly' && styles.planCardSelected,
+                    selectedPlan === 'weekly' && dynamicStyles.planCardSelected,
                   ]}
                 >
                   <View
                     style={[
                       styles.radioButton,
                       dynamicStyles.radioButton,
-                      selectedPlan === 'monthly' && styles.radioButtonSelected,
-                      selectedPlan === 'monthly' && dynamicStyles.radioButtonSelected,
+                      selectedPlan === 'weekly' && styles.radioButtonSelected,
+                      selectedPlan === 'weekly' && dynamicStyles.radioButtonSelected,
                     ]}
                   >
-                    {selectedPlan === 'monthly' && <Check size={10} color="#fff" />}
+                    {selectedPlan === 'weekly' && <Check size={10} color="#fff" />}
                   </View>
                   <Text style={[styles.planName, dynamicStyles.planName]} numberOfLines={1}>
-                    {t('paywall.plans.monthly')}
+                    {t('paywall.plans.weekly')}
                   </Text>
                   <Text style={[styles.planPriceTotal, dynamicStyles.planPriceTotal]} numberOfLines={1} adjustsFontSizeToFit>
-                    {monthlyPriceString}
+                    {weeklyPriceString}
                   </Text>
                   <Text style={[styles.planPeriod, dynamicStyles.planPeriod]} numberOfLines={1}>
-                    {t('paywall.plans.perMonthFull')}
+                    {t('paywall.plans.perWeek')}
                   </Text>
                 </View>
               </Pressable>
@@ -376,7 +372,7 @@ export default function PaywallScreen() {
                 <Text style={styles.ctaSubtext}>
                   {selectedPlan === 'yearly'
                     ? t('paywall.cta.thenPrice', { price: currentPriceString })
-                    : t('paywall.cta.perMonth', { price: currentPriceString })}
+                    : t('paywall.cta.perWeek', { price: currentPriceString })}
                 </Text>
               </View>
             )}
