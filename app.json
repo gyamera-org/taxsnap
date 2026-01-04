@@ -15,7 +15,9 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": ["remote-notification"],
+        "NSCameraUsageDescription": "TaxSnap needs camera access to scan receipts and extract tax deduction information.",
+        "NSPhotoLibraryUsageDescription": "TaxSnap needs photo library access to import receipt images for tax tracking."
       }
     },
     "android": {
@@ -23,7 +25,13 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#00C0E8"
       },
-      "package": "com.tax-snap.app"
+      "package": "com.tax-snap.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -49,6 +57,18 @@
           "icon": "./assets/images/icon.png",
           "color": "#00C0E8",
           "sounds": []
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "TaxSnap needs camera access to scan receipts and extract tax deduction information."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "TaxSnap needs photo library access to import receipt images for tax tracking."
         }
       ]
     ],

@@ -12,6 +12,7 @@ import { ThemeProvider, useTheme } from './theme-provider';
 import { TabBarProvider } from './tab-bar-provider';
 import { DevModeProvider } from './dev-mode-provider';
 import { LanguageProvider } from './language-provider';
+import { PendingReceiptProvider } from './pending-receipt-provider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,14 +57,16 @@ export const RootProvider = ({ children }: PropsWithChildren) => {
             <AuthProvider>
               <RevenueCatProvider>
                 <NotificationProvider>
-                  <GestureHandlerRootView style={{ flex: 1 }}>
-                    <BottomSheetModalProvider>
-                      <TabBarProvider>
-                        {children}
-                        <ThemedToaster />
-                      </TabBarProvider>
-                    </BottomSheetModalProvider>
-                  </GestureHandlerRootView>
+                  <PendingReceiptProvider>
+                    <GestureHandlerRootView style={{ flex: 1 }}>
+                      <BottomSheetModalProvider>
+                        <TabBarProvider>
+                          {children}
+                          <ThemedToaster />
+                        </TabBarProvider>
+                      </BottomSheetModalProvider>
+                    </GestureHandlerRootView>
+                  </PendingReceiptProvider>
                 </NotificationProvider>
               </RevenueCatProvider>
             </AuthProvider>

@@ -2662,6 +2662,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native-community/datetimepicker@npm:^8.5.1":
+  version: 8.5.1
+  resolution: "@react-native-community/datetimepicker@npm:8.5.1"
+  dependencies:
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    expo: ">=52.0.0"
+    react: "*"
+    react-native: "*"
+    react-native-windows: "*"
+  peerDependenciesMeta:
+    expo:
+      optional: true
+    react-native-windows:
+      optional: true
+  checksum: 10c0/3c9e5889b7616c4b611d280cdceaa9cca7b03fce44e1a9bdd34c5f710882ec5c5c1b085df7c4ed9d315678d3e6d2094cd8e1ce5876e82491db80421f62867d5d
+  languageName: node
+  linkType: hard
+
 "@react-native-community/slider@npm:5.0.1":
   version: 5.0.1
   resolution: "@react-native-community/slider@npm:5.0.1"
@@ -6062,6 +6081,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-document-picker@npm:~14.0.8":
+  version: 14.0.8
+  resolution: "expo-document-picker@npm:14.0.8"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/1ef6aa129397e09269f5f47d6dbe338dc071ca51a24b98ed8bf21c3042c8a9ff806d31e14a9033bbc459ec4953aeb049f0648a083a71db43948255b6c1942e3e
+  languageName: node
+  linkType: hard
+
 "expo-file-system@npm:~19.0.19":
   version: 19.0.19
   resolution: "expo-file-system@npm:19.0.19"
@@ -6069,6 +6097,16 @@ __metadata:
     expo: "*"
     react-native: "*"
   checksum: 10c0/c9d038666a3f1addcc14968b2516c854370ed75b0dc31b9d31f49d57ba93f411d67c3d791bbffc586a9e4e274fec8bcb4fab0db3bfcde01c1142e7d20b6ce5df
+  languageName: node
+  linkType: hard
+
+"expo-file-system@npm:~19.0.21":
+  version: 19.0.21
+  resolution: "expo-file-system@npm:19.0.21"
+  peerDependencies:
+    expo: "*"
+    react-native: "*"
+  checksum: 10c0/0ece34f86beda2048f8bf1f3218e57f6c7c14a875fe8be0f0dd2704d968ee61f979ddf0561b8769f4d46cfeb77ac759da0a030c5a77128cf2a06ce0bb9e3959b
   languageName: node
   linkType: hard
 
@@ -6225,6 +6263,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-print@npm:~15.0.8":
+  version: 15.0.8
+  resolution: "expo-print@npm:15.0.8"
+  peerDependencies:
+    expo: "*"
+    react-native: "*"
+  checksum: 10c0/b9b4ed4df6d3443e30738198b5edc4819806aea328561090ff0d59b566cfd19d9e439f6a2f746df1c975c0727578ad3df5462afcac9bbacb84963b2debecb337
+  languageName: node
+  linkType: hard
+
 "expo-router@npm:~6.0.16":
   version: 6.0.16
   resolution: "expo-router@npm:6.0.16"
@@ -6291,6 +6339,15 @@ __metadata:
   version: 1.0.5
   resolution: "expo-server@npm:1.0.5"
   checksum: 10c0/0da974f733235d457f7ce51e5452f48f203378687f821bdab7159617a491c0192251423a17a7a3a118486e1cbfffff5d5ad31aeeedcf2cfad6412a1bd7e86877
+  languageName: node
+  linkType: hard
+
+"expo-sharing@npm:~14.0.8":
+  version: 14.0.8
+  resolution: "expo-sharing@npm:14.0.8"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/64c6f42272b7e762988dbb92af6eabb71bd8229366cdc675cda78513fea39c46c9a46bb250ffaf5587b8361bd824a89820e46771cb5f97fc16bbfc87e3f00518
   languageName: node
   linkType: hard
 
@@ -9944,6 +10001,7 @@ __metadata:
     "@eslint/js": "npm:^9.27.0"
     "@gorhom/bottom-sheet": "npm:^5.2.8"
     "@react-native-async-storage/async-storage": "npm:2.2.0"
+    "@react-native-community/datetimepicker": "npm:^8.5.1"
     "@react-native-community/slider": "npm:5.0.1"
     "@react-navigation/bottom-tabs": "npm:^7.3.10"
     "@react-navigation/elements": "npm:^2.8.4"
@@ -9971,13 +10029,17 @@ __metadata:
     expo-crypto: "npm:~15.0.7"
     expo-dev-client: "npm:~6.0.19"
     expo-device: "npm:~8.0.9"
+    expo-document-picker: "npm:~14.0.8"
+    expo-file-system: "npm:~19.0.21"
     expo-haptics: "npm:~15.0.7"
     expo-image-picker: "npm:~17.0.8"
     expo-linear-gradient: "npm:~15.0.7"
     expo-linking: "npm:~8.0.9"
     expo-localization: "npm:~17.0.7"
     expo-notifications: "npm:^0.32.14"
+    expo-print: "npm:~15.0.8"
     expo-router: "npm:~6.0.16"
+    expo-sharing: "npm:~14.0.8"
     expo-splash-screen: "npm:~31.0.11"
     expo-store-review: "npm:^9.0.8"
     expo-web-browser: "npm:~15.0.9"
@@ -10007,6 +10069,7 @@ __metadata:
     tailwindcss-animate: "npm:^1.0.7"
     typescript: "npm:~5.9.2"
     typescript-eslint: "npm:^8.32.1"
+    zustand: "npm:^5.0.9"
   languageName: unknown
   linkType: soft
 
@@ -12983,5 +13046,26 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 10c0/dceb44c28578b31641e13695d200d34ec4ab3966a5729814d5445b194933c096b7ced71494ce53a0e8820685d1d010df8b2422e5bf2cdea7e469d97ffbea306f
+  languageName: node
+  linkType: hard
+
+"zustand@npm:^5.0.9":
+  version: 5.0.9
+  resolution: "zustand@npm:5.0.9"
+  peerDependencies:
+    "@types/react": ">=18.0.0"
+    immer: ">=9.0.6"
+    react: ">=18.0.0"
+    use-sync-external-store: ">=1.2.0"
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    immer:
+      optional: true
+    react:
+      optional: true
+    use-sync-external-store:
+      optional: true
+  checksum: 10c0/552849e4546c7760704d6509a5c412d57c62a1fa9e53169c939ba5e3d75f8cb3df50a64c3a22e6c3f1c8cc00de7543e4edd61ab5ae0c9169ba9a98e28303aba6
   languageName: node
   linkType: hard

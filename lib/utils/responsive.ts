@@ -4,8 +4,8 @@ import { useWindowDimensions, Platform } from 'react-native';
 const TABLET_MIN_WIDTH = 768;
 const TABLET_CONTENT_MAX_WIDTH = 600;
 const PHONE_FRAME_MAX_WIDTH = 280;
-const TAB_BAR_PHONE_WIDTH = 280;
-const TAB_BAR_TABLET_WIDTH = 360;
+const TAB_BAR_PHONE_WIDTH = 320;
+const TAB_BAR_TABLET_WIDTH = 400;
 
 export interface ResponsiveValues {
   isTablet: boolean;

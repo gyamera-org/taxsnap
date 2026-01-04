@@ -1,51 +1,76 @@
+import { useState } from 'react';
 import { Tabs } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, Modal, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Path, G } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTabBar } from '@/context/tab-bar-provider';
 import * as Haptics from 'expo-haptics';
+import { Camera } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { useRouter } from 'expo-router';
 import { useResponsive } from '@/lib/utils/responsive';
 import { useThemedColors } from '@/lib/utils/theme';
-
-// Custom Home Icon
-function HomeIcon({ color, size = 24 }: { color: string; size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <G fill={color}>
-        <Path d="m9.5 17.5c-.27614 0-.5.2239-.5.5s.22386.5.5.5h5c.2761 0 .5-.2239.5-.5s-.2239-.5-.5-.5z" />
-        <Path
-          fillRule="evenodd"
-          clipRule="evenodd"
-          d="m14.1688 2.57514c-1.2716-1.00388-3.066-1.00388-4.33756 0l-6.5 5.13158c-.84073.66374-1.33124 1.67592-1.33124 2.74708v8.0462c0 1.933 1.567 3.5 3.5 3.5h13c1.933 0 3.5-1.567 3.5-3.5v-8.0462c0-1.07116-.4905-2.08334-1.3312-2.74708zm-3.7179.78488c.9083-.71706 2.1899-.71706 3.0982 0l6.5 5.13158c.6005.4741.9509 1.19709.9509 1.9622v8.0462c0 1.3807-1.1193 2.5-2.5 2.5h-13c-1.38071 0-2.5-1.1193-2.5-2.5v-8.0462c0-.76511.35036-1.4881.95089-1.9622z"
-        />
-      </G>
-    </Svg>
-  );
-}
-
-// Custom Settings Icon
-function SettingsIcon({ color, size = 24 }: { color: string; size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 512 512" fill={color}>
-      <Path d="m272.066 512h-32.133c-25.989 0-47.134-21.144-47.134-47.133v-10.871c-11.049-3.53-21.784-7.986-32.097-13.323l-7.704 7.704c-18.659 18.682-48.548 18.134-66.665-.007l-22.711-22.71c-18.149-18.129-18.671-48.008.006-66.665l7.698-7.698c-5.337-10.313-9.792-21.046-13.323-32.097h-10.87c-25.988 0-47.133-21.144-47.133-47.133v-32.134c0-25.989 21.145-47.133 47.134-47.133h10.87c3.531-11.05 7.986-21.784 13.323-32.097l-7.704-7.703c-18.666-18.646-18.151-48.528.006-66.665l22.713-22.712c18.159-18.184 48.041-18.638 66.664.006l7.697 7.697c10.313-5.336 21.048-9.792 32.097-13.323v-10.87c0-25.989 21.144-47.133 47.134-47.133h32.133c25.989 0 47.133 21.144 47.133 47.133v10.871c11.049 3.53 21.784 7.986 32.097 13.323l7.704-7.704c18.659-18.682 48.548-18.134 66.665.007l22.711 22.71c18.149 18.129 18.671 48.008-.006 66.665l-7.698 7.698c5.337 10.313 9.792 21.046 13.323 32.097h10.87c25.989 0 47.134 21.144 47.134 47.133v32.134c0 25.989-21.145 47.133-47.134 47.133h-10.87c-3.531 11.05-7.986 21.784-13.323 32.097l7.704 7.704c18.666 18.646 18.151 48.528-.006 66.665l-22.713 22.712c-18.159 18.184-48.041 18.638-66.664-.006l-7.697-7.697c-10.313 5.336-21.048 9.792-32.097 13.323v10.871c0 25.987-21.144 47.131-47.134 47.131zm-106.349-102.83c14.327 8.473 29.747 14.874 45.831 19.025 6.624 1.709 11.252 7.683 11.252 14.524v22.148c0 9.447 7.687 17.133 17.134 17.133h32.133c9.447 0 17.134-7.686 17.134-17.133v-22.148c0-6.841 4.628-12.815 11.252-14.524 16.084-4.151 31.504-10.552 45.831-19.025 5.895-3.486 13.4-2.538 18.243 2.305l15.688 15.689c6.764 6.772 17.626 6.615 24.224.007l22.727-22.726c6.582-6.574 6.802-17.438.006-24.225l-15.695-15.695c-4.842-4.842-5.79-12.348-2.305-18.242 8.473-14.326 14.873-29.746 19.024-45.831 1.71-6.624 7.684-11.251 14.524-11.251h22.147c9.447 0 17.134-7.686 17.134-17.133v-32.134c0-9.447-7.687-17.133-17.134-17.133h-22.147c-6.841 0-12.814-4.628-14.524-11.251-4.151-16.085-10.552-31.505-19.024-45.831-3.485-5.894-2.537-13.4 2.305-18.242l15.689-15.689c6.782-6.774 6.605-17.634.006-24.225l-22.725-22.725c-6.587-6.596-17.451-6.789-24.225-.006l-15.694 15.695c-4.842 4.843-12.35 5.791-18.243 2.305-14.327-8.473-29.747-14.874-45.831-19.025-6.624-1.709-11.252-7.683-11.252-14.524v-22.15c0-9.447-7.687-17.133-17.134-17.133h-32.133c-9.447 0-17.134 7.686-17.134 17.133v22.148c0 6.841-4.628 12.815-11.252 14.524-16.084 4.151-31.504 10.552-45.831 19.025-5.896 3.485-13.401 2.537-18.243-2.305l-15.688-15.689c-6.764-6.772-17.627-6.615-24.224-.007l-22.727 22.726c-6.582 6.574-6.802 17.437-.006 24.225l15.695 15.695c4.842 4.842 5.79 12.348 2.305 18.242-8.473 14.326-14.873 29.746-19.024 45.831-1.71 6.624-7.684 11.251-14.524 11.251h-22.148c-9.447.001-17.134 7.687-17.134 17.134v32.134c0 9.447 7.687 17.133 17.134 17.133h22.147c6.841 0 12.814 4.628 14.524 11.251 4.151 16.085 10.552 31.505 19.024 45.831 3.485 5.894 2.537 13.4-2.305 18.242l-15.689 15.689c-6.782 6.774-6.605 17.634-.006 24.225l22.725 22.725c6.587 6.596 17.451 6.789 24.225.006l15.694-15.695c3.568-3.567 10.991-6.594 18.244-2.304z" />
-      <Path d="m256 367.4c-61.427 0-111.4-49.974-111.4-111.4s49.973-111.4 111.4-111.4 111.4 49.974 111.4 111.4-49.973 111.4-111.4 111.4zm0-192.8c-44.885 0-81.4 36.516-81.4 81.4s36.516 81.4 81.4 81.4 81.4-36.516 81.4-81.4-36.515-81.4-81.4-81.4z" />
-    </Svg>
-  );
-}
+import { useTheme } from '@/context/theme-provider';
+import { useAuth } from '@/context/auth-provider';
+import { HomeIcon, ReceiptsIcon, SettingsIcon } from '@/components/icons/tab-icons';
+import { Plus, Camera as CameraIcon, Image as ImageIcon, FileText, X } from 'lucide-react-native';
+import { Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface TabBarProps {
   state: any;
   navigation: any;
 }
 
+interface TabItemProps {
+  routeName: string;
+  icon: React.ComponentType<{ color: string; size: number; filled?: boolean }>;
+  isActive: boolean;
+  onPress: () => void;
+  colors: ReturnType<typeof useThemedColors>;
+}
+
+function TabItem({ icon: Icon, isActive, onPress, colors }: TabItemProps) {
+  return (
+    <Pressable onPress={onPress} style={styles.tabButton}>
+      <View
+        style={[
+          styles.tabIconWrapper,
+          isActive && {
+            backgroundColor: colors.primaryLight,
+          },
+        ]}
+      >
+        <Icon
+          color={isActive ? colors.primary : colors.tabBarInactive}
+          size={22}
+          filled={isActive}
+        />
+      </View>
+    </Pressable>
+  );
+}
+
 function CustomTabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const { tabBarWidth } = useResponsive();
   const colors = useThemedColors();
+  const { isDark } = useTheme();
+  const router = useRouter();
+  const { t } = useTranslation();
+  const { session } = useAuth();
+  const [showScanOptions, setShowScanOptions] = useState(false);
 
-  const getTabColor = (routeName: string) => {
+  const tabs = [
+    { name: 'home/index', icon: HomeIcon },
+    { name: 'receipts/index', icon: ReceiptsIcon },
+    { name: 'settings/index', icon: SettingsIcon },
+  ];
+
+  const getIsActive = (routeName: string) => {
     const currentIndex = state.routes.findIndex((r: any) => r.name === routeName);
-    return state.index === currentIndex ? colors.tabBarActive : colors.tabBarInactive;
+    return state.index === currentIndex;
   };
 
   const handleTabPress = (routeName: string) => {
@@ -63,33 +88,259 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
     }
   };
 
-  return (
-    <View style={[styles.container, { paddingBottom: insets.bottom > 0 ? insets.bottom : 12 }]}>
-      {/* Tab Bar */}
-      <View
-        style={[
-          styles.tabBarWrapper,
-          {
-            maxWidth: tabBarWidth,
-            backgroundColor: colors.tabBar,
-            borderColor: colors.tabBarBorder,
-            shadowColor: colors.shadowColor,
-          },
-        ]}
-      >
-        <View style={styles.tabBarContent}>
-          {/* Home Tab */}
-          <Pressable onPress={() => handleTabPress('home/index')} style={styles.tabButton}>
-            <HomeIcon color={getTabColor('home/index')} size={24} />
-          </Pressable>
+  const handleScanPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowScanOptions(true);
+  };
 
-          {/* Settings Tab */}
-          <Pressable onPress={() => handleTabPress('settings/index')} style={styles.tabButton}>
-            <SettingsIcon color={getTabColor('settings/index')} size={24} />
-          </Pressable>
+  const handleCameraPress = async () => {
+    setShowScanOptions(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    const { status } = await Camera.requestCameraPermissionsAsync();
+
+    if (status === 'granted') {
+      router.push('/(tabs)/scan');
+    } else {
+      Alert.alert(t('scan.permissionTitle'), t('scan.permissionText'), [
+        { text: t('common.close') },
+      ]);
+    }
+  };
+
+  const handleImagePress = async () => {
+    setShowScanOptions(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (!session?.user?.id) {
+      Alert.alert(t('common.error'), t('common.notLoggedIn', 'Please sign in to scan receipts.'));
+      return;
+    }
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert(
+        t('scan.galleryPermissionTitle', 'Photo Library Access Required'),
+        t(
+          'scan.galleryPermissionText',
+          'TaxSnap needs access to your photo library to select receipt images.'
+        ),
+        [{ text: t('common.close') }]
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsEditing: true,
+      aspect: [3, 4],
+      base64: true, // Get base64 directly
+    });
+
+    if (!result.canceled && result.assets[0]?.base64) {
+      const { uri, base64 } = result.assets[0];
+
+      // Navigate to verify screen with image data
+      router.push({
+        pathname: '/receipt/verify',
+        params: {
+          imageBase64: base64,
+          localUri: uri,
+          isScanning: 'true',
+        },
+      });
+    }
+  };
+
+  const handlePDFPress = async () => {
+    setShowScanOptions(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        router.push({
+          pathname: '/receipt/verify',
+          params: { imageUri: result.assets[0].uri, isPDF: 'true' },
+        });
+      }
+    } catch (error) {
+      console.error('PDF picker error:', error);
+      Alert.alert(
+        t('common.error'),
+        t('scan.pdfError', 'Failed to select PDF. Please try again.'),
+        [{ text: t('common.close') }]
+      );
+    }
+  };
+
+  const closeScanOptions = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowScanOptions(false);
+  };
+
+  return (
+    <>
+      <View style={[styles.container, { paddingBottom: insets.bottom > 0 ? insets.bottom : 16 }]}>
+        {/* Tab Bar */}
+        <View
+          style={[
+            styles.tabBarWrapper,
+            {
+              maxWidth: tabBarWidth,
+              backgroundColor: isDark ? 'rgba(26, 26, 26, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+              shadowColor: '#000000',
+            },
+          ]}
+        >
+          {/* Glass effect overlay */}
+          <View style={styles.glassOverlay} pointerEvents="none">
+            <View
+              style={[
+                styles.glassHighlight,
+                {
+                  backgroundColor: isDark
+                    ? 'rgba(255, 255, 255, 0.03)'
+                    : 'rgba(255, 255, 255, 0.5)',
+                },
+              ]}
+            />
+          </View>
+
+          <View style={styles.tabBarContent}>
+            {/* Home tab */}
+            <TabItem
+              routeName={tabs[0].name}
+              icon={tabs[0].icon}
+              isActive={getIsActive(tabs[0].name)}
+              onPress={() => handleTabPress(tabs[0].name)}
+              colors={colors}
+            />
+
+            {/* Receipts tab */}
+            <TabItem
+              routeName={tabs[1].name}
+              icon={tabs[1].icon}
+              isActive={getIsActive(tabs[1].name)}
+              onPress={() => handleTabPress(tabs[1].name)}
+              colors={colors}
+            />
+
+            {/* Settings tab */}
+            <TabItem
+              routeName={tabs[2].name}
+              icon={tabs[2].icon}
+              isActive={getIsActive(tabs[2].name)}
+              onPress={() => handleTabPress(tabs[2].name)}
+              colors={colors}
+            />
+
+            {/* Scan/Close Button - toggles between + and X */}
+            <Pressable
+              onPress={showScanOptions ? closeScanOptions : handleScanPress}
+              style={styles.scanButtonWrapper}
+            >
+              {showScanOptions ? (
+                <View
+                  style={[styles.scanButton, { backgroundColor: isDark ? '#2a2a2a' : '#f0f0f0' }]}
+                >
+                  <X size={24} color={colors.text} strokeWidth={2} />
+                </View>
+              ) : (
+                <LinearGradient
+                  colors={[colors.primary, isDark ? '#0099BB' : '#00A8CC']}
+                  style={styles.scanButton}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Plus size={24} color="#FFFFFF" strokeWidth={2.5} />
+                </LinearGradient>
+              )}
+            </Pressable>
+          </View>
         </View>
       </View>
-    </View>
+
+      {/* Scan Options Modal */}
+      <Modal
+        visible={showScanOptions}
+        transparent
+        animationType="fade"
+        onRequestClose={closeScanOptions}
+      >
+        <Pressable
+          style={[
+            styles.modalOverlay,
+            { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.4)' },
+          ]}
+          onPress={closeScanOptions}
+        >
+          {/* Options Card */}
+          <Pressable
+            style={[
+              styles.optionsCard,
+              {
+                backgroundColor: 'transparent',
+                marginBottom: insets.bottom > 0 ? insets.bottom + 90 : 106,
+              },
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Scan Options Grid */}
+            <View style={styles.optionsGrid}>
+              {/* Camera Option */}
+              <Pressable
+                style={[
+                  styles.gridOption,
+                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' },
+                ]}
+                onPress={handleCameraPress}
+              >
+                <CameraIcon size={26} color={colors.text} strokeWidth={1.5} />
+                <Text style={[styles.gridOptionLabel, { color: colors.text }]}>
+                  {t('scan.takePhoto', 'Take Photo')}
+                </Text>
+              </Pressable>
+
+              {/* Image Option */}
+              <Pressable
+                style={[
+                  styles.gridOption,
+                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' },
+                ]}
+                onPress={handleImagePress}
+              >
+                <ImageIcon size={26} color={colors.text} strokeWidth={1.5} />
+                <Text style={[styles.gridOptionLabel, { color: colors.text }]}>
+                  {t('scan.uploadImage', 'Upload Image')}
+                </Text>
+              </Pressable>
+
+              {/* PDF Option */}
+              <Pressable
+                style={[
+                  styles.gridOption,
+                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' },
+                ]}
+                onPress={handlePDFPress}
+              >
+                <FileText size={26} color={colors.text} strokeWidth={1.5} />
+                <Text style={[styles.gridOptionLabel, { color: colors.text }]}>
+                  {t('scan.uploadPDF', 'Upload PDF')}
+                </Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -104,24 +355,95 @@ const styles = StyleSheet.create({
   },
   tabBarWrapper: {
     width: '100%',
-    borderRadius: 32,
+    borderRadius: 28,
     overflow: 'hidden',
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  glassOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    overflow: 'hidden',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+  },
+  glassHighlight: {
+    flex: 1,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
   },
   tabBarContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 24,
   },
   tabButton: {
-    padding: 8,
+    padding: 4,
+  },
+  tabIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanButtonWrapper: {
+    padding: 4,
+    shadowColor: '#00C0E8',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  scanButton: {
+    width: 48,
+    height: 48,
     borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    paddingHorizontal: 24,
+  },
+  optionsCard: {
+    borderRadius: 24,
+    padding: 16,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  optionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    backgroundColor: 'transparent',
+  },
+  gridOption: {
+    width: 90,
+    height: 90,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  gridOptionLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 
@@ -137,6 +459,8 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="home/index" />
+      <Tabs.Screen name="scan/index" />
+      <Tabs.Screen name="receipts/index" />
       <Tabs.Screen name="settings/index" />
     </Tabs>
   );

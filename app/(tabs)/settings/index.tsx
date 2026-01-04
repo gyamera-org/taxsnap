@@ -295,7 +295,7 @@ export default function SettingsScreen() {
           {/* App Version */}
           <View className="items-center mt-4">
             <Text className="text-sm" style={{ color: colors.textMuted }}>
-              App Base v1.0.0
+              TaxSnap v1.0.0
             </Text>
           </View>
         </View>
