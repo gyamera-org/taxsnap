@@ -26,7 +26,7 @@ export const lightColors = {
   primaryMedium: `${PRIMARY}30`, // 30% opacity
 
   // Backgrounds
-  background: WHITE,
+  background: '#F8F6F7',
   backgroundSecondary: '#F9FAFB',
   backgroundTertiary: '#F3F4F6',
 

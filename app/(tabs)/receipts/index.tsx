@@ -7,27 +7,32 @@ import {
   Pressable,
   StatusBar,
   RefreshControl,
-  ActivityIndicator,
   TextInput,
   Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import {
-  FileText,
   Search,
   TrendingUp,
   Download,
-  Calendar,
+  SlidersHorizontal,
   X,
+  DollarSign,
+  PiggyBank,
+  FileText,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
-import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { FilterModal } from '@/components/ui/filter-modal';
 import { ReceiptListItem } from '@/components/receipts/receipt-list-item';
 import { PendingReceiptItem } from '@/components/receipts/pending-receipt-item';
 import { ExportModal } from '@/components/receipts/export-modal';
+import {
+  ReceiptListSkeleton,
+  SummaryCardsSkeleton,
+} from '@/components/ui/skeleton';
 import { usePendingReceipt } from '@/context/pending-receipt-provider';
 import {
   useReceipts,
@@ -35,6 +40,7 @@ import {
   useExportReceiptsToCSV,
   useExportReceiptsToPDF,
 } from '@/lib/hooks/use-receipts';
+import type { TaxCategoryId } from '@/lib/constants/categories';
 import type { DateRange, QuickFilterType } from '@/lib/types/receipt';
 
 export default function ReceiptsScreen() {
@@ -50,7 +56,8 @@ export default function ReceiptsScreen() {
   const [quickFilter, setQuickFilter] = useState<QuickFilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<TaxCategoryId[]>([]);
   const searchInputRef = useRef<TextInput>(null);
 
   // Build filters object for the query
@@ -58,24 +65,22 @@ export default function ReceiptsScreen() {
     () => ({
       dateRange: selectedRange || undefined,
       searchQuery: searchQuery || undefined,
+      categories: selectedCategories.length > 0 ? selectedCategories : undefined,
     }),
-    [selectedRange, searchQuery]
+    [selectedRange, searchQuery, selectedCategories]
   );
 
   // Use React Query hooks
-  const {
-    data: receipts = [],
-    isLoading,
-    isRefetching,
-    refetch,
-  } = useReceipts(filters);
+  const { data: receipts = [], isLoading, isRefetching, refetch } = useReceipts(filters);
 
-  const { data: summary = {
-    totalReceipts: 0,
-    totalAmount: 0,
-    totalDeductible: 0,
-    estimatedSavings: 0,
-  } } = useReceiptSummary(selectedRange || undefined);
+  const {
+    data: summary = {
+      totalReceipts: 0,
+      totalAmount: 0,
+      totalDeductible: 0,
+      estimatedSavings: 0,
+    },
+  } = useReceiptSummary(filters);
 
   // Export mutations
   const exportCSV = useExportReceiptsToCSV();
@@ -108,8 +113,8 @@ export default function ReceiptsScreen() {
 
   const formatCurrency = (cents: number) => {
     return `$${(cents / 100).toLocaleString('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     })}`;
   };
 
@@ -121,18 +126,21 @@ export default function ReceiptsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            <Text style={[styles.title, { color: colors.text }]}>
-              {t('receipts.title')}
-            </Text>
+            <View style={styles.titleRow}>
+              <Text style={[styles.title, { color: colors.text }]}>{t('receipts.title')}</Text>
+              {summary.totalReceipts > 0 && (
+                <Text style={[styles.titleCount, { color: colors.textMuted }]}>
+                  ({summary.totalReceipts})
+                </Text>
+              )}
+            </View>
             <View style={styles.headerActions}>
               {/* Export Button */}
               <Pressable
                 style={[
                   styles.headerButton,
                   {
-                    backgroundColor: isDark
-                      ? 'rgba(255,255,255,0.05)'
-                      : 'rgba(0,0,0,0.03)',
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
                   },
                 ]}
                 onPress={() => {
@@ -148,9 +156,7 @@ export default function ReceiptsScreen() {
                 style={[
                   styles.headerButton,
                   {
-                    backgroundColor: isDark
-                      ? 'rgba(255,255,255,0.05)'
-                      : 'rgba(0,0,0,0.03)',
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
                   },
                   isSearchVisible && {
                     backgroundColor: colors.primaryLight,
@@ -174,25 +180,26 @@ export default function ReceiptsScreen() {
                 )}
               </Pressable>
 
-              {/* Period Selector Button */}
+              {/* Filter Button */}
               <Pressable
                 style={[
                   styles.headerButton,
                   {
-                    backgroundColor: isDark
-                      ? 'rgba(255,255,255,0.05)'
-                      : 'rgba(0,0,0,0.03)',
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
                   },
-                  quickFilter !== 'all' && {
+                  (quickFilter !== 'all' || selectedCategories.length > 0) && {
                     backgroundColor: colors.primaryLight,
                   },
                 ]}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setShowDatePicker(true);
+                  setShowFilterModal(true);
                 }}
               >
-                <Calendar size={20} color={quickFilter !== 'all' ? colors.primary : colors.textSecondary} />
+                <SlidersHorizontal
+                  size={20}
+                  color={(quickFilter !== 'all' || selectedCategories.length > 0) ? colors.primary : colors.textSecondary}
+                />
               </Pressable>
             </View>
           </View>
@@ -212,12 +219,8 @@ export default function ReceiptsScreen() {
               style={[
                 styles.searchContainer,
                 {
-                  backgroundColor: isDark
-                    ? 'rgba(255,255,255,0.05)'
-                    : 'rgba(0,0,0,0.03)',
-                  borderColor: isDark
-                    ? 'rgba(255,255,255,0.1)'
-                    : 'rgba(0,0,0,0.08)',
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
                 },
               ]}
             >
@@ -241,76 +244,87 @@ export default function ReceiptsScreen() {
             </View>
           )}
 
-          {/* Date Range Picker Modal */}
-          <DateRangePicker
+          {/* Filter Modal */}
+          <FilterModal
+            visible={showFilterModal}
+            onClose={() => setShowFilterModal(false)}
             selectedRange={selectedRange}
             selectedQuickFilter={quickFilter}
             onRangeChange={handleRangeChange}
-            visible={showDatePicker}
-            onClose={() => setShowDatePicker(false)}
+            selectedCategories={selectedCategories}
+            onCategoriesChange={setSelectedCategories}
           />
         </View>
 
         {/* Summary Cards */}
-        <View style={styles.summaryContainer}>
-          <View
-            style={[
-              styles.summaryCard,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(255,255,255,0.05)'
-                  : 'rgba(0,0,0,0.02)',
-                borderColor: isDark
-                  ? 'rgba(255,255,255,0.1)'
-                  : 'rgba(0,0,0,0.08)',
-              },
-            ]}
-          >
+        {isLoading ? (
+          <SummaryCardsSkeleton />
+        ) : (
+          <View style={styles.summaryContainer}>
+            {/* Savings */}
             <View
               style={[
-                styles.summaryIcon,
-                { backgroundColor: colors.primaryLight },
+                styles.summaryCard,
+                {
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                },
               ]}
             >
-              <FileText size={18} color={colors.primary} />
+              <View style={[styles.summaryIcon, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+                <PiggyBank size={16} color="#F59E0B" />
+              </View>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {formatCurrency(summary.estimatedSavings)}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>
+                {t('receipts.savings')}
+              </Text>
             </View>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>
-              {summary.totalReceipts}
-            </Text>
-            <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>
-              {t('receipts.totalReceipts')}
-            </Text>
-          </View>
 
-          <View
-            style={[
-              styles.summaryCard,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(255,255,255,0.05)'
-                  : 'rgba(0,0,0,0.02)',
-                borderColor: isDark
-                  ? 'rgba(255,255,255,0.1)'
-                  : 'rgba(0,0,0,0.08)',
-              },
-            ]}
-          >
+            {/* Total Expenses */}
             <View
               style={[
-                styles.summaryIcon,
-                { backgroundColor: 'rgba(16, 185, 129, 0.1)' },
+                styles.summaryCard,
+                {
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                },
               ]}
             >
-              <TrendingUp size={18} color="#10B981" />
+              <View style={[styles.summaryIcon, { backgroundColor: 'rgba(139, 92, 246, 0.1)' }]}>
+                <DollarSign size={16} color="#8B5CF6" />
+              </View>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {formatCurrency(summary.totalAmount)}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>
+                {t('receipts.totalExpenses')}
+              </Text>
             </View>
-            <Text style={[styles.summaryValue, { color: colors.text }]}>
-              {formatCurrency(summary.totalDeductible)}
-            </Text>
-            <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>
-              {t('receipts.deductions')}
-            </Text>
+
+            {/* Total Deductions */}
+            <View
+              style={[
+                styles.summaryCard,
+                {
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                },
+              ]}
+            >
+              <View style={[styles.summaryIcon, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
+                <TrendingUp size={16} color="#10B981" />
+              </View>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {formatCurrency(summary.totalDeductible)}
+              </Text>
+              <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>
+                {t('receipts.deductions')}
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Content */}
         <ScrollView
@@ -326,9 +340,7 @@ export default function ReceiptsScreen() {
           }
         >
           {isLoading ? (
-            <View style={styles.loadingState}>
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
+            <ReceiptListSkeleton count={4} />
           ) : receipts.length === 0 && !pendingReceipt ? (
             /* Empty State */
             <View style={styles.emptyState}>
@@ -336,9 +348,7 @@ export default function ReceiptsScreen() {
                 style={[
                   styles.emptyIconContainer,
                   {
-                    backgroundColor: isDark
-                      ? 'rgba(255,255,255,0.05)'
-                      : 'rgba(0,0,0,0.02)',
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
                   },
                 ]}
               >
@@ -355,9 +365,7 @@ export default function ReceiptsScreen() {
             /* Receipt List */
             <View style={styles.receiptList}>
               {/* Pending Receipt - show at top while scanning */}
-              {pendingReceipt && (
-                <PendingReceiptItem pendingReceipt={pendingReceipt} />
-              )}
+              {pendingReceipt && <PendingReceiptItem pendingReceipt={pendingReceipt} />}
               {receipts.map((receipt) => (
                 <ReceiptListItem key={receipt.id} receipt={receipt} />
               ))}
@@ -388,10 +396,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 16,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
   title: {
     fontSize: 28,
     fontWeight: '700',
     letterSpacing: -0.5,
+  },
+  titleCount: {
+    fontSize: 18,
+    fontWeight: '500',
   },
   headerActions: {
     flexDirection: 'row',
@@ -434,20 +451,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   summaryValue: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
     marginBottom: 2,
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: 11,
+    textAlign: 'center',
   },
   content: {
     flex: 1,

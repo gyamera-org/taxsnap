@@ -150,19 +150,22 @@ export function PendingReceiptItem({ pendingReceipt }: PendingReceiptItemProps) 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
+    alignItems: 'stretch',
     borderRadius: 20,
-    overflow: 'hidden',
+    minHeight: 110,
   },
   containerLight: {
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 3,
+        elevation: 1,
       },
     }),
   },
@@ -171,8 +174,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
   },
   imageContainer: {
-    width: 120,
-    height: 120,
+    width: 110,
+    minHeight: 110,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
     overflow: 'hidden',
@@ -180,11 +183,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#2C2C2E',
   },
   receiptImage: {
-    width: '100%',
-    height: '100%',
+    width: 110,
+    height: 110,
   },
   placeholderIcon: {
-    flex: 1,
+    width: 110,
+    height: 110,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -222,7 +226,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     justifyContent: 'center',
     gap: 10,
   },

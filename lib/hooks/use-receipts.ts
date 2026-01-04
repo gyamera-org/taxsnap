@@ -10,7 +10,6 @@ import type {
   UpdateReceiptInput,
   ReceiptSummary,
   ReceiptFilters,
-  DateRange,
 } from '@/lib/types/receipt';
 
 export const receiptKeys = {
@@ -18,17 +17,60 @@ export const receiptKeys = {
   lists: () => [...receiptKeys.all, 'list'] as const,
   list: (filters: Record<string, unknown>) => [...receiptKeys.lists(), filters] as const,
   summary: () => [...receiptKeys.all, 'summary'] as const,
-  summaryWithRange: (range?: DateRange) => [...receiptKeys.summary(), range] as const,
+  summaryWithFilters: (filters?: ReceiptFilters) => [...receiptKeys.summary(), filters] as const,
   details: () => [...receiptKeys.all, 'detail'] as const,
   detail: (id: string) => [...receiptKeys.details(), id] as const,
 };
+
+// Helper to extract storage path from image URI and generate signed URL
+async function getSignedImageUrl(imageUri: string | null): Promise<string | null> {
+  if (!imageUri) return null;
+
+  try {
+    // Check if it's already a signed URL (contains 'token=')
+    if (imageUri.includes('token=')) {
+      return imageUri;
+    }
+
+    // Extract the path from the public URL
+    // URL format: https://<project>.supabase.co/storage/v1/object/public/receipts/<user_id>/<filename>
+    const match = imageUri.match(/\/receipts\/(.+)$/);
+    if (!match) return imageUri; // Return as-is if we can't parse it
+
+    const path = match[1];
+
+    const { data, error } = await supabase.storage
+      .from('receipts')
+      .createSignedUrl(path, 60 * 60 * 24 * 7); // 7 days expiry
+
+    if (error) {
+      console.warn('Failed to create signed URL:', error);
+      return imageUri; // Return original URL as fallback
+    }
+
+    return data.signedUrl;
+  } catch (e) {
+    console.warn('Error generating signed URL:', e);
+    return imageUri;
+  }
+}
+
+// Process receipts to add signed URLs
+async function addSignedUrlsToReceipts(receipts: Receipt[]): Promise<Receipt[]> {
+  return Promise.all(
+    receipts.map(async (receipt) => ({
+      ...receipt,
+      image_uri: (await getSignedImageUrl(receipt.image_uri)) || receipt.image_uri,
+    }))
+  );
+}
 
 // Fetch all receipts for the current user
 export function useReceipts(filters?: ReceiptFilters) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: receiptKeys.list(filters || {}),
+    queryKey: receiptKeys.list(filters as Record<string, unknown> || {}),
     queryFn: async (): Promise<Receipt[]> => {
       if (!user) return [];
 
@@ -63,7 +105,10 @@ export function useReceipts(filters?: ReceiptFilters) {
       const { data, error } = await query;
 
       if (error) throw error;
-      return (data || []) as Receipt[];
+
+      // Add signed URLs for images
+      const receipts = (data || []) as Receipt[];
+      return addSignedUrlsToReceipts(receipts);
     },
     enabled: !!user,
   });
@@ -89,18 +134,22 @@ export function useReceipt(id: string) {
         if (error.code === 'PGRST116') return null; // Not found
         throw error;
       }
-      return data as Receipt;
+
+      // Add signed URL for image
+      const receipt = data as Receipt;
+      const signedUrl = await getSignedImageUrl(receipt.image_uri);
+      return { ...receipt, image_uri: signedUrl || receipt.image_uri };
     },
     enabled: !!user && !!id,
   });
 }
 
-// Fetch receipt summary for dashboard
-export function useReceiptSummary(dateRange?: DateRange) {
+// Fetch receipt summary for dashboard (now supports full filters including category)
+export function useReceiptSummary(filters?: ReceiptFilters) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: receiptKeys.summaryWithRange(dateRange),
+    queryKey: receiptKeys.summaryWithFilters(filters),
     queryFn: async (): Promise<ReceiptSummary> => {
       if (!user) {
         return { totalReceipts: 0, totalAmount: 0, totalDeductible: 0, estimatedSavings: 0 };
@@ -111,10 +160,21 @@ export function useReceiptSummary(dateRange?: DateRange) {
         .select('total_amount, deductible_amount')
         .eq('user_id', user.id);
 
-      if (dateRange) {
-        const startStr = dateRange.startDate.toISOString().split('T')[0];
-        const endStr = dateRange.endDate.toISOString().split('T')[0];
+      // Apply date range filter
+      if (filters?.dateRange) {
+        const startStr = filters.dateRange.startDate.toISOString().split('T')[0];
+        const endStr = filters.dateRange.endDate.toISOString().split('T')[0];
         query = query.gte('date', startStr).lte('date', endStr);
+      }
+
+      // Apply category filter
+      if (filters?.categories && filters.categories.length > 0) {
+        query = query.in('category', filters.categories);
+      }
+
+      // Apply search filter
+      if (filters?.searchQuery) {
+        query = query.ilike('vendor', `%${filters.searchQuery}%`);
       }
 
       const { data, error } = await query;
@@ -306,12 +366,14 @@ export function useUploadReceiptImage() {
 
       if (error) throw error;
 
-      // Get the public URL
-      const { data: urlData } = supabase.storage
+      // Get a signed URL (works for private buckets)
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from('receipts')
-        .getPublicUrl(data.path);
+        .createSignedUrl(data.path, 60 * 60 * 24 * 365); // 1 year expiry
 
-      return urlData.publicUrl;
+      if (signedUrlError) throw signedUrlError;
+
+      return signedUrlData.signedUrl;
     },
   });
 }

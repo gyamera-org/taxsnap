@@ -7,13 +7,16 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from './auth-provider';
 import { receiptKeys } from '@/lib/hooks/use-receipts';
-import type { ExtractedReceiptData } from '@/lib/types/receipt';
+import { calculateDeductible } from '@/lib/constants/categories';
+import type { ExtractedReceiptData, ReceiptStatus } from '@/lib/types/receipt';
 
 export interface PendingReceipt {
-  id: string;
+  id: string; // Now stores the actual database receipt ID
   imageBase64: string;
   imagePreviewUri?: string;
+  imageUrl?: string;
   progress: number;
+  status: ReceiptStatus;
   createdAt: Date;
 }
 
@@ -57,10 +60,14 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
 
     if (error) throw error;
 
-    // Get the public URL
-    const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(data.path);
+    // Get a signed URL (works for private buckets)
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('receipts')
+      .createSignedUrl(data.path, 60 * 60 * 24 * 365); // 1 year expiry
 
-    return urlData.publicUrl;
+    if (signedUrlError) throw signedUrlError;
+
+    return signedUrlData.signedUrl;
   };
 
   const startScan = useCallback(
@@ -70,33 +77,57 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Create a temporary pending receipt ID
-      const tempId = `pending-${Date.now()}`;
+      let receiptId: string | null = null;
+      let imageUrl: string | null = null;
 
-      // Set pending receipt state immediately
+      // Set pending receipt state immediately (with temp ID until we get DB ID)
       setPendingReceipt({
-        id: tempId,
+        id: `temp-${Date.now()}`,
         imageBase64,
         imagePreviewUri,
-        progress: 0,
+        progress: 5,
+        status: 'pending',
         createdAt: new Date(),
       });
 
       // Simulate progress updates
       const progressInterval = setInterval(() => {
         setPendingReceipt((prev) => {
-          if (!prev) return null;
-          const newProgress = Math.min(prev.progress + Math.random() * 15, 90);
+          if (!prev || prev.status === 'completed') return prev;
+          const newProgress = Math.min(prev.progress + Math.random() * 10, 85);
           return { ...prev, progress: newProgress };
         });
-      }, 500);
+      }, 600);
 
       try {
         // Step 1: Upload image to storage
-        const imageUrl = await uploadImage(imageBase64);
+        imageUrl = await uploadImage(imageBase64);
 
-        // Step 2: Call the receipt-scan edge function
-        // Explicitly pass auth header since supabase-js may not auto-attach it
+        // Update progress
+        setPendingReceipt((prev) => prev ? { ...prev, progress: 30, imageUrl: imageUrl || undefined } : null);
+
+        // Step 2: Create receipt in database immediately with 'processing' status
+        const { data: newReceipt, error: insertError } = await supabase
+          .from('receipts')
+          .insert({
+            user_id: user.id,
+            image_uri: imageUrl,
+            status: 'processing',
+            currency: 'USD',
+          })
+          .select('id')
+          .single();
+
+        if (insertError) throw insertError;
+        receiptId = newReceipt.id;
+
+        // Update pending receipt with real DB ID
+        setPendingReceipt((prev) => prev ? { ...prev, id: receiptId!, progress: 40, status: 'processing' } : null);
+
+        // Invalidate lists so the new receipt appears
+        queryClient.invalidateQueries({ queryKey: receiptKeys.lists() });
+
+        // Step 3: Call the receipt-scan edge function
         const response = await supabase.functions.invoke('receipt-scan', {
           body: {
             imageBase64,
@@ -106,8 +137,6 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
             Authorization: `Bearer ${session.access_token}`,
           },
         });
-
-        clearInterval(progressInterval);
 
         if (response.error) {
           throw new Error(response.error.message || 'Failed to scan receipt');
@@ -119,41 +148,66 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
           throw new Error(extractedData?.error || 'Failed to extract receipt data');
         }
 
+        // Step 4: Update the receipt with extracted data
+        const deductibleAmount = extractedData.total && extractedData.suggestedCategory
+          ? calculateDeductible(extractedData.total, extractedData.suggestedCategory)
+          : null;
+
+        const taxYear = extractedData.date ? new Date(extractedData.date).getFullYear() : null;
+
+        const { error: updateError } = await supabase
+          .from('receipts')
+          .update({
+            vendor: extractedData.vendor,
+            date: extractedData.date,
+            total_amount: extractedData.total,
+            currency: extractedData.currency || 'USD',
+            category: extractedData.suggestedCategory,
+            deductible_amount: deductibleAmount,
+            tax_year: taxYear,
+            status: 'completed',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', receiptId);
+
+        if (updateError) throw updateError;
+
+        clearInterval(progressInterval);
+
         // Set progress to 100%
-        setPendingReceipt((prev) => (prev ? { ...prev, progress: 100 } : null));
+        setPendingReceipt((prev) => prev ? { ...prev, progress: 100, status: 'completed' } : null);
 
         // Small delay to show 100% progress
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 400));
 
         // Clear pending receipt
         clearPendingReceipt();
 
-        // Invalidate receipt lists
+        // Invalidate receipt lists to show updated data
         queryClient.invalidateQueries({ queryKey: receiptKeys.lists() });
         queryClient.invalidateQueries({ queryKey: receiptKeys.summary() });
 
         // Success feedback
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-        // Navigate to verify screen with extracted data
-        router.push({
-          pathname: '/receipt/verify',
-          params: {
-            imageUrl,
-            vendor: extractedData.vendor || '',
-            date: extractedData.date || '',
-            total: extractedData.total?.toString() || '',
-            currency: extractedData.currency || 'USD',
-            suggestedCategory: extractedData.suggestedCategory || '',
-            confidence: extractedData.confidence?.toString() || '0',
-          },
-        });
+        toast.success(t('scan.scanComplete'));
       } catch (error) {
         clearInterval(progressInterval);
-        clearPendingReceipt();
 
         console.error('Error scanning receipt:', error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+        // If we created a receipt, update its status to failed
+        if (receiptId) {
+          await supabase
+            .from('receipts')
+            .update({ status: 'failed', updated_at: new Date().toISOString() })
+            .eq('id', receiptId);
+
+          // Invalidate to show the failed state
+          queryClient.invalidateQueries({ queryKey: receiptKeys.lists() });
+        }
+
+        clearPendingReceipt();
 
         const errorMessage = error instanceof Error ? error.message : t('errors.generic');
         toast.error(t('scan.analysisFailed'), {

@@ -1,5 +1,8 @@
 import { TaxCategoryId } from '@/lib/constants/categories';
 
+// Receipt status for tracking scan progress
+export type ReceiptStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
 // Receipt entity stored in database
 export interface Receipt {
   id: string;
@@ -13,6 +16,7 @@ export interface Receipt {
   deductible_amount: number | null; // stored in cents
   note: string | null;
   tax_year: number | null;
+  status: ReceiptStatus; // Track scan status
   created_at: string;
   updated_at: string | null;
 }
@@ -26,6 +30,7 @@ export interface ExtractedReceiptData {
   suggestedCategory: TaxCategoryId | null;
   confidence: number; // 0-1
   rawText?: string; // Optional: raw text from OCR
+  error?: string; // Error message if extraction failed
 }
 
 // Create receipt input (for new receipts)

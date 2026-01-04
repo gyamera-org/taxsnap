@@ -2,10 +2,11 @@ import { View, Text, StyleSheet, Pressable, Image, Platform } from 'react-native
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { format } from 'date-fns';
-import { Receipt as ReceiptIcon, Flame, TrendingUp, Tag } from 'lucide-react-native';
+import { Receipt as ReceiptIcon, TrendingUp, Tag, PiggyBank, Loader2, AlertCircle } from 'lucide-react-native';
+import Animated, { useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
-import { getCategoryById } from '@/lib/constants/categories';
+import { getCategoryById, calculateTaxSavings } from '@/lib/constants/categories';
 import type { Receipt } from '@/lib/types/receipt';
 
 interface ReceiptListItemProps {
@@ -18,16 +19,41 @@ export function ReceiptListItem({ receipt, onPress }: ReceiptListItemProps) {
   const { isDark } = useTheme();
   const router = useRouter();
 
+  const isProcessing = receipt.status === 'processing' || receipt.status === 'pending';
+  const isFailed = receipt.status === 'failed';
+
   const category = receipt.category ? getCategoryById(receipt.category) : null;
-  const formattedTime = receipt.date
-    ? format(new Date(receipt.date), 'h:mm a')
+
+  // Format the receipt date (transaction date from the receipt itself)
+  const formattedDate = receipt.date
+    ? format(new Date(receipt.date + 'T00:00:00'), 'MMM d, yyyy')
     : '';
+
   const formattedAmount = receipt.total_amount
     ? `$${(receipt.total_amount / 100).toFixed(2)}`
     : '$0.00';
-  const formattedDeductible = receipt.deductible_amount
-    ? `$${(receipt.deductible_amount / 100).toFixed(2)}`
-    : formattedAmount;
+
+  const deductibleAmount = receipt.deductible_amount || receipt.total_amount || 0;
+  const formattedDeductible = `$${(deductibleAmount / 100).toFixed(2)}`;
+
+  const savingsAmount = calculateTaxSavings(deductibleAmount);
+  const formattedSavings = `$${(savingsAmount / 100).toFixed(2)}`;
+
+  // Spinning animation for processing state
+  const spinStyle = useAnimatedStyle(() => {
+    if (!isProcessing) return {};
+    return {
+      transform: [
+        {
+          rotate: withRepeat(
+            withTiming('360deg', { duration: 1500, easing: Easing.linear }),
+            -1,
+            false
+          ),
+        },
+      ],
+    };
+  });
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -42,73 +68,103 @@ export function ReceiptListItem({ receipt, onPress }: ReceiptListItemProps) {
     <Pressable
       onPress={handlePress}
       style={({ pressed }) => [
-        styles.container,
-        {
-          backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-        },
+        styles.pressable,
         isDark ? styles.containerDark : styles.containerLight,
         pressed && styles.pressed,
       ]}
     >
-      {/* Large Receipt Image */}
-      <View
-        style={[
-          styles.imageContainer,
-          { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F2F2F7' },
-        ]}
-      >
-        {receipt.image_uri ? (
-          <Image
-            source={{ uri: receipt.image_uri }}
-            style={styles.receiptImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.placeholderIcon}>
-            <ReceiptIcon size={32} color={colors.textMuted} />
-          </View>
-        )}
-      </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Header: Vendor & Time */}
-        <View style={styles.headerRow}>
-          <Text
-            style={[styles.vendor, { color: colors.text }]}
-            numberOfLines={1}
-          >
-            {receipt.vendor || 'Unknown Vendor'}
-          </Text>
-          <Text style={[styles.time, { color: colors.textMuted }]}>
-            {formattedTime}
-          </Text>
-        </View>
-
-        {/* Amount with icon */}
-        <View style={styles.amountRow}>
-          <Flame size={16} color={colors.primary} />
-          <Text style={[styles.amount, { color: colors.text }]}>
-            {formattedAmount}
-          </Text>
-        </View>
-
-        {/* Meta: Category & Deductible */}
-        <View style={styles.metaRow}>
-          {category && (
-            <View style={styles.metaItem}>
-              <Tag size={14} color="#8B5CF6" />
-              <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                {category.name}
-              </Text>
+      <View style={[styles.row, { backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF' }]}>
+        {/* Large Receipt Image */}
+        <View
+          style={[
+            styles.imageContainer,
+            { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F2F2F7' },
+          ]}
+        >
+          {receipt.image_uri ? (
+            <Image
+              source={{ uri: receipt.image_uri }}
+              style={[styles.receiptImage, isProcessing && { opacity: 0.6 }]}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.placeholderIcon}>
+              <ReceiptIcon size={32} color={colors.textMuted} />
             </View>
           )}
-          <View style={styles.metaItem}>
-            <TrendingUp size={14} color="#10B981" />
-            <Text style={styles.deductibleText}>
-              {formattedDeductible}
+          {/* Processing overlay */}
+          {isProcessing && (
+            <View style={styles.processingOverlay}>
+              <Animated.View style={spinStyle}>
+                <Loader2 size={28} color="#FFFFFF" />
+              </Animated.View>
+            </View>
+          )}
+          {/* Failed overlay */}
+          {isFailed && (
+            <View style={[styles.processingOverlay, { backgroundColor: 'rgba(239, 68, 68, 0.7)' }]}>
+              <AlertCircle size={28} color="#FFFFFF" />
+            </View>
+          )}
+        </View>
+
+        {/* Content */}
+        <View style={styles.content}>
+          {/* Header: Vendor & Time */}
+          <View style={styles.headerRow}>
+            <Text
+              style={[styles.vendor, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              {isProcessing ? 'Processing...' : isFailed ? 'Scan Failed' : (receipt.vendor || 'Unknown Vendor')}
             </Text>
+            {!isProcessing && !isFailed && formattedDate && (
+              <Text style={[styles.time, { color: colors.textMuted }]}>
+                {formattedDate}
+              </Text>
+            )}
           </View>
+
+          {/* Amount or status message */}
+          {isProcessing ? (
+            <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+              Analyzing receipt with AI...
+            </Text>
+          ) : isFailed ? (
+            <Text style={[styles.statusText, { color: '#EF4444' }]}>
+              Tap to retry or delete
+            </Text>
+          ) : (
+            <>
+              <Text style={[styles.amount, { color: colors.text }]}>
+                {formattedAmount}
+              </Text>
+
+              {/* Meta Row: Category, Deductible, Savings */}
+              <View style={styles.metaRow}>
+                {category && (
+                  <View style={styles.metaItem}>
+                    <Tag size={14} color="#8B5CF6" />
+                    <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                      {category.name}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.metaItem}>
+                  <TrendingUp size={14} color="#10B981" />
+                  <Text style={styles.greenText}>
+                    {formattedDeductible}
+                  </Text>
+                </View>
+                <View style={styles.metaItem}>
+                  <PiggyBank size={14} color="#F59E0B" />
+                  <Text style={styles.orangeText}>
+                    {formattedSavings}
+                  </Text>
+                </View>
+              </View>
+            </>
+          )}
         </View>
       </View>
     </Pressable>
@@ -116,21 +172,30 @@ export function ReceiptListItem({ receipt, onPress }: ReceiptListItemProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  pressable: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  row: {
     flexDirection: 'row',
-    borderRadius: 20,
+    alignItems: 'center',
+    minHeight: 110,
+    borderRadius: 12,
     overflow: 'hidden',
   },
   containerLight: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.15)',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 3,
+        elevation: 1,
       },
     }),
   },
@@ -143,26 +208,26 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   imageContainer: {
-    width: 120,
-    height: 120,
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
-    overflow: 'hidden',
+    width: 110,
+    height: 110,
+    flexShrink: 0,
   },
   receiptImage: {
-    width: '100%',
-    height: '100%',
+    width: 110,
+    height: 110,
   },
   placeholderIcon: {
-    flex: 1,
+    width: 110,
+    height: 110,
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     flex: 1,
-    padding: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
   },
   headerRow: {
     flexDirection: 'row',
@@ -205,9 +270,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
   },
-  deductibleText: {
+  greenText: {
     fontSize: 13,
     fontWeight: '600',
     color: '#10B981',
+  },
+  orangeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#F59E0B',
+  },
+  processingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusText: {
+    fontSize: 14,
+    marginTop: 2,
   },
 });

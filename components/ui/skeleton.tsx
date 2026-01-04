@@ -145,6 +145,108 @@ export function ProductGridSkeleton({ count = 6 }: { count?: number }) {
   );
 }
 
+export function ReceiptListItemSkeleton() {
+  const { isDark } = useTheme();
+
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        minHeight: 110,
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+        borderWidth: isDark ? 1 : 0,
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'transparent',
+      }}
+    >
+      {/* Image skeleton */}
+      <Skeleton width={110} height={110} borderRadius={0} />
+
+      {/* Content skeleton */}
+      <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 14, gap: 8 }}>
+        {/* Vendor & time row */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Skeleton width={140} height={16} borderRadius={4} />
+          <Skeleton width={50} height={12} borderRadius={4} />
+        </View>
+
+        {/* Amount */}
+        <Skeleton width={80} height={22} borderRadius={4} />
+
+        {/* Meta row */}
+        <View style={{ flexDirection: 'row', gap: 16 }}>
+          <Skeleton width={60} height={14} borderRadius={4} />
+          <Skeleton width={50} height={14} borderRadius={4} />
+          <Skeleton width={50} height={14} borderRadius={4} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+export function ReceiptListSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <View style={{ gap: 12 }}>
+      {Array.from({ length: count }).map((_, index) => (
+        <ReceiptListItemSkeleton key={index} />
+      ))}
+    </View>
+  );
+}
+
+export function CategoryFilterSkeleton() {
+  return (
+    <View style={{ flexDirection: 'row', paddingHorizontal: 20, gap: 8 }}>
+      <Skeleton width={50} height={36} borderRadius={20} />
+      <Skeleton width={80} height={36} borderRadius={20} />
+      <Skeleton width={90} height={36} borderRadius={20} />
+      <Skeleton width={70} height={36} borderRadius={20} />
+      <Skeleton width={85} height={36} borderRadius={20} />
+    </View>
+  );
+}
+
+export function SummaryCardsSkeleton() {
+  const { isDark } = useTheme();
+
+  return (
+    <View style={{ flexDirection: 'row', paddingHorizontal: 20, gap: 12 }}>
+      {Array.from({ length: 3 }).map((_, index) => (
+        <View
+          key={index}
+          style={{
+            flex: 1,
+            borderRadius: 16,
+            borderWidth: 1,
+            padding: 16,
+            alignItems: 'center',
+            backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+            borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          }}
+        >
+          <Skeleton width={32} height={32} borderRadius={8} style={{ marginBottom: 8 }} />
+          <Skeleton width={60} height={18} borderRadius={4} style={{ marginBottom: 4 }} />
+          <Skeleton width={50} height={11} borderRadius={4} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export function ReceiptsPageSkeleton() {
+  return (
+    <View style={{ flex: 1, gap: 16 }}>
+      <CategoryFilterSkeleton />
+      <SummaryCardsSkeleton />
+      <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+        <ReceiptListSkeleton count={4} />
+      </View>
+    </View>
+  );
+}
+
 export function PreferencesStepSkeleton() {
   return (
     <View className="flex-1 bg-teal-50">

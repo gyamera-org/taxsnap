@@ -67,6 +67,8 @@ export const en = {
     galleryPermissionTitle: 'Photo Library Access Required',
     galleryPermissionText: 'TaxSnap needs access to your photo library to select receipt images.',
     pdfError: 'Failed to select PDF. Please try again.',
+    scanComplete: 'Receipt scanned successfully',
+    analysisFailed: 'Failed to analyze receipt',
   },
   receipts: {
     title: 'Receipts',
@@ -76,8 +78,10 @@ export const en = {
       month: 'This Month',
       year: 'This Year',
     },
-    totalReceipts: 'Total Receipts',
+    totalReceipts: 'Receipts',
+    totalExpenses: 'Expenses',
     deductions: 'Deductions',
+    savings: 'Savings',
     emptyTitle: 'No receipts yet',
     emptySubtitle: 'Scan your first receipt to start tracking your deductions',
     export: {
@@ -372,6 +376,7 @@ export const en = {
     generic: 'Something went wrong',
     network: 'Network error. Please try again.',
     unauthorized: 'Please sign in to continue',
+    notAuthenticated: 'Please sign in to continue',
     notFound: 'Not found',
   },
   processing: {
