@@ -37,9 +37,9 @@ export const en = {
     receipts: 'Receipts',
     scanReceipt: 'Scan a Receipt',
     scanReceiptSubtitle: 'AI extracts data instantly',
-    quickActions: 'Quick Actions',
-    viewReceipts: 'View Receipts',
-    aiInsights: 'AI Insights',
+    recentReceipts: 'Recent Receipts',
+    noReceiptsYet: 'No receipts yet',
+    tapToScanFirst: 'Tap to scan your first receipt',
   },
   scan: {
     title: 'Scan Receipt',

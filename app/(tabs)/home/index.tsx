@@ -1,26 +1,43 @@
-import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import {
-  TrendingUp,
-  Receipt,
+  PiggyBank,
   Camera,
   ChevronRight,
-  Sparkles,
   DollarSign,
   FileText,
+  Plus,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { format } from 'date-fns';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
+import { useReceiptSummary, useReceipts } from '@/lib/hooks/use-receipts';
+import { getCategoryById } from '@/lib/constants/categories';
+import type { Receipt } from '@/lib/types/receipt';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
   const colors = useThemedColors();
   const { isDark } = useTheme();
   const router = useRouter();
+
+  // Fetch real data
+  const { data: summary = { totalReceipts: 0, totalAmount: 0, totalDeductible: 0, estimatedSavings: 0 } } = useReceiptSummary();
+  const { data: receipts = [] } = useReceipts();
+
+  // Get recent receipts (last 3)
+  const recentReceipts = receipts.slice(0, 3);
+
+  const formatCurrency = (cents: number) => {
+    return `$${(cents / 100).toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`;
+  };
 
   const handleScanPress = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -47,7 +64,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* Savings Card - Main Hero */}
+          {/* Main Savings Card */}
           <View
             style={[
               styles.savingsCard,
@@ -68,19 +85,21 @@ export default function HomeScreen() {
                   { backgroundColor: colors.primaryLight },
                 ]}
               >
-                <TrendingUp size={20} color={colors.primary} />
+                <PiggyBank size={20} color={colors.primary} />
               </View>
               <Text style={[styles.savingsLabel, { color: colors.textSecondary }]}>
                 {t('home.estimatedSavings')}
               </Text>
             </View>
-            <Text style={[styles.savingsAmount, { color: colors.text }]}>$0</Text>
+            <Text style={[styles.savingsAmount, { color: colors.text }]}>
+              {formatCurrency(summary.estimatedSavings)}
+            </Text>
             <Text style={[styles.savingsSubtext, { color: colors.textMuted }]}>
               {t('home.thisYear')}
             </Text>
           </View>
 
-          {/* Quick Stats Row */}
+          {/* Stats Row */}
           <View style={styles.statsRow}>
             <View
               style={[
@@ -103,7 +122,9 @@ export default function HomeScreen() {
               >
                 <DollarSign size={16} color="#10B981" />
               </View>
-              <Text style={[styles.statValue, { color: colors.text }]}>$0</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {formatCurrency(summary.totalDeductible)}
+              </Text>
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>
                 {t('home.deductions')}
               </Text>
@@ -130,7 +151,9 @@ export default function HomeScreen() {
               >
                 <FileText size={16} color={colors.primary} />
               </View>
-              <Text style={[styles.statValue, { color: colors.text }]}>0</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {summary.totalReceipts}
+              </Text>
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>
                 {t('home.receipts')}
               </Text>
@@ -162,31 +185,74 @@ export default function HomeScreen() {
             </LinearGradient>
           </Pressable>
 
-          {/* Quick Actions */}
+          {/* Recent Receipts Section */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-              {t('home.quickActions')}
-            </Text>
-            <View style={styles.actionsGrid}>
-              <QuickAction
-                icon={Receipt}
-                label={t('home.viewReceipts')}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/(tabs)/receipts');
-                }}
-                colors={colors}
-                isDark={isDark}
-              />
-              <QuickAction
-                icon={Sparkles}
-                label={t('home.aiInsights')}
-                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                colors={colors}
-                isDark={isDark}
-                disabled
-              />
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {t('home.recentReceipts')}
+              </Text>
+              {receipts.length > 0 && (
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push('/(tabs)/receipts');
+                  }}
+                >
+                  <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                    {t('common.seeAll')}
+                  </Text>
+                </Pressable>
+              )}
             </View>
+
+            {recentReceipts.length === 0 ? (
+              /* Empty State */
+              <Pressable
+                onPress={handleScanPress}
+                style={[
+                  styles.emptyState,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(255,255,255,0.03)'
+                      : 'rgba(0,0,0,0.02)',
+                    borderColor: isDark
+                      ? 'rgba(255,255,255,0.08)'
+                      : 'rgba(0,0,0,0.06)',
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.emptyIconWrapper,
+                    { backgroundColor: colors.primaryLight },
+                  ]}
+                >
+                  <Plus size={24} color={colors.primary} />
+                </View>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                  {t('home.noReceiptsYet')}
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
+                  {t('home.tapToScanFirst')}
+                </Text>
+              </Pressable>
+            ) : (
+              /* Receipt List */
+              <View style={styles.receiptList}>
+                {recentReceipts.map((receipt) => (
+                  <RecentReceiptItem
+                    key={receipt.id}
+                    receipt={receipt}
+                    colors={colors}
+                    isDark={isDark}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      router.push(`/receipt/${receipt.id}`);
+                    }}
+                  />
+                ))}
+              </View>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -194,42 +260,79 @@ export default function HomeScreen() {
   );
 }
 
-function QuickAction({
-  icon: Icon,
-  label,
-  onPress,
+function RecentReceiptItem({
+  receipt,
   colors,
   isDark,
-  disabled = false,
+  onPress,
 }: {
-  icon: React.ElementType;
-  label: string;
-  onPress: () => void;
+  receipt: Receipt;
   colors: ReturnType<typeof useThemedColors>;
   isDark: boolean;
-  disabled?: boolean;
+  onPress: () => void;
 }) {
+  const category = receipt.category ? getCategoryById(receipt.category) : null;
+
+  const formatAmount = (cents: number | null) => {
+    if (!cents) return '$0';
+    return `$${(cents / 100).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
       style={[
-        styles.actionCard,
+        styles.receiptItem,
         {
-          backgroundColor: isDark
-            ? 'rgba(255,255,255,0.05)'
-            : 'rgba(0,0,0,0.02)',
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-          opacity: disabled ? 0.5 : 1,
+          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
         },
       ]}
     >
-      <View
-        style={[styles.actionIcon, { backgroundColor: colors.iconBackground }]}
-      >
-        <Icon size={20} color={colors.textSecondary} />
+      {/* Receipt Image Thumbnail */}
+      {receipt.image_uri ? (
+        <Image
+          source={{ uri: receipt.image_uri }}
+          style={styles.receiptThumbnail}
+          resizeMode="cover"
+        />
+      ) : (
+        <View
+          style={[
+            styles.receiptThumbnail,
+            styles.receiptThumbnailPlaceholder,
+            { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' },
+          ]}
+        >
+          <FileText size={16} color={colors.textMuted} />
+        </View>
+      )}
+
+      {/* Receipt Details */}
+      <View style={styles.receiptDetails}>
+        <Text style={[styles.receiptVendor, { color: colors.text }]} numberOfLines={1}>
+          {receipt.vendor || 'Unknown Vendor'}
+        </Text>
+        <Text style={[styles.receiptMeta, { color: colors.textMuted }]}>
+          {receipt.date ? format(new Date(receipt.date), 'MMM d') : 'No date'}
+          {category && ` · ${category.name}`}
+        </Text>
       </View>
-      <Text style={[styles.actionLabel, { color: colors.text }]}>{label}</Text>
+
+      {/* Amount */}
+      <View style={styles.receiptAmountWrapper}>
+        <Text style={[styles.receiptAmount, { color: colors.text }]}>
+          {formatAmount(receipt.total_amount)}
+        </Text>
+        {receipt.deductible_amount && receipt.deductible_amount > 0 && (
+          <Text style={[styles.receiptDeductible, { color: '#10B981' }]}>
+            -{formatAmount(receipt.deductible_amount)}
+          </Text>
+        )}
+      </View>
     </Pressable>
   );
 }
@@ -364,36 +467,86 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
-  actionsGrid: {
+  sectionHeader: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  actionCard: {
-    flex: 1,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  // Empty state
+  emptyState: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
+    borderStyle: 'dashed',
+    padding: 32,
     alignItems: 'center',
   },
-  actionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  emptyIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  actionLabel: {
-    fontSize: 13,
-    fontWeight: '500',
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: 14,
     textAlign: 'center',
+  },
+  // Recent receipts list
+  receiptList: {
+    gap: 10,
+  },
+  receiptItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 12,
+  },
+  receiptThumbnail: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+  },
+  receiptThumbnailPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  receiptDetails: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  receiptVendor: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  receiptMeta: {
+    fontSize: 13,
+  },
+  receiptAmountWrapper: {
+    alignItems: 'flex-end',
+  },
+  receiptAmount: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  receiptDeductible: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
