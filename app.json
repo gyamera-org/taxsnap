@@ -13,6 +13,7 @@
       "userInterfaceStyle": "automatic",
       "bundleIdentifier": "com.tax-snap.app",
       "usesAppleSignIn": true,
+      "usesIcloudStorage": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": ["remote-notification"],
@@ -73,7 +74,12 @@
           "photosPermission": "TaxSnap needs photo library access to import receipt images for tax tracking."
         }
       ],
-      "expo-document-picker"
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

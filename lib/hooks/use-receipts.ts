@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/context/auth-provider';
-import { calculateDeductible } from '@/lib/constants/categories';
+import { calculateDeductible, TaxCategoryId } from '@/lib/constants/categories';
+import { isDemoMode, DEMO_DATA } from '@/lib/config/dev-mode';
 import type {
   Receipt,
   ExtractedReceiptData,
@@ -68,10 +69,39 @@ async function addSignedUrlsToReceipts(receipts: Receipt[]): Promise<Receipt[]> 
 // Fetch all receipts for the current user
 export function useReceipts(filters?: ReceiptFilters) {
   const { user } = useAuth();
+  const demoMode = isDemoMode();
 
   return useQuery({
-    queryKey: receiptKeys.list(filters as Record<string, unknown> || {}),
+    queryKey: receiptKeys.list({ ...(filters as Record<string, unknown> || {}), demoMode }),
     queryFn: async (): Promise<Receipt[]> => {
+      // Return mock data in demo mode
+      if (demoMode) {
+        let receipts = [...DEMO_DATA.receipts];
+
+        // Apply date range filter
+        if (filters?.dateRange) {
+          const startStr = filters.dateRange.startDate.toISOString().split('T')[0];
+          const endStr = filters.dateRange.endDate.toISOString().split('T')[0];
+          receipts = receipts.filter((r) => {
+            if (!r.date) return false;
+            return r.date >= startStr && r.date <= endStr;
+          });
+        }
+
+        // Apply category filter
+        if (filters?.categories && filters.categories.length > 0) {
+          receipts = receipts.filter((r) => r.category && filters.categories!.includes(r.category as any));
+        }
+
+        // Apply search filter (vendor name)
+        if (filters?.searchQuery) {
+          const query = filters.searchQuery.toLowerCase();
+          receipts = receipts.filter((r) => r.vendor?.toLowerCase().includes(query));
+        }
+
+        return receipts;
+      }
+
       if (!user) return [];
 
       let query = supabase
@@ -110,17 +140,23 @@ export function useReceipts(filters?: ReceiptFilters) {
       const receipts = (data || []) as Receipt[];
       return addSignedUrlsToReceipts(receipts);
     },
-    enabled: !!user,
+    enabled: demoMode || !!user,
   });
 }
 
 // Fetch a single receipt by ID
 export function useReceipt(id: string) {
   const { user } = useAuth();
+  const demoMode = isDemoMode();
 
   return useQuery({
-    queryKey: receiptKeys.detail(id),
+    queryKey: [...receiptKeys.detail(id), demoMode],
     queryFn: async (): Promise<Receipt | null> => {
+      // Return mock receipt in demo mode
+      if (demoMode) {
+        return DEMO_DATA.getById(id) || null;
+      }
+
       if (!user) return null;
 
       const { data, error } = await supabase
@@ -140,17 +176,51 @@ export function useReceipt(id: string) {
       const signedUrl = await getSignedImageUrl(receipt.image_uri);
       return { ...receipt, image_uri: signedUrl || receipt.image_uri };
     },
-    enabled: !!user && !!id,
+    enabled: (demoMode || !!user) && !!id,
   });
 }
 
 // Fetch receipt summary for dashboard (now supports full filters including category)
 export function useReceiptSummary(filters?: ReceiptFilters) {
   const { user } = useAuth();
+  const demoMode = isDemoMode();
 
   return useQuery({
-    queryKey: receiptKeys.summaryWithFilters(filters),
+    queryKey: [...receiptKeys.summaryWithFilters(filters), demoMode],
     queryFn: async (): Promise<ReceiptSummary> => {
+      // Return mock summary in demo mode
+      if (demoMode) {
+        let receipts = [...DEMO_DATA.receipts];
+
+        // Apply date range filter
+        if (filters?.dateRange) {
+          const startStr = filters.dateRange.startDate.toISOString().split('T')[0];
+          const endStr = filters.dateRange.endDate.toISOString().split('T')[0];
+          receipts = receipts.filter((r) => {
+            if (!r.date) return false;
+            return r.date >= startStr && r.date <= endStr;
+          });
+        }
+
+        // Apply category filter
+        if (filters?.categories && filters.categories.length > 0) {
+          receipts = receipts.filter((r) => r.category && filters.categories!.includes(r.category as any));
+        }
+
+        // Apply search filter
+        if (filters?.searchQuery) {
+          const query = filters.searchQuery.toLowerCase();
+          receipts = receipts.filter((r) => r.vendor?.toLowerCase().includes(query));
+        }
+
+        const totalReceipts = receipts.length;
+        const totalAmount = receipts.reduce((sum, r) => sum + (r.total_amount || 0), 0);
+        const totalDeductible = receipts.reduce((sum, r) => sum + (r.deductible_amount || 0), 0);
+        const estimatedSavings = Math.round(totalDeductible * 0.25);
+
+        return { totalReceipts, totalAmount, totalDeductible, estimatedSavings };
+      }
+
       if (!user) {
         return { totalReceipts: 0, totalAmount: 0, totalDeductible: 0, estimatedSavings: 0 };
       }
@@ -189,7 +259,7 @@ export function useReceiptSummary(filters?: ReceiptFilters) {
 
       return { totalReceipts, totalAmount, totalDeductible, estimatedSavings };
     },
-    enabled: !!user,
+    enabled: demoMode || !!user,
   });
 }
 
@@ -436,6 +506,70 @@ export function useScanReceipt() {
       queryClient.invalidateQueries({ queryKey: receiptKeys.lists() });
       queryClient.invalidateQueries({ queryKey: receiptKeys.summary() });
     },
+  });
+}
+
+// Category breakdown for dashboard
+export interface CategoryBreakdown {
+  category: TaxCategoryId;
+  categoryName: string;
+  total: number; // in cents
+  count: number;
+}
+
+export function useCategoryBreakdown() {
+  const { user } = useAuth();
+  const demoMode = isDemoMode();
+
+  return useQuery({
+    queryKey: [...receiptKeys.all, 'categoryBreakdown', demoMode],
+    queryFn: async (): Promise<CategoryBreakdown[]> => {
+      const { getCategoryById } = await import('@/lib/constants/categories');
+
+      // Return mock breakdown in demo mode
+      if (demoMode) {
+        const breakdown = DEMO_DATA.getCategoryBreakdown();
+        return breakdown.map((item) => ({
+          category: item.category,
+          categoryName: getCategoryById(item.category)?.name || 'Other',
+          total: item.total,
+          count: item.count,
+        }));
+      }
+
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('receipts')
+        .select('category, deductible_amount')
+        .eq('user_id', user.id)
+        .not('category', 'is', null);
+
+      if (error) throw error;
+
+      // Group by category
+      const breakdown: Record<string, { total: number; count: number }> = {};
+
+      (data || []).forEach((receipt) => {
+        if (receipt.category && receipt.deductible_amount) {
+          if (!breakdown[receipt.category]) {
+            breakdown[receipt.category] = { total: 0, count: 0 };
+          }
+          breakdown[receipt.category].total += receipt.deductible_amount;
+          breakdown[receipt.category].count += 1;
+        }
+      });
+
+      return Object.entries(breakdown)
+        .map(([category, data]) => ({
+          category: category as TaxCategoryId,
+          categoryName: getCategoryById(category)?.name || 'Other',
+          total: data.total,
+          count: data.count,
+        }))
+        .sort((a, b) => b.total - a.total);
+    },
+    enabled: demoMode || !!user,
   });
 }
 

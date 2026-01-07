@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, Pressable, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { format } from 'date-fns';
-import { Receipt as ReceiptIcon, TrendingUp, Tag, PiggyBank, Loader2, AlertCircle } from 'lucide-react-native';
+import { TrendingUp, Tag, PiggyBank, Loader2, AlertCircle } from 'lucide-react-native';
 import Animated, { useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
@@ -74,42 +74,26 @@ export function ReceiptListItem({ receipt, onPress }: ReceiptListItemProps) {
       ]}
     >
       <View style={[styles.row, { backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF' }]}>
-        {/* Large Receipt Image */}
-        <View
-          style={[
-            styles.imageContainer,
-            { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F2F2F7' },
-          ]}
-        >
-          {receipt.image_uri ? (
-            <Image
-              source={{ uri: receipt.image_uri }}
-              style={[styles.receiptImage, isProcessing && { opacity: 0.6 }]}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.placeholderIcon}>
-              <ReceiptIcon size={32} color={colors.textMuted} />
-            </View>
-          )}
-          {/* Processing overlay */}
-          {isProcessing && (
-            <View style={styles.processingOverlay}>
+        {/* Status Icon for processing/failed states */}
+        {(isProcessing || isFailed) && (
+          <View
+            style={[
+              styles.statusIconContainer,
+              { backgroundColor: isFailed ? 'rgba(239, 68, 68, 0.1)' : 'rgba(0, 192, 232, 0.1)' },
+            ]}
+          >
+            {isProcessing ? (
               <Animated.View style={spinStyle}>
-                <Loader2 size={28} color="#FFFFFF" />
+                <Loader2 size={20} color="#00C0E8" />
               </Animated.View>
-            </View>
-          )}
-          {/* Failed overlay */}
-          {isFailed && (
-            <View style={[styles.processingOverlay, { backgroundColor: 'rgba(239, 68, 68, 0.7)' }]}>
-              <AlertCircle size={28} color="#FFFFFF" />
-            </View>
-          )}
-        </View>
+            ) : (
+              <AlertCircle size={20} color="#EF4444" />
+            )}
+          </View>
+        )}
 
         {/* Content */}
-        <View style={styles.content}>
+        <View style={[styles.content, !isProcessing && !isFailed && styles.contentFull]}>
           {/* Header: Vendor & Time */}
           <View style={styles.headerRow}>
             <Text
@@ -179,7 +163,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 110,
+    minHeight: 72,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -207,27 +191,23 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
   },
-  imageContainer: {
-    width: 110,
-    height: 110,
-    flexShrink: 0,
-  },
-  receiptImage: {
-    width: 110,
-    height: 110,
-  },
-  placeholderIcon: {
-    width: 110,
-    height: 110,
+  statusIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 14,
   },
   content: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 14,
     justifyContent: 'center',
     gap: 4,
+  },
+  contentFull: {
+    paddingLeft: 16,
   },
   headerRow: {
     flexDirection: 'row',
@@ -279,16 +259,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#F59E0B',
-  },
-  processingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   statusText: {
     fontSize: 14,

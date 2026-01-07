@@ -8,7 +8,6 @@ import {
   TextInput,
   ActivityIndicator,
   Modal,
-  StatusBar,
 } from 'react-native';
 import * as StoreReview from 'expo-store-review';
 import * as Haptics from 'expo-haptics';
@@ -174,7 +173,6 @@ export default function SettingsScreen() {
 
   return (
     <PageLayout title="Settings">
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}

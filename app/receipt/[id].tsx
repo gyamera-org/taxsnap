@@ -206,6 +206,8 @@ export default function ReceiptDetailScreen() {
   const handleClosePreview = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowImagePreview(false);
+    // Restore status bar to match theme when closing modal
+    StatusBar.setBarStyle(isDark ? 'light-content' : 'dark-content');
   };
 
   // Pinch gesture for zooming

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { View, Text, Pressable, ScrollView, StatusBar, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
@@ -68,7 +68,6 @@ export function OnboardingLayout({
         style={[styles.orb, styles.orb3]}
       />
 
-      <StatusBar barStyle="dark-content" />
       <SafeAreaView className="flex-1">
         {/* Progress Bar with Back Button */}
         <View className="flex-row items-center py-4 px-6">

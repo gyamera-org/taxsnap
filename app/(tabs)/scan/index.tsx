@@ -1,19 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, StatusBar, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, StatusBar, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
-import { File } from 'expo-file-system/next';
+// PDF support temporarily disabled
+// import * as DocumentPicker from 'expo-document-picker';
+// import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { X, RotateCcw, Image as ImageIcon, Zap, ZapOff, FileText } from 'lucide-react-native';
+import { X, RotateCcw, Image as ImageIcon, Zap, ZapOff } from 'lucide-react-native';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { useTabBar } from '@/context/tab-bar-provider';
 import { useAuth } from '@/context/auth-provider';
 import { usePendingReceipt } from '@/context/pending-receipt-provider';
+import { isDemoMode } from '@/lib/config/dev-mode';
 
 export default function ScanScreen() {
   const { t } = useTranslation();
@@ -29,7 +31,8 @@ export default function ScanScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
   const [isCapturing, setIsCapturing] = useState(false);
-  const [isPickingPdf, setIsPickingPdf] = useState(false);
+  // PDF support temporarily disabled
+  // const [isPickingPdf, setIsPickingPdf] = useState(false);
 
   // Hide tab bar when screen mounts, show when unmounts
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function ScanScreen() {
     return () => {
       showTabBar();
     };
-  }, []);
+  }, [hideTabBar, showTabBar]);
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -55,12 +58,12 @@ export default function ScanScreen() {
     setFacing((current) => (current === 'back' ? 'front' : 'back'));
   };
 
-  const processImage = async (imageBase64: string, localUri: string) => {
+  const processImage = async (imageBase64: string, localUri: string, mimeType: string = 'image/jpeg') => {
     try {
       // Start the scan in the background and navigate back
       showTabBar();
       router.back();
-      startScan(imageBase64, localUri);
+      startScan(imageBase64, localUri, mimeType);
     } catch (error) {
       console.error('Failed to process image:', error);
       Alert.alert('Error', 'Failed to process image. Please try again.');
@@ -120,35 +123,14 @@ export default function ScanScreen() {
     }
   };
 
-  const handlePickPdf = async () => {
-    if (!session?.user?.id || isPickingPdf) return;
-
-    setIsPickingPdf(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/pdf',
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const { uri } = result.assets[0];
-
-        // Read the PDF file as base64 using new File API
-        const file = new File(uri);
-        const base64 = await file.base64();
-
-        // Process the PDF
-        await processImage(base64, uri);
-      }
-    } catch (error) {
-      console.error('Failed to pick PDF:', error);
-      Alert.alert('Error', 'Failed to select PDF. Please try again.');
-    } finally {
-      setIsPickingPdf(false);
-    }
-  };
+  // PDF support temporarily disabled
+  // const handlePickPdf = async () => {
+  //   if (!session?.user?.id) {
+  //     Alert.alert('Sign In Required', 'Please sign in to upload PDFs.');
+  //     return;
+  //   }
+  //   // TODO: Implement PDF picker when expo-file-system issues are resolved
+  // };
 
   // Permission not determined yet
   if (!permission) {
@@ -187,6 +169,82 @@ export default function ScanScreen() {
     );
   }
 
+  // Demo mode - show mock receipt image for screenshots
+  if (isDemoMode()) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" />
+
+        {/* Mock Receipt Image Background */}
+        <Image
+          source={require('@/assets/images/receipt.png')}
+          style={styles.demoImage}
+          resizeMode="cover"
+        />
+
+        {/* Overlay */}
+        <SafeAreaView style={styles.overlay}>
+          {/* Top Controls */}
+          <View style={styles.topControls}>
+            <Pressable onPress={handleClose} style={styles.controlButton}>
+              <X size={24} color="#FFFFFF" />
+            </Pressable>
+
+            <View style={styles.topRightControls}>
+              <Pressable onPress={toggleFlash} style={styles.controlButton}>
+                {flash === 'on' ? (
+                  <Zap size={22} color="#FFCC00" fill="#FFCC00" />
+                ) : (
+                  <ZapOff size={22} color="#FFFFFF" />
+                )}
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Scan Frame Guide */}
+          <View style={styles.frameContainer}>
+            <View style={styles.scanFrame}>
+              {/* Corner guides */}
+              <View style={[styles.corner, styles.cornerTopLeft]} />
+              <View style={[styles.corner, styles.cornerTopRight]} />
+              <View style={[styles.corner, styles.cornerBottomLeft]} />
+              <View style={[styles.corner, styles.cornerBottomRight]} />
+            </View>
+            <Text style={styles.frameHint}>{t('scan.alignReceipt')}</Text>
+          </View>
+
+          {/* Bottom Controls */}
+          <View style={styles.bottomControls}>
+            {/* Gallery Button */}
+            <Pressable onPress={handlePickImage} style={styles.sideButton}>
+              <View style={styles.galleryButton}>
+                <ImageIcon size={24} color="#FFFFFF" />
+              </View>
+            </Pressable>
+
+            {/* Capture Button */}
+            <Pressable
+              onPress={handleCapture}
+              disabled={isCapturing}
+              style={styles.captureButtonOuter}
+            >
+              <View
+                style={[styles.captureButtonInner, isCapturing && styles.captureButtonCapturing]}
+              />
+            </Pressable>
+
+            {/* Flip Camera Button */}
+            <Pressable onPress={toggleFacing} style={styles.sideButton}>
+              <View style={styles.flipButton}>
+                <RotateCcw size={22} color="#FFFFFF" />
+              </View>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -202,6 +260,7 @@ export default function ScanScreen() {
             </Pressable>
 
             <View style={styles.topRightControls}>
+              {/* PDF button temporarily disabled
               <Pressable
                 onPress={handlePickPdf}
                 disabled={isPickingPdf}
@@ -209,6 +268,7 @@ export default function ScanScreen() {
               >
                 <FileText size={22} color="#FFFFFF" />
               </Pressable>
+              */}
               <Pressable onPress={toggleFlash} style={styles.controlButton}>
                 {flash === 'on' ? (
                   <Zap size={22} color="#FFCC00" fill="#FFCC00" />
@@ -271,6 +331,11 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+  },
+  demoImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
   overlay: {
     flex: 1,

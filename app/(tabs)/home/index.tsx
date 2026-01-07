@@ -1,22 +1,19 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import {
-  PiggyBank,
-  Camera,
-  ChevronRight,
   DollarSign,
   FileText,
   Plus,
+  ChevronRight,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { format } from 'date-fns';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
-import { useReceiptSummary, useReceipts } from '@/lib/hooks/use-receipts';
+import { useReceiptSummary, useReceipts, useCategoryBreakdown, CategoryBreakdown } from '@/lib/hooks/use-receipts';
 import { useReviewPrompt } from '@/lib/hooks/use-review-prompt';
 import { getCategoryById } from '@/lib/constants/categories';
 import type { Receipt } from '@/lib/types/receipt';
@@ -30,6 +27,7 @@ export default function HomeScreen() {
   // Fetch real data
   const { data: summary = { totalReceipts: 0, totalAmount: 0, totalDeductible: 0, estimatedSavings: 0 } } = useReceiptSummary();
   const { data: receipts = [] } = useReceipts();
+  const { data: categoryBreakdown = [] } = useCategoryBreakdown();
   const { maybeRequestReview } = useReviewPrompt();
 
   // Request app review on home screen (natural pause point)
@@ -40,6 +38,9 @@ export default function HomeScreen() {
 
   // Get recent receipts (last 3)
   const recentReceipts = receipts.slice(0, 3);
+
+  // Get top categories (limit to 4 for display)
+  const topCategories = categoryBreakdown.slice(0, 4);
 
   const formatCurrency = (cents: number) => {
     return `$${(cents / 100).toLocaleString('en-US', {
@@ -53,10 +54,11 @@ export default function HomeScreen() {
     router.push('/(tabs)/scan');
   };
 
+  // Calculate total for percentage
+  const totalDeductible = categoryBreakdown.reduce((sum, cat) => sum + cat.total, 0);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView
           style={styles.scrollView}
@@ -70,41 +72,6 @@ export default function HomeScreen() {
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               {t('home.subtitle')}
-            </Text>
-          </View>
-
-          {/* Main Savings Card */}
-          <View
-            style={[
-              styles.savingsCard,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(0, 192, 232, 0.08)'
-                  : 'rgba(0, 192, 232, 0.06)',
-                borderColor: isDark
-                  ? 'rgba(0, 192, 232, 0.2)'
-                  : 'rgba(0, 192, 232, 0.15)',
-              },
-            ]}
-          >
-            <View style={styles.savingsHeader}>
-              <View
-                style={[
-                  styles.savingsIconWrapper,
-                  { backgroundColor: colors.primaryLight },
-                ]}
-              >
-                <PiggyBank size={20} color={colors.primary} />
-              </View>
-              <Text style={[styles.savingsLabel, { color: colors.textSecondary }]}>
-                {t('home.estimatedSavings')}
-              </Text>
-            </View>
-            <Text style={[styles.savingsAmount, { color: colors.text }]}>
-              {formatCurrency(summary.estimatedSavings)}
-            </Text>
-            <Text style={[styles.savingsSubtext, { color: colors.textMuted }]}>
-              {t('home.thisYear')}
             </Text>
           </View>
 
@@ -169,30 +136,56 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Scan CTA */}
-          <Pressable onPress={handleScanPress} style={styles.scanCTAWrapper}>
-            <LinearGradient
-              colors={[colors.primary, isDark ? '#0099BB' : '#00A8CC']}
-              style={styles.scanCTA}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={styles.scanCTAContent}>
-                <View style={styles.scanCTALeft}>
-                  <View style={styles.scanCTAIconWrapper}>
-                    <Camera size={24} color="#FFFFFF" />
-                  </View>
-                  <View>
-                    <Text style={styles.scanCTATitle}>{t('home.scanReceipt')}</Text>
-                    <Text style={styles.scanCTASubtitle}>
-                      {t('home.scanReceiptSubtitle')}
-                    </Text>
-                  </View>
-                </View>
-                <ChevronRight size={20} color="rgba(255,255,255,0.7)" />
+          {/* Category Breakdown Section */}
+          {topCategories.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t('home.byCategory')}
+                </Text>
               </View>
-            </LinearGradient>
-          </Pressable>
+
+              <View
+                style={[
+                  styles.categoryCard,
+                  {
+                    backgroundColor: isDark
+                      ? 'rgba(255,255,255,0.05)'
+                      : '#FFFFFF',
+                    borderColor: isDark
+                      ? 'rgba(255,255,255,0.1)'
+                      : 'rgba(0,0,0,0.08)',
+                  },
+                ]}
+              >
+                {topCategories.map((cat, index) => (
+                  <CategoryRow
+                    key={cat.category}
+                    category={cat}
+                    totalDeductible={totalDeductible}
+                    colors={colors}
+                    isDark={isDark}
+                    isLast={index === topCategories.length - 1}
+                  />
+                ))}
+
+                {categoryBreakdown.length > 4 && (
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      router.push('/(tabs)/home/categories');
+                    }}
+                    style={styles.viewAllCategories}
+                  >
+                    <Text style={[styles.viewAllText, { color: colors.primary }]}>
+                      {t('home.viewAllCategories', { count: categoryBreakdown.length - 4 })}
+                    </Text>
+                    <ChevronRight size={16} color={colors.primary} />
+                  </Pressable>
+                )}
+              </View>
+            </View>
+          )}
 
           {/* Recent Receipts Section */}
           <View style={styles.section}>
@@ -269,6 +262,89 @@ export default function HomeScreen() {
   );
 }
 
+// Category progress colors
+const CATEGORY_COLORS = [
+  '#10B981', // emerald
+  '#3B82F6', // blue
+  '#F59E0B', // amber
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+];
+
+function CategoryRow({
+  category,
+  totalDeductible,
+  colors,
+  isDark,
+  isLast,
+}: {
+  category: CategoryBreakdown;
+  totalDeductible: number;
+  colors: ReturnType<typeof useThemedColors>;
+  isDark: boolean;
+  isLast: boolean;
+}) {
+  const percentage = totalDeductible > 0 ? (category.total / totalDeductible) * 100 : 0;
+  const colorIndex = CATEGORY_COLORS.length > 0 ? Math.abs(category.category.charCodeAt(0)) % CATEGORY_COLORS.length : 0;
+  const barColor = CATEGORY_COLORS[colorIndex];
+
+  const formatCurrency = (cents: number) => {
+    return `$${(cents / 100).toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`;
+  };
+
+  return (
+    <View
+      style={[
+        styles.categoryRow,
+        !isLast && {
+          borderBottomWidth: 1,
+          borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+        },
+      ]}
+    >
+      <View style={styles.categoryInfo}>
+        <Text style={[styles.categoryName, { color: colors.text }]} numberOfLines={1}>
+          {category.categoryName}
+        </Text>
+        <Text style={[styles.categoryCount, { color: colors.textMuted }]}>
+          {category.count} {category.count === 1 ? 'receipt' : 'receipts'}
+        </Text>
+      </View>
+      <View style={styles.categoryRight}>
+        <Text style={[styles.categoryAmount, { color: colors.text }]}>
+          {formatCurrency(category.total)}
+        </Text>
+        <View style={styles.progressBarContainer}>
+          <View
+            style={[
+              styles.progressBar,
+              {
+                backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  width: `${Math.min(percentage, 100)}%`,
+                  backgroundColor: barColor,
+                },
+              ]}
+            />
+          </View>
+          <Text style={[styles.categoryPercentage, { color: colors.textMuted }]}>
+            {percentage.toFixed(0)}%
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function RecentReceiptItem({
   receipt,
   colors,
@@ -301,25 +377,6 @@ function RecentReceiptItem({
         },
       ]}
     >
-      {/* Receipt Image Thumbnail */}
-      {receipt.image_uri ? (
-        <Image
-          source={{ uri: receipt.image_uri }}
-          style={styles.receiptThumbnail}
-          resizeMode="cover"
-        />
-      ) : (
-        <View
-          style={[
-            styles.receiptThumbnail,
-            styles.receiptThumbnailPlaceholder,
-            { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' },
-          ]}
-        >
-          <FileText size={16} color={colors.textMuted} />
-        </View>
-      )}
-
       {/* Receipt Details */}
       <View style={styles.receiptDetails}>
         <Text style={[styles.receiptVendor, { color: colors.text }]} numberOfLines={1}>
@@ -374,42 +431,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
   },
-  savingsCard: {
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 24,
-    marginBottom: 16,
-  },
-  savingsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  savingsIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  savingsLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  savingsAmount: {
-    fontSize: 44,
-    fontWeight: '700',
-    letterSpacing: -1,
-    marginBottom: 4,
-  },
-  savingsSubtext: {
-    fontSize: 13,
-  },
   statsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   statCard: {
     flex: 1,
@@ -433,46 +458,6 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
   },
-  scanCTAWrapper: {
-    marginBottom: 28,
-  },
-  scanCTA: {
-    borderRadius: 16,
-    shadowColor: '#00C0E8',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  scanCTAContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 18,
-  },
-  scanCTALeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  scanCTAIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  scanCTATitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 2,
-  },
-  scanCTASubtitle: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.8)',
-  },
   section: {
     marginBottom: 24,
   },
@@ -487,6 +472,70 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   seeAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  // Category breakdown
+  categoryCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  categoryInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  categoryName: {
+    fontSize: 15,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  categoryCount: {
+    fontSize: 12,
+  },
+  categoryRight: {
+    alignItems: 'flex-end',
+  },
+  categoryAmount: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  progressBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  progressBar: {
+    width: 60,
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  categoryPercentage: {
+    fontSize: 11,
+    width: 28,
+    textAlign: 'right',
+  },
+  viewAllCategories: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 4,
+  },
+  viewAllText: {
     fontSize: 14,
     fontWeight: '500',
   },
@@ -524,20 +573,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 14,
     borderWidth: 1,
-    padding: 12,
-  },
-  receiptThumbnail: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-  },
-  receiptThumbnailPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 14,
   },
   receiptDetails: {
     flex: 1,
-    marginLeft: 12,
   },
   receiptVendor: {
     fontSize: 15,

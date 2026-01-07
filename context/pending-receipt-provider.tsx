@@ -22,7 +22,7 @@ export interface PendingReceipt {
 
 interface PendingReceiptContextType {
   pendingReceipt: PendingReceipt | null;
-  startScan: (imageBase64: string, imagePreviewUri?: string) => void;
+  startScan: (imageBase64: string, imagePreviewUri?: string, mimeType?: string) => void;
   clearPendingReceipt: () => void;
 }
 
@@ -39,10 +39,11 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
     setPendingReceipt(null);
   }, []);
 
-  const uploadImage = async (imageBase64: string): Promise<string> => {
+  const uploadImage = async (imageBase64: string, mimeType: string = 'image/jpeg'): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
 
-    const fileName = `${user.id}/${Date.now()}.jpg`;
+    const extension = mimeType === 'application/pdf' ? 'pdf' : 'jpg';
+    const fileName = `${user.id}/${Date.now()}.${extension}`;
 
     // Convert base64 to ArrayBuffer
     const binaryString = atob(imageBase64);
@@ -54,7 +55,7 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.storage
       .from('receipts')
       .upload(fileName, bytes.buffer, {
-        contentType: 'image/jpeg',
+        contentType: mimeType,
         upsert: false,
       });
 
@@ -71,7 +72,7 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
   };
 
   const startScan = useCallback(
-    async (imageBase64: string, imagePreviewUri?: string) => {
+    async (imageBase64: string, imagePreviewUri?: string, mimeType: string = 'image/jpeg') => {
       if (!session?.access_token || !user) {
         toast.error(t('errors.notAuthenticated'));
         return;
@@ -101,7 +102,7 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
 
       try {
         // Step 1: Upload image to storage
-        imageUrl = await uploadImage(imageBase64);
+        imageUrl = await uploadImage(imageBase64, mimeType);
 
         // Update progress
         setPendingReceipt((prev) => prev ? { ...prev, progress: 30, imageUrl: imageUrl || undefined } : null);
@@ -131,7 +132,7 @@ export function PendingReceiptProvider({ children }: { children: ReactNode }) {
         const response = await supabase.functions.invoke('receipt-scan', {
           body: {
             imageBase64,
-            mimeType: 'image/jpeg',
+            mimeType,
           },
           headers: {
             Authorization: `Bearer ${session.access_token}`,

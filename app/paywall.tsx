@@ -5,7 +5,6 @@ import {
   Pressable,
   StyleSheet,
   Linking,
-  StatusBar,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
@@ -327,8 +326,6 @@ export default function PaywallScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle={colors.isDark ? 'light-content' : 'dark-content'} />
-
       {/* Background gradient */}
       <LinearGradient
         colors={gradientColors}

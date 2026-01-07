@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Pressable,
-  StatusBar,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -45,7 +44,6 @@ import {
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useThemedColors } from '@/lib/utils/theme';
-import { useTheme } from '@/context/theme-provider';
 import { useTranslation } from 'react-i18next';
 import { PRIMARY } from '@/lib/theme/colors';
 import { saveOnboardingData } from '@/lib/utils/onboarding-storage';
@@ -594,7 +592,6 @@ function CategoriesSlide({ selectedCategories, onToggle, onNext, onBack, colors 
 export default function OnboardingScreen() {
   const router = useRouter();
   const colors = useThemedColors();
-  const { isDark } = useTheme();
   const { t } = useTranslation();
 
   const [step, setStep] = useState<Step>('q1');
@@ -718,7 +715,6 @@ export default function OnboardingScreen() {
   if (step === 'results') {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
         <ResultsSlide
           savings={savings}
           missed={missed}
@@ -732,7 +728,6 @@ export default function OnboardingScreen() {
   if (step === 'categories') {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
         <CategoriesSlide
           selectedCategories={answers.expenseCategories}
           onToggle={toggleCategory}
@@ -750,7 +745,6 @@ export default function OnboardingScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <QuestionSlide
         title={currentQuestion.title}
         subtitle={currentQuestion.subtitle}

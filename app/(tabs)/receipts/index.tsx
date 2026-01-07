@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  StatusBar,
   RefreshControl,
   TextInput,
   Keyboard,
@@ -120,8 +119,6 @@ export default function ReceiptsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
         <View style={styles.header}>
@@ -459,7 +456,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   summaryValue: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '700',
     marginBottom: 2,
   },

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, StatusBar } from 'react-native';
 import {
   getStoredTheme,
   saveTheme,
@@ -66,7 +66,12 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     isDark,
   };
 
-  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={contextValue}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {

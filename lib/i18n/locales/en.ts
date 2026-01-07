@@ -40,6 +40,17 @@ export const en = {
     recentReceipts: 'Recent Receipts',
     noReceiptsYet: 'No receipts yet',
     tapToScanFirst: 'Tap to scan your first receipt',
+    byCategory: 'By Category',
+    viewAllCategories: '+{{count}} more categories',
+  },
+  categories: {
+    title: 'Categories',
+    totalDeductible: 'Total Deductible',
+    acrossCategories: 'Across {{count}} categories',
+    noCategories: 'No categories yet',
+    noCategoriesSubtitle: 'Scan receipts to see your spending by category',
+    receipt: 'receipt',
+    receipts: 'receipts',
   },
   scan: {
     title: 'Scan Receipt',

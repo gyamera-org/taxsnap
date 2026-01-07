@@ -4,7 +4,6 @@ import {
   Text,
   Pressable,
   Platform,
-  StatusBar,
   ActivityIndicator,
   Linking,
   StyleSheet,
@@ -18,7 +17,6 @@ import { AppleIcon } from '@/components/icons/tab-icons';
 import { APP_URLS } from '@/lib/config/urls';
 import { useTranslation } from 'react-i18next';
 import { useThemedColors } from '@/lib/utils/theme';
-import { useTheme } from '@/context/theme-provider';
 import { Shield } from 'lucide-react-native';
 
 export default function AuthScreen() {
@@ -28,7 +26,6 @@ export default function AuthScreen() {
   const { signInWithApple, loading: authLoading } = useAuth();
   const [appleLoading, setAppleLoading] = useState(false);
   const colors = useThemedColors();
-  const { isDark } = useTheme();
 
   const isSignUp = mode === 'signup';
   const isLoading = authLoading || appleLoading;
@@ -47,8 +44,6 @@ export default function AuthScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           {/* Main Content */}

@@ -1,20 +1,27 @@
-import { useState } from 'react';
+// Modal disabled for initial release
+// import { useState } from 'react';
 import { Tabs } from 'expo-router';
-import { Pressable, StyleSheet, View, Modal, Text } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+// Modal disabled for initial release
+// import { Modal, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTabBar } from '@/context/tab-bar-provider';
 import * as Haptics from 'expo-haptics';
 import { Camera } from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
+// Modal handlers disabled for initial release
+// import * as ImagePicker from 'expo-image-picker';
+// import * as DocumentPicker from 'expo-document-picker';
 import { useRouter } from 'expo-router';
 import { useResponsive } from '@/lib/utils/responsive';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
-import { useAuth } from '@/context/auth-provider';
+// Modal disabled for initial release
+// import { useAuth } from '@/context/auth-provider';
 import { HomeIcon, ReceiptsIcon, SettingsIcon } from '@/components/icons/tab-icons';
-import { Plus, Camera as CameraIcon, Image as ImageIcon, FileText, X } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
+// Modal disabled for initial release
+// import { Camera as CameraIcon, Image as ImageIcon, FileText, X } from 'lucide-react-native';
 import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -59,9 +66,12 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
   const { isDark } = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
-  const { session } = useAuth();
-  const [showScanOptions, setShowScanOptions] = useState(false);
-  const [isPickingDocument, setIsPickingDocument] = useState(false);
+  const { hideTabBar } = useTabBar();
+  // Modal disabled for initial release
+  // const { session } = useAuth();
+  // Modal disabled for initial release
+  // const [showScanOptions, setShowScanOptions] = useState(false);
+  // const [isPickingDocument, setIsPickingDocument] = useState(false);
 
   const tabs = [
     { name: 'home/index', icon: HomeIcon },
@@ -89,18 +99,19 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
     }
   };
 
-  const handleScanPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setShowScanOptions(true);
-  };
+  // Modal disabled - open camera directly
+  // const handleScanPress = () => {
+  //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  //   setShowScanOptions(true);
+  // };
 
-  const handleCameraPress = async () => {
-    setShowScanOptions(false);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleScanPress = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const { status } = await Camera.requestCameraPermissionsAsync();
 
     if (status === 'granted') {
+      hideTabBar(); // Hide tab bar before navigating to scan screen
       router.push('/(tabs)/scan');
     } else {
       Alert.alert(t('scan.permissionTitle'), t('scan.permissionText'), [
@@ -109,87 +120,84 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
     }
   };
 
-  const handleImagePress = async () => {
-    setShowScanOptions(false);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  // Modal handlers disabled for initial release
+  // const handleCameraPress = async () => {
+  //   setShowScanOptions(false);
+  //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  //   const { status } = await Camera.requestCameraPermissionsAsync();
+  //   if (status === 'granted') {
+  //     router.push('/(tabs)/scan');
+  //   } else {
+  //     Alert.alert(t('scan.permissionTitle'), t('scan.permissionText'), [
+  //       { text: t('common.close') },
+  //     ]);
+  //   }
+  // };
 
-    if (!session?.user?.id) {
-      Alert.alert(t('common.error'), t('common.notLoggedIn', 'Please sign in to scan receipts.'));
-      return;
-    }
+  // const handleImagePress = async () => {
+  //   setShowScanOptions(false);
+  //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  //   if (!session?.user?.id) {
+  //     Alert.alert(t('common.error'), t('common.notLoggedIn', 'Please sign in to scan receipts.'));
+  //     return;
+  //   }
+  //   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  //   if (status !== 'granted') {
+  //     Alert.alert(
+  //       t('scan.galleryPermissionTitle', 'Photo Library Access Required'),
+  //       t('scan.galleryPermissionText', 'TaxSnap needs access to your photo library to select receipt images.'),
+  //       [{ text: t('common.close') }]
+  //     );
+  //     return;
+  //   }
+  //   const result = await ImagePicker.launchImageLibraryAsync({
+  //     mediaTypes: ['images'],
+  //     quality: 0.8,
+  //     allowsEditing: true,
+  //     aspect: [3, 4],
+  //     base64: true,
+  //   });
+  //   if (!result.canceled && result.assets[0]?.base64) {
+  //     const { uri, base64 } = result.assets[0];
+  //     router.push({
+  //       pathname: '/receipt/verify',
+  //       params: { imageBase64: base64, localUri: uri, isScanning: 'true' },
+  //     });
+  //   }
+  // };
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // const handlePDFPress = async () => {
+  //   if (isPickingDocument) return;
+  //   setShowScanOptions(false);
+  //   setIsPickingDocument(true);
+  //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  //   try {
+  //     const result = await DocumentPicker.getDocumentAsync({
+  //       type: 'application/pdf',
+  //       copyToCacheDirectory: true,
+  //     });
+  //     if (!result.canceled && result.assets[0]) {
+  //       router.push({
+  //         pathname: '/receipt/verify',
+  //         params: { imageUri: result.assets[0].uri, isPDF: 'true' },
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('PDF picker error:', error);
+  //     Alert.alert(
+  //       t('common.error'),
+  //       t('scan.pdfError', 'Failed to select PDF. Please try again.'),
+  //       [{ text: t('common.close') }]
+  //     );
+  //   } finally {
+  //     setIsPickingDocument(false);
+  //   }
+  // };
 
-    if (status !== 'granted') {
-      Alert.alert(
-        t('scan.galleryPermissionTitle', 'Photo Library Access Required'),
-        t(
-          'scan.galleryPermissionText',
-          'TaxSnap needs access to your photo library to select receipt images.'
-        ),
-        [{ text: t('common.close') }]
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-      allowsEditing: true,
-      aspect: [3, 4],
-      base64: true, // Get base64 directly
-    });
-
-    if (!result.canceled && result.assets[0]?.base64) {
-      const { uri, base64 } = result.assets[0];
-
-      // Navigate to verify screen with image data
-      router.push({
-        pathname: '/receipt/verify',
-        params: {
-          imageBase64: base64,
-          localUri: uri,
-          isScanning: 'true',
-        },
-      });
-    }
-  };
-
-  const handlePDFPress = async () => {
-    if (isPickingDocument) return;
-
-    setShowScanOptions(false);
-    setIsPickingDocument(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/pdf',
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        router.push({
-          pathname: '/receipt/verify',
-          params: { imageUri: result.assets[0].uri, isPDF: 'true' },
-        });
-      }
-    } catch (error) {
-      console.error('PDF picker error:', error);
-      Alert.alert(
-        t('common.error'),
-        t('scan.pdfError', 'Failed to select PDF. Please try again.'),
-        [{ text: t('common.close') }]
-      );
-    } finally {
-      setIsPickingDocument(false);
-    }
-  };
-
-  const closeScanOptions = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setShowScanOptions(false);
-  };
+  // const closeScanOptions = () => {
+  //   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  //   setShowScanOptions(false);
+  // };
 
   return (
     <>
@@ -248,33 +256,25 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
               colors={colors}
             />
 
-            {/* Scan/Close Button - toggles between + and X */}
+            {/* Scan Button - opens camera directly */}
             <Pressable
-              onPress={showScanOptions ? closeScanOptions : handleScanPress}
+              onPress={handleScanPress}
               style={styles.scanButtonWrapper}
             >
-              {showScanOptions ? (
-                <View
-                  style={[styles.scanButton, { backgroundColor: isDark ? '#2a2a2a' : '#ffffff' }]}
-                >
-                  <X size={24} color={isDark ? colors.text : '#333333'} strokeWidth={2} />
-                </View>
-              ) : (
-                <LinearGradient
-                  colors={[colors.primary, isDark ? '#0099BB' : '#00A8CC']}
-                  style={styles.scanButton}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <Plus size={24} color="#FFFFFF" strokeWidth={2.5} />
-                </LinearGradient>
-              )}
+              <LinearGradient
+                colors={[colors.primary, isDark ? '#0099BB' : '#00A8CC']}
+                style={styles.scanButton}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Plus size={24} color="#FFFFFF" strokeWidth={2.5} />
+              </LinearGradient>
             </Pressable>
           </View>
         </View>
       </View>
 
-      {/* Scan Options Modal */}
+      {/* Scan Options Modal - Disabled for initial release (PDF not working)
       <Modal
         visible={showScanOptions}
         transparent
@@ -288,7 +288,6 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
           ]}
           onPress={closeScanOptions}
         >
-          {/* Options Card */}
           <Pressable
             style={[
               styles.optionsCard,
@@ -299,13 +298,11 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
             ]}
             onPress={(e) => e.stopPropagation()}
           >
-            {/* Scan Options Grid */}
             <View style={styles.optionsGrid}>
-              {/* Camera Option */}
               <Pressable
                 style={[
                   styles.gridOption,
-                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.95)' },
+                  { backgroundColor: isDark ? '#2a2a2a' : '#ffffff' },
                 ]}
                 onPress={handleCameraPress}
               >
@@ -315,11 +312,10 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
                 </Text>
               </Pressable>
 
-              {/* Image Option */}
               <Pressable
                 style={[
                   styles.gridOption,
-                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.95)' },
+                  { backgroundColor: isDark ? '#2a2a2a' : '#ffffff' },
                 ]}
                 onPress={handleImagePress}
               >
@@ -329,11 +325,10 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
                 </Text>
               </Pressable>
 
-              {/* PDF Option */}
               <Pressable
                 style={[
                   styles.gridOption,
-                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.95)' },
+                  { backgroundColor: isDark ? '#2a2a2a' : '#ffffff' },
                 ]}
                 onPress={handlePDFPress}
               >
@@ -346,6 +341,7 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
           </Pressable>
         </Pressable>
       </Modal>
+      */}
     </>
   );
 }

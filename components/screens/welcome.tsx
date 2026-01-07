@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StatusBar, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
@@ -24,8 +24,6 @@ export function WelcomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#000' : '#FAFAFA' }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-
       {/* Subtle gradient accent */}
       <Animated.View
         entering={FadeIn.delay(100).duration(1200)}
