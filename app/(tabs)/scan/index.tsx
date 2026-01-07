@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, Pressable, StatusBar, Alert } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system/next';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { X, RotateCcw, Image as ImageIcon, Zap, ZapOff } from 'lucide-react-native';
+import { X, RotateCcw, Image as ImageIcon, Zap, ZapOff, FileText } from 'lucide-react-native';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { useTabBar } from '@/context/tab-bar-provider';
@@ -27,6 +29,7 @@ export default function ScanScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isPickingPdf, setIsPickingPdf] = useState(false);
 
   // Hide tab bar when screen mounts, show when unmounts
   useEffect(() => {
@@ -106,13 +109,44 @@ export default function ScanScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.8,
-      allowsEditing: false,
+      allowsEditing: true,
+      aspect: [3, 4],
       base64: true,
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
       const { uri, base64 } = result.assets[0];
       await processImage(base64, uri);
+    }
+  };
+
+  const handlePickPdf = async () => {
+    if (!session?.user?.id || isPickingPdf) return;
+
+    setIsPickingPdf(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const { uri } = result.assets[0];
+
+        // Read the PDF file as base64 using new File API
+        const file = new File(uri);
+        const base64 = await file.base64();
+
+        // Process the PDF
+        await processImage(base64, uri);
+      }
+    } catch (error) {
+      console.error('Failed to pick PDF:', error);
+      Alert.alert('Error', 'Failed to select PDF. Please try again.');
+    } finally {
+      setIsPickingPdf(false);
     }
   };
 
@@ -168,6 +202,13 @@ export default function ScanScreen() {
             </Pressable>
 
             <View style={styles.topRightControls}>
+              <Pressable
+                onPress={handlePickPdf}
+                disabled={isPickingPdf}
+                style={[styles.controlButton, isPickingPdf && { opacity: 0.5 }]}
+              >
+                <FileText size={22} color="#FFFFFF" />
+              </Pressable>
               <Pressable onPress={toggleFlash} style={styles.controlButton}>
                 {flash === 'on' ? (
                   <Zap size={22} color="#FFCC00" fill="#FFCC00" />

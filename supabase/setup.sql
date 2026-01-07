@@ -17,6 +17,14 @@ CREATE TABLE IF NOT EXISTS accounts (
   name TEXT,
   onboarding_completed BOOLEAN DEFAULT FALSE,
   free_scans_used INTEGER DEFAULT 0,
+  -- Onboarding questionnaire data
+  onboarding_income TEXT,
+  onboarding_work_type TEXT,
+  onboarding_current_tracking TEXT,
+  onboarding_monthly_expenses TEXT,
+  onboarding_expense_categories TEXT[], -- Array of selected Schedule C category IDs
+  onboarding_estimated_savings INTEGER,
+  onboarding_estimated_missed_deductions INTEGER,
   -- Subscription fields (synced from RevenueCat webhook)
   subscription_status TEXT,
   subscription_plan TEXT,

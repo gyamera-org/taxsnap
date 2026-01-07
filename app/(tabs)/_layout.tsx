@@ -61,6 +61,7 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
   const { t } = useTranslation();
   const { session } = useAuth();
   const [showScanOptions, setShowScanOptions] = useState(false);
+  const [isPickingDocument, setIsPickingDocument] = useState(false);
 
   const tabs = [
     { name: 'home/index', icon: HomeIcon },
@@ -155,7 +156,10 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
   };
 
   const handlePDFPress = async () => {
+    if (isPickingDocument) return;
+
     setShowScanOptions(false);
+    setIsPickingDocument(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     try {
@@ -177,6 +181,8 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
         t('scan.pdfError', 'Failed to select PDF. Please try again.'),
         [{ text: t('common.close') }]
       );
+    } finally {
+      setIsPickingDocument(false);
     }
   };
 
@@ -249,9 +255,9 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
             >
               {showScanOptions ? (
                 <View
-                  style={[styles.scanButton, { backgroundColor: isDark ? '#2a2a2a' : '#f0f0f0' }]}
+                  style={[styles.scanButton, { backgroundColor: isDark ? '#2a2a2a' : '#ffffff' }]}
                 >
-                  <X size={24} color={colors.text} strokeWidth={2} />
+                  <X size={24} color={isDark ? colors.text : '#333333'} strokeWidth={2} />
                 </View>
               ) : (
                 <LinearGradient
@@ -299,7 +305,7 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
               <Pressable
                 style={[
                   styles.gridOption,
-                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' },
+                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.95)' },
                 ]}
                 onPress={handleCameraPress}
               >
@@ -313,7 +319,7 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
               <Pressable
                 style={[
                   styles.gridOption,
-                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' },
+                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.95)' },
                 ]}
                 onPress={handleImagePress}
               >
@@ -327,7 +333,7 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
               <Pressable
                 style={[
                   styles.gridOption,
-                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' },
+                  { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.95)' },
                 ]}
                 onPress={handlePDFPress}
               >

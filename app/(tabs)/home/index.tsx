@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, StatusBar, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +17,7 @@ import { format } from 'date-fns';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { useReceiptSummary, useReceipts } from '@/lib/hooks/use-receipts';
+import { useReviewPrompt } from '@/lib/hooks/use-review-prompt';
 import { getCategoryById } from '@/lib/constants/categories';
 import type { Receipt } from '@/lib/types/receipt';
 
@@ -28,6 +30,13 @@ export default function HomeScreen() {
   // Fetch real data
   const { data: summary = { totalReceipts: 0, totalAmount: 0, totalDeductible: 0, estimatedSavings: 0 } } = useReceiptSummary();
   const { data: receipts = [] } = useReceipts();
+  const { maybeRequestReview } = useReviewPrompt();
+
+  // Request app review on home screen (natural pause point)
+  // Only prompts if: 3+ receipts AND 7+ days of usage
+  useEffect(() => {
+    maybeRequestReview();
+  }, [maybeRequestReview]);
 
   // Get recent receipts (last 3)
   const recentReceipts = receipts.slice(0, 3);

@@ -11,6 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,13 +29,28 @@ import {
   Tag,
   FileText,
   ChevronDown,
+  X,
+  ZoomIn,
+  Maximize2,
 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { TAX_CATEGORIES, getCategoryById, calculateDeductible, calculateTaxSavings } from '@/lib/constants/categories';
 import { useReceipt, useUpdateReceipt, useDeleteReceipt } from '@/lib/hooks/use-receipts';
 import type { TaxCategoryId } from '@/lib/constants/categories';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function ReceiptDetailScreen() {
   const { t } = useTranslation();
@@ -47,6 +65,15 @@ export default function ReceiptDetailScreen() {
   const deleteReceiptMutation = useDeleteReceipt();
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
+
+  // Pinch-to-zoom state for image preview
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
 
   // Form state
   const [vendor, setVendor] = useState('');
@@ -158,6 +185,95 @@ export default function ReceiptDetailScreen() {
 
   const selectedCategory = category ? getCategoryById(category) : null;
 
+  // Check if the image is a PDF based on URI
+  const isPDF = receipt?.image_uri?.toLowerCase().endsWith('.pdf');
+
+  // Handle opening the image preview
+  const handleOpenPreview = () => {
+    if (!receipt?.image_uri) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Reset zoom state
+    scale.value = 1;
+    savedScale.value = 1;
+    translateX.value = 0;
+    translateY.value = 0;
+    savedTranslateX.value = 0;
+    savedTranslateY.value = 0;
+    setShowImagePreview(true);
+  };
+
+  // Handle closing the preview
+  const handleClosePreview = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowImagePreview(false);
+  };
+
+  // Pinch gesture for zooming
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((event) => {
+      scale.value = savedScale.value * event.scale;
+    })
+    .onEnd(() => {
+      if (scale.value < 1) {
+        scale.value = withSpring(1);
+        savedScale.value = 1;
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+      } else if (scale.value > 4) {
+        scale.value = withSpring(4);
+        savedScale.value = 4;
+      } else {
+        savedScale.value = scale.value;
+      }
+    });
+
+  // Pan gesture for moving the image when zoomed
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      if (scale.value > 1) {
+        translateX.value = savedTranslateX.value + event.translationX;
+        translateY.value = savedTranslateY.value + event.translationY;
+      }
+    })
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+
+  // Double tap to zoom in/out
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      if (scale.value > 1) {
+        scale.value = withSpring(1);
+        savedScale.value = 1;
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+      } else {
+        scale.value = withSpring(2.5);
+        savedScale.value = 2.5;
+      }
+    });
+
+  // Combine gestures
+  const composedGesture = Gesture.Simultaneous(
+    pinchGesture,
+    Gesture.Race(doubleTapGesture, panGesture)
+  );
+
+  // Animated style for the image
+  const animatedImageStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
   const cardStyle = [
     styles.card,
     {
@@ -233,19 +349,27 @@ export default function ReceiptDetailScreen() {
             {/* Receipt Image Preview */}
             <Pressable
               style={cardStyle}
-              onPress={() => {
-                if (receipt.image_uri) {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
-              }}
+              onPress={handleOpenPreview}
+              disabled={!receipt.image_uri}
             >
               <View style={styles.imageContainer}>
                 {receipt.image_uri ? (
-                  <Image
-                    source={{ uri: receipt.image_uri }}
-                    style={styles.receiptImage}
-                    resizeMode="contain"
-                  />
+                  <>
+                    <Image
+                      source={{ uri: receipt.image_uri }}
+                      style={styles.receiptImage}
+                      resizeMode="contain"
+                    />
+                    {/* Tap to preview overlay */}
+                    <View style={styles.previewOverlay}>
+                      <View style={styles.previewHint}>
+                        <Maximize2 size={16} color="#FFFFFF" />
+                        <Text style={styles.previewHintText}>
+                          {isPDF ? 'Tap to share PDF' : 'Tap to preview'}
+                        </Text>
+                      </View>
+                    </View>
+                  </>
                 ) : (
                   <View style={styles.noImage}>
                     <FileText size={48} color={colors.textMuted} />
@@ -459,6 +583,61 @@ export default function ReceiptDetailScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      {/* Fullscreen Image Preview Modal */}
+      <Modal
+        visible={showImagePreview}
+        animationType="fade"
+        onRequestClose={handleClosePreview}
+        presentationStyle="fullScreen"
+      >
+        <GestureHandlerRootView style={styles.previewModalContainer}>
+          <StatusBar barStyle="light-content" />
+
+          {/* Header */}
+          <SafeAreaView edges={['top']} style={styles.previewHeader}>
+            <Pressable onPress={handleClosePreview} style={styles.previewHeaderButton}>
+              <X size={24} color="#FFFFFF" />
+            </Pressable>
+            <Text style={styles.previewHeaderTitle}>Receipt Preview</Text>
+            <View style={styles.previewHeaderSpacer} />
+          </SafeAreaView>
+
+          {/* Zoomable Image */}
+          {receipt?.image_uri && !isPDF && (
+            <GestureDetector gesture={composedGesture}>
+              <Animated.View style={[styles.previewImageContainer, animatedImageStyle]}>
+                <Image
+                  source={{ uri: receipt.image_uri }}
+                  style={styles.previewImage}
+                  resizeMode="contain"
+                />
+              </Animated.View>
+            </GestureDetector>
+          )}
+
+          {/* PDF fallback */}
+          {receipt?.image_uri && isPDF && (
+            <View style={styles.pdfContainer}>
+              <FileText size={64} color="#FFFFFF" />
+              <Text style={styles.pdfText}>PDF Receipt</Text>
+              <Text style={styles.pdfSubtext}>
+                PDF preview is not available
+              </Text>
+            </View>
+          )}
+
+          {/* Zoom hint */}
+          {!isPDF && (
+            <SafeAreaView edges={['bottom']} style={styles.previewFooter}>
+              <View style={styles.zoomHint}>
+                <ZoomIn size={16} color="rgba(255,255,255,0.6)" />
+                <Text style={styles.zoomHintText}>Pinch to zoom • Double-tap to zoom in/out</Text>
+              </View>
+            </SafeAreaView>
+          )}
+        </GestureHandlerRootView>
+      </Modal>
     </View>
   );
 }
@@ -645,5 +824,97 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 15,
     fontWeight: '600',
+  },
+  // Preview overlay on thumbnail
+  previewOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 12,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  previewHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  previewHintText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  // Fullscreen preview modal styles
+  previewModalContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  previewHeaderButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewHeaderTitle: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  previewHeaderSpacer: {
+    width: 44,
+    height: 44,
+  },
+  previewImageContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT * 0.7,
+  },
+  previewFooter: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  zoomHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+  },
+  zoomHintText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+  },
+  // PDF preview styles
+  pdfContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    gap: 16,
+  },
+  pdfText: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  pdfSubtext: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

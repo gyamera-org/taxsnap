@@ -5,3 +5,4 @@ export * from './utils';
 
 export * from './use-accounts';
 export * from './use-receipts';
+export * from './use-review-prompt';

@@ -11,6 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,8 +29,20 @@ import {
   FileText,
   Sparkles,
   ChevronDown,
+  Maximize2,
+  ZoomIn,
 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { useAuth } from '@/context/auth-provider';
@@ -39,6 +54,8 @@ import {
 } from '@/lib/constants/categories';
 import { useScanReceipt, useCreateReceipt } from '@/lib/hooks/use-receipts';
 import type { TaxCategoryId } from '@/lib/constants/categories';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function VerifyReceiptScreen() {
   const { t } = useTranslation();
@@ -58,6 +75,15 @@ export default function VerifyReceiptScreen() {
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [confidence, setConfidence] = useState(0);
+  const [showImagePreview, setShowImagePreview] = useState(false);
+
+  // Pinch-to-zoom state for image preview
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
 
   // Form state
   const [vendor, setVendor] = useState('');
@@ -152,6 +178,92 @@ export default function VerifyReceiptScreen() {
       setDate(selectedDate);
     }
   };
+
+  // Handle opening the image preview
+  const handleOpenPreview = () => {
+    if (!displayImageUri) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Reset zoom state
+    scale.value = 1;
+    savedScale.value = 1;
+    translateX.value = 0;
+    translateY.value = 0;
+    savedTranslateX.value = 0;
+    savedTranslateY.value = 0;
+    setShowImagePreview(true);
+  };
+
+  // Handle closing the preview
+  const handleClosePreview = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowImagePreview(false);
+  };
+
+  // Pinch gesture for zooming
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate((event) => {
+      scale.value = savedScale.value * event.scale;
+    })
+    .onEnd(() => {
+      if (scale.value < 1) {
+        scale.value = withSpring(1);
+        savedScale.value = 1;
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+      } else if (scale.value > 4) {
+        scale.value = withSpring(4);
+        savedScale.value = 4;
+      } else {
+        savedScale.value = scale.value;
+      }
+    });
+
+  // Pan gesture for moving the image when zoomed
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      if (scale.value > 1) {
+        translateX.value = savedTranslateX.value + event.translationX;
+        translateY.value = savedTranslateY.value + event.translationY;
+      }
+    })
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+
+  // Double tap to zoom in/out
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      if (scale.value > 1) {
+        scale.value = withSpring(1);
+        savedScale.value = 1;
+        translateX.value = withSpring(0);
+        translateY.value = withSpring(0);
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+      } else {
+        scale.value = withSpring(2.5);
+        savedScale.value = 2.5;
+      }
+    });
+
+  // Combine gestures
+  const composedGesture = Gesture.Simultaneous(
+    pinchGesture,
+    Gesture.Race(doubleTapGesture, panGesture)
+  );
+
+  // Animated style for the image
+  const animatedImageStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
 
   const selectedCategory = category ? getCategoryById(category) : null;
 

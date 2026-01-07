@@ -76,13 +76,10 @@ export default function AuthScreen() {
             >
               {isSignUp ? t('auth.signUpSubtitle') : t('auth.signInSubtitle')}
             </Animated.Text>
-          </View>
 
-          {/* Bottom Section */}
-          <View style={styles.bottomSection}>
             {/* Apple Sign In Button */}
             {Platform.OS === 'ios' && (
-              <Animated.View entering={FadeInUp.delay(500).duration(500)}>
+              <Animated.View entering={FadeInUp.delay(500).duration(500)} style={styles.buttonContainer}>
                 <Pressable
                   onPress={handleAppleAuth}
                   disabled={isLoading}
@@ -124,8 +121,10 @@ export default function AuthScreen() {
                 </Text>
               </Pressable>
             </Animated.View>
+          </View>
 
-            {/* Terms */}
+          {/* Bottom Section - Terms Only */}
+          <View style={styles.bottomSection}>
             <Animated.View entering={FadeInDown.delay(700).duration(500)} style={styles.termsContainer}>
               <Text style={[styles.termsText, { color: colors.textMuted }]}>
                 {t('auth.terms')}{' '}
@@ -188,6 +187,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 26,
     paddingHorizontal: 16,
+  },
+  buttonContainer: {
+    width: '100%',
+    marginTop: 32,
   },
   bottomSection: {
     paddingBottom: 32,

@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           onboarding_work_type: onboardingData?.workType || null,
           onboarding_current_tracking: onboardingData?.currentTracking || null,
           onboarding_monthly_expenses: onboardingData?.monthlyExpenses || null,
+          onboarding_expense_categories: onboardingData?.expenseCategories || [],
           onboarding_estimated_savings: onboardingData?.estimatedSavings || null,
           onboarding_estimated_missed_deductions: onboardingData?.estimatedMissedDeductions || null,
         });

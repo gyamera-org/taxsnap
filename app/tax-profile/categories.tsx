@@ -44,32 +44,20 @@ export default function CategoriesScreen() {
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    if (account?.onboarding_current_tracking) {
-      try {
-        const parsed = JSON.parse(account.onboarding_current_tracking);
-        if (Array.isArray(parsed)) {
-          setSelectedCategories(parsed);
-        }
-      } catch {
-        setSelectedCategories([]);
+    if (account?.onboarding_expense_categories) {
+      // onboarding_expense_categories is already a TEXT[] array from Postgres
+      if (Array.isArray(account.onboarding_expense_categories)) {
+        setSelectedCategories(account.onboarding_expense_categories);
       }
     }
   }, [account]);
 
   useEffect(() => {
     if (account) {
-      let originalCategories: string[] = [];
-      if (account.onboarding_current_tracking) {
-        try {
-          const parsed = JSON.parse(account.onboarding_current_tracking);
-          if (Array.isArray(parsed)) {
-            originalCategories = parsed;
-          }
-        } catch {
-          // ignore
-        }
-      }
-      const changed = JSON.stringify(selectedCategories.sort()) !== JSON.stringify(originalCategories.sort());
+      const originalCategories = Array.isArray(account.onboarding_expense_categories)
+        ? account.onboarding_expense_categories
+        : [];
+      const changed = JSON.stringify(selectedCategories.sort()) !== JSON.stringify([...originalCategories].sort());
       setHasChanges(changed);
     }
   }, [selectedCategories, account]);
@@ -88,7 +76,7 @@ export default function CategoriesScreen() {
 
     try {
       await updateAccount.mutateAsync({
-        onboarding_current_tracking: JSON.stringify(selectedCategories),
+        onboarding_expense_categories: selectedCategories,
       });
       router.back();
     } catch {

@@ -5,11 +5,6 @@ import {
   Pressable,
   StatusBar,
   StyleSheet,
-  TextInput,
-  Keyboard,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -33,8 +28,6 @@ import {
   Receipt,
   TrendingUp,
   Check,
-  Star,
-  User,
   FileText,
   Megaphone,
   Car,
@@ -51,15 +44,14 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import * as StoreReview from 'expo-store-review';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { useTranslation } from 'react-i18next';
 import { PRIMARY } from '@/lib/theme/colors';
-import { saveOnboardingData, saveUserName } from '@/lib/utils/onboarding-storage';
+import { saveOnboardingData } from '@/lib/utils/onboarding-storage';
 import { ScrollView } from 'react-native';
 
-type Step = 'q1' | 'q2' | 'q3' | 'q4' | 'categories' | 'results' | 'rateApp' | 'nameInput';
+type Step = 'q1' | 'q2' | 'q3' | 'q4' | 'categories' | 'results';
 
 interface QuizAnswers {
   income: string | null;
@@ -446,85 +438,6 @@ function ResultsSlide({ savings, missed, onContinue, colors }: ResultsSlideProps
   );
 }
 
-interface RateAppSlideProps {
-  onRate: () => void;
-  onSkip: () => void;
-  colors: ReturnType<typeof useThemedColors>;
-}
-
-function RateAppSlide({ onRate, onSkip, colors }: RateAppSlideProps) {
-  const { t } = useTranslation();
-
-  return (
-    <Animated.View
-      entering={FadeIn.duration(400)}
-      style={[styles.slideContainer, { backgroundColor: colors.background }]}
-    >
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.rateAppContent}>
-          {/* Stars */}
-          <Animated.View
-            entering={FadeIn.delay(200).duration(500)}
-            style={styles.starsContainer}
-          >
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Animated.View
-                key={star}
-                entering={FadeIn.delay(200 + star * 100).duration(400)}
-              >
-                <Star
-                  size={40}
-                  color={colors.primary}
-                  fill={colors.primary}
-                />
-              </Animated.View>
-            ))}
-          </Animated.View>
-
-          {/* Title */}
-          <Animated.Text
-            entering={FadeInUp.delay(600).duration(500)}
-            style={[styles.rateAppTitle, { color: colors.text }]}
-          >
-            {t('onboarding.rateApp.title')}
-          </Animated.Text>
-
-          {/* Subtitle */}
-          <Animated.Text
-            entering={FadeInUp.delay(700).duration(500)}
-            style={[styles.rateAppSubtitle, { color: colors.textSecondary }]}
-          >
-            {t('onboarding.rateApp.subtitle')}
-          </Animated.Text>
-        </View>
-
-        {/* Buttons */}
-        <Animated.View entering={FadeInDown.delay(800).duration(500)} style={styles.footer}>
-          <Pressable
-            onPress={onRate}
-            style={[styles.ctaButton, { backgroundColor: colors.primary }]}
-          >
-            <Star size={20} color="#ffffff" fill="#ffffff" />
-            <Text style={styles.ctaButtonText}>{t('onboarding.rateApp.rateNow')}</Text>
-          </Pressable>
-
-          <Pressable onPress={onSkip} style={styles.skipButton}>
-            <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
-              {t('onboarding.rateApp.maybeLater')}
-            </Text>
-          </Pressable>
-        </Animated.View>
-      </SafeAreaView>
-    </Animated.View>
-  );
-}
-
-interface NameInputSlideProps {
-  name: string;
-  onNameChange: (name: string) => void;
-  onContinue: () => void;
-  colors: ReturnType<typeof useThemedColors>;
-}
 
 // Categories Selection Slide
 interface CategoriesSlideProps {
@@ -618,6 +531,7 @@ function CategoriesSlide({ selectedCategories, onToggle, onNext, onBack, colors 
                   <Animated.View
                     key={category.id}
                     entering={FadeInUp.delay(300 + index * 30).duration(300)}
+                    style={styles.categoryItemWrapper}
                   >
                     <Pressable
                       onPress={() => handleToggle(category.id)}
@@ -638,7 +552,6 @@ function CategoriesSlide({ selectedCategories, onToggle, onNext, onBack, colors 
                           styles.categoryItemText,
                           { color: isSelected ? category.color : colors.text },
                         ]}
-                        numberOfLines={1}
                       >
                         {category.name}
                       </Text>
@@ -678,93 +591,6 @@ function CategoriesSlide({ selectedCategories, onToggle, onNext, onBack, colors 
   );
 }
 
-function NameInputSlide({ name, onNameChange, onContinue, colors }: NameInputSlideProps) {
-  const { t } = useTranslation();
-
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.slideContainer, { backgroundColor: colors.background }]}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <Animated.View
-          entering={FadeIn.duration(400)}
-          style={styles.slideContainer}
-        >
-          <SafeAreaView style={styles.safeArea}>
-            <View style={styles.nameInputContent}>
-              {/* Icon */}
-              <Animated.View
-                entering={FadeIn.delay(200).duration(500)}
-                style={[styles.nameIconContainer, { backgroundColor: `${colors.primary}15` }]}
-              >
-                <User size={40} color={colors.primary} />
-              </Animated.View>
-
-              {/* Title */}
-              <Animated.Text
-                entering={FadeInUp.delay(300).duration(500)}
-                style={[styles.nameInputTitle, { color: colors.text }]}
-              >
-                {t('onboarding.nameInput.title')}
-              </Animated.Text>
-
-              {/* Subtitle */}
-              <Animated.Text
-                entering={FadeInUp.delay(400).duration(500)}
-                style={[styles.nameInputSubtitle, { color: colors.textSecondary }]}
-              >
-                {t('onboarding.nameInput.subtitle')}
-              </Animated.Text>
-
-              {/* Text Input */}
-              <Animated.View
-                entering={FadeInUp.delay(500).duration(500)}
-                style={styles.inputContainer}
-              >
-                <TextInput
-                  value={name}
-                  onChangeText={onNameChange}
-                  placeholder={t('onboarding.nameInput.placeholder')}
-                  placeholderTextColor={colors.textMuted}
-                  style={[
-                    styles.nameInput,
-                    {
-                      backgroundColor: colors.card,
-                      borderColor: name ? colors.primary : colors.cardBorder,
-                      color: colors.text,
-                    },
-                  ]}
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  returnKeyType="done"
-                  onSubmitEditing={() => name.trim() && onContinue()}
-                />
-              </Animated.View>
-            </View>
-
-            {/* Continue button */}
-            <Animated.View entering={FadeInDown.delay(600).duration(500)} style={styles.footer}>
-              <Pressable
-                onPress={onContinue}
-                disabled={!name.trim()}
-                style={[
-                  styles.ctaButton,
-                  { backgroundColor: colors.primary },
-                  !name.trim() && styles.buttonDisabled,
-                ]}
-              >
-                <Text style={styles.ctaButtonText}>{t('onboarding.nameInput.continue')}</Text>
-                <ChevronRight size={20} color="#ffffff" />
-              </Pressable>
-            </Animated.View>
-          </SafeAreaView>
-        </Animated.View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
-  );
-}
-
 export default function OnboardingScreen() {
   const router = useRouter();
   const colors = useThemedColors();
@@ -772,7 +598,6 @@ export default function OnboardingScreen() {
   const { t } = useTranslation();
 
   const [step, setStep] = useState<Step>('q1');
-  const [userName, setUserName] = useState('');
   const [answers, setAnswers] = useState<QuizAnswers>({
     income: null,
     workType: null,
@@ -830,34 +655,7 @@ export default function OnboardingScreen() {
       completedAt: new Date().toISOString(),
     });
 
-    setStep('rateApp');
-  };
-
-  const handleRateApp = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    // Try to open the native review prompt
-    if (await StoreReview.hasAction()) {
-      await StoreReview.requestReview();
-    }
-
-    setStep('nameInput');
-  };
-
-  const handleSkipRating = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setStep('nameInput');
-  };
-
-  const handleNameContinue = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    // Save the user's name
-    if (userName.trim()) {
-      await saveUserName(userName.trim());
-    }
-
-    // Navigate to auth with signup mode
+    // Navigate directly to auth
     router.push('/auth?mode=signup');
   };
 
@@ -925,33 +723,6 @@ export default function OnboardingScreen() {
           savings={savings}
           missed={missed}
           onContinue={handleResultsContinue}
-          colors={colors}
-        />
-      </View>
-    );
-  }
-
-  if (step === 'rateApp') {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-        <RateAppSlide
-          onRate={handleRateApp}
-          onSkip={handleSkipRating}
-          colors={colors}
-        />
-      </View>
-    );
-  }
-
-  if (step === 'nameInput') {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-        <NameInputSlide
-          name={userName}
-          onNameChange={setUserName}
-          onContinue={handleNameContinue}
           colors={colors}
         />
       </View>
@@ -1229,79 +1000,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingHorizontal: 24,
   },
-  // Rate App Styles
-  rateAppContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 32,
-  },
-  rateAppTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 12,
-    letterSpacing: -0.5,
-  },
-  rateAppSubtitle: {
-    fontSize: 17,
-    textAlign: 'center',
-    lineHeight: 26,
-    paddingHorizontal: 16,
-  },
-  skipButton: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  skipButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Name Input Styles
-  nameInputContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  nameIconContainer: {
-    width: 88,
-    height: 88,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
-  },
-  nameInputTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 12,
-    letterSpacing: -0.5,
-  },
-  nameInputSubtitle: {
-    fontSize: 17,
-    textAlign: 'center',
-    lineHeight: 26,
-    marginBottom: 32,
-  },
-  inputContainer: {
-    width: '100%',
-  },
-  nameInput: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    borderWidth: 2,
-  },
   // Categories Slide Styles
   categoriesContent: {
     flex: 1,
@@ -1335,16 +1033,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    justifyContent: 'space-between',
+  },
+  categoryItemWrapper: {
+    flexGrow: 0,
+    flexShrink: 0,
   },
   categoryItem: {
-    width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: 12,
-    marginBottom: 2,
-    gap: 10,
+    gap: 8,
   },
   categoryItemIcon: {
     width: 36,
@@ -1354,8 +1054,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   categoryItemText: {
-    flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
   categoryItemCheck: {

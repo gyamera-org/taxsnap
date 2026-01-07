@@ -29,8 +29,8 @@ export const en = {
     alreadyHaveAccount: 'Already have an account?',
   },
   home: {
-    greeting: 'Welcome',
-    subtitle: 'Track your receipts and maximize deductions',
+    greeting: 'Home',
+    subtitle: 'Track receipts and maximize deductions',
     estimatedSavings: 'Estimated Tax Savings',
     thisYear: 'This tax year',
     deductions: 'Deductions',
@@ -220,18 +220,6 @@ export const en = {
       taxSavings: 'Potential tax savings',
       cta: 'Claim My Savings',
       disclaimer: '*Estimate based on IRS data for similar profiles. Actual savings vary.',
-    },
-    nameInput: {
-      title: "What's your name?",
-      subtitle: "We'll personalize your experience.",
-      placeholder: 'Enter your first name',
-      continue: 'Continue',
-    },
-    rateApp: {
-      title: 'Enjoying TaxSnap?',
-      subtitle: 'Your feedback helps us improve and reach more people like you.',
-      rateNow: 'Rate 5 Stars',
-      maybeLater: 'Maybe Later',
     },
   },
   paywall: {
