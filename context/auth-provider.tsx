@@ -139,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log('Auth event:', event);
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
@@ -148,6 +149,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           newSession.user.user_metadata?.full_name || newSession.user.user_metadata?.name || '';
         await ensureAccountExists(newSession.user.id, userEmail, userName);
       }
+
+      // Handle token refresh failure - user needs to sign in again
+      if (event === 'TOKEN_REFRESHED' && !newSession) {
+        console.log('Token refresh failed, clearing session');
+        setSession(null);
+        setUser(null);
+      }
     });
 
     // Get initial session
@@ -155,10 +163,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const {
           data: { session: restored },
+          error,
         } = await supabase.auth.getSession();
+
+        // Handle invalid refresh token error
+        if (error?.message?.includes('Refresh Token')) {
+          console.log('Invalid refresh token, signing out');
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          return;
+        }
+
         setSession(restored);
         setUser(restored?.user ?? null);
-      } catch (err) {
+      } catch (err: any) {
+        console.error('Session restore error:', err);
+        // If it's a refresh token error, clear the session
+        if (err?.message?.includes('Refresh Token')) {
+          await supabase.auth.signOut();
+        }
         setSession(null);
         setUser(null);
       } finally {

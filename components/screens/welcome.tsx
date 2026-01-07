@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { ArrowRight } from 'lucide-react-native';
+import { AppLogo } from '@/components/icons/app-logo';
 
 export function WelcomeScreen() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export function WelcomeScreen() {
                 },
               ]}
             >
-              <View style={[styles.badgeDot, { backgroundColor: colors.primary }]} />
+              <AppLogo size={18} color={colors.primary} />
               <Text style={[styles.badgeText, { color: isDark ? '#fff' : '#000' }]}>
                 {t('welcome.badge')}
               </Text>
@@ -140,11 +141,6 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     marginBottom: 28,
     gap: 8,
-  },
-  badgeDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
   badgeText: {
     fontSize: 14,

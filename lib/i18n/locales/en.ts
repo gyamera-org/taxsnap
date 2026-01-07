@@ -23,7 +23,7 @@ export const en = {
   welcome: {
     badge: 'TaxSnap',
     headline: 'Snap receipts.\nSave thousands.',
-    subheadline: 'AI-powered Schedule C deduction tracking.',
+    subheadline: 'Schedule C deduction tracking made simple.',
     getStarted: 'Get Started',
     signIn: 'Sign In',
     alreadyHaveAccount: 'Already have an account?',
