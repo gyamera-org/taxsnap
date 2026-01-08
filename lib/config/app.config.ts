@@ -62,8 +62,9 @@ export const pricingConfig = {
       enabled: true,
       config: {
         id: 'weekly',
-        order: 4,
-        hasTrial: false,
+        order: 1,
+        hasTrial: true,
+        trialDays: 3,
         showSavings: false,
       } as PlanConfig,
     },
@@ -81,9 +82,8 @@ export const pricingConfig = {
       enabled: true,
       config: {
         id: 'yearly',
-        order: 1,
-        hasTrial: true,
-        trialDays: 3,
+        order: 2,
+        hasTrial: false,
         badge: 'bestValue',
         showSavings: true,
         savingsComparedTo: 'weekly',
@@ -105,7 +105,7 @@ export const pricingConfig = {
    * Default selected plan when paywall opens
    * Must be one of the enabled plans
    */
-  defaultSelectedPlan: 'yearly' as PricingPlan,
+  defaultSelectedPlan: 'weekly' as PricingPlan,
 
   /**
    * Show "Continue for Free" button on paywall

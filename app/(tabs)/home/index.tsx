@@ -10,13 +10,12 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { format } from 'date-fns';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { useReceiptSummary, useReceipts, useCategoryBreakdown, CategoryBreakdown } from '@/lib/hooks/use-receipts';
 import { useReviewPrompt } from '@/lib/hooks/use-review-prompt';
-import { getCategoryById } from '@/lib/constants/categories';
-import type { Receipt } from '@/lib/types/receipt';
+import { usePendingReceipt } from '@/context/pending-receipt-provider';
+import { ReceiptListItem } from '@/components/receipts/receipt-list-item';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -29,6 +28,7 @@ export default function HomeScreen() {
   const { data: receipts = [] } = useReceipts();
   const { data: categoryBreakdown = [] } = useCategoryBreakdown();
   const { maybeRequestReview } = useReviewPrompt();
+  const { pendingReceipt } = usePendingReceipt();
 
   // Request app review on home screen (natural pause point)
   // Only prompts if: 3+ receipts AND 7+ days of usage
@@ -241,16 +241,15 @@ export default function HomeScreen() {
             ) : (
               /* Receipt List */
               <View style={styles.receiptList}>
+                {/* Show pending receipt at top if scanning */}
+                {pendingReceipt && (
+                  <ReceiptListItem pendingReceipt={pendingReceipt} />
+                )}
                 {recentReceipts.map((receipt) => (
-                  <RecentReceiptItem
+                  <ReceiptListItem
                     key={receipt.id}
                     receipt={receipt}
-                    colors={colors}
-                    isDark={isDark}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      router.push(`/receipt/${receipt.id}`);
-                    }}
+                    variant="compact"
                   />
                 ))}
               </View>
@@ -342,64 +341,6 @@ function CategoryRow({
         </View>
       </View>
     </View>
-  );
-}
-
-function RecentReceiptItem({
-  receipt,
-  colors,
-  isDark,
-  onPress,
-}: {
-  receipt: Receipt;
-  colors: ReturnType<typeof useThemedColors>;
-  isDark: boolean;
-  onPress: () => void;
-}) {
-  const category = receipt.category ? getCategoryById(receipt.category) : null;
-
-  const formatAmount = (cents: number | null) => {
-    if (!cents) return '$0';
-    return `$${(cents / 100).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.receiptItem,
-        {
-          backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#FFFFFF',
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-        },
-      ]}
-    >
-      {/* Receipt Details */}
-      <View style={styles.receiptDetails}>
-        <Text style={[styles.receiptVendor, { color: colors.text }]} numberOfLines={1}>
-          {receipt.vendor || 'Unknown Vendor'}
-        </Text>
-        <Text style={[styles.receiptMeta, { color: colors.textMuted }]}>
-          {receipt.date ? format(new Date(receipt.date), 'MMM d') : 'No date'}
-          {category && ` · ${category.name}`}
-        </Text>
-      </View>
-
-      {/* Amount */}
-      <View style={styles.receiptAmountWrapper}>
-        <Text style={[styles.receiptAmount, { color: colors.text }]}>
-          {formatAmount(receipt.total_amount)}
-        </Text>
-        {receipt.deductible_amount && receipt.deductible_amount > 0 && (
-          <Text style={[styles.receiptDeductible, { color: '#10B981' }]}>
-            -{formatAmount(receipt.deductible_amount)}
-          </Text>
-        )}
-      </View>
-    </Pressable>
   );
 }
 
@@ -567,34 +508,5 @@ const styles = StyleSheet.create({
   // Recent receipts list
   receiptList: {
     gap: 10,
-  },
-  receiptItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-  },
-  receiptDetails: {
-    flex: 1,
-  },
-  receiptVendor: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  receiptMeta: {
-    fontSize: 13,
-  },
-  receiptAmountWrapper: {
-    alignItems: 'flex-end',
-  },
-  receiptAmount: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  receiptDeductible: {
-    fontSize: 12,
-    fontWeight: '500',
   },
 });

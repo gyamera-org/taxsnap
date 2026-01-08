@@ -35,6 +35,7 @@ export default function PaywallScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const enabledPlans = useMemo(() => getEnabledPlans(), []);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan>(getDefaultSelectedPlan());
+  const [freeTrialEnabled, setFreeTrialEnabled] = useState(true);
   const { offerings, purchasePackage, restorePurchases } = useRevenueCat();
   const { isTablet, contentMaxWidth } = useResponsive();
 
@@ -168,10 +169,13 @@ export default function PaywallScreen() {
     }
   };
 
+  // Check if trial is available for selected plan
+  const hasTrialAvailable = selectedPlan === 'weekly' && freeTrialEnabled && selectedPlanConfig?.hasTrial;
+
   // Get CTA text based on selected plan
   const getCtaText = () => {
-    if (selectedPlanConfig?.hasTrial && selectedPlanConfig.trialDays) {
-      return t('paywall.cta.startTrial', { days: selectedPlanConfig.trialDays });
+    if (hasTrialAvailable) {
+      return t('paywall.cta.startTrial');
     }
     if (selectedPlan === 'lifetime') {
       return t('paywall.cta.buyNow');
@@ -180,7 +184,7 @@ export default function PaywallScreen() {
   };
 
   const getCtaSubtext = () => {
-    if (selectedPlanConfig?.hasTrial) {
+    if (hasTrialAvailable) {
       return t('paywall.cta.thenPrice', { price: selectedPriceString });
     }
     if (selectedPlan === 'lifetime') {
@@ -324,6 +328,58 @@ export default function PaywallScreen() {
     );
   };
 
+  // Check if trial can be enabled for the selected plan
+  const canEnableTrial = selectedPlan === 'weekly' && selectedPlanConfig?.hasTrial;
+  const isTrialToggleEnabled = canEnableTrial && freeTrialEnabled;
+
+  // Render free trial toggle (always visible, but disabled for yearly)
+  const renderFreeTrialToggle = () => {
+    return (
+      <Pressable
+        style={[
+          styles.trialToggleContainer,
+          dynamicStyles.planCard,
+          !canEnableTrial && styles.trialToggleDisabled,
+        ]}
+        onPress={() => canEnableTrial && setFreeTrialEnabled(!freeTrialEnabled)}
+        disabled={!canEnableTrial}
+      >
+        <View style={styles.trialToggleContent}>
+          <Text
+            style={[
+              styles.trialToggleLabel,
+              dynamicStyles.planName,
+              !canEnableTrial && { opacity: 0.5 },
+            ]}
+          >
+            {t('paywall.plans.enableFreeTrial')}
+          </Text>
+        </View>
+        <View
+          style={[
+            styles.trialToggleSwitch,
+            isTrialToggleEnabled && styles.trialToggleSwitchOn,
+            {
+              backgroundColor: isTrialToggleEnabled
+                ? colors.primary
+                : colors.isDark
+                  ? '#3A3A3C'
+                  : '#E5E5EA',
+              opacity: canEnableTrial ? 1 : 0.5,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.trialToggleThumb,
+              isTrialToggleEnabled && styles.trialToggleThumbOn,
+            ]}
+          />
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* Background gradient */}
@@ -399,10 +455,13 @@ export default function PaywallScreen() {
               ))}
             </View>
 
-            {/* Plan Selection - Dynamic based on config */}
+            {/* Plan Selection */}
             <View style={[styles.plansContainer, isTablet && styles.plansContainerTablet]}>
               {planPackages.map(renderPlanCard)}
             </View>
+
+            {/* Free Trial Toggle */}
+            {renderFreeTrialToggle()}
           </View>
         </ScrollView>
 
@@ -590,17 +649,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  radioButtonSelected: {},
   planName: {
     fontSize: 15,
     fontWeight: '700',
@@ -614,10 +662,46 @@ const styles = StyleSheet.create({
   planPeriod: {
     fontSize: 12,
   },
-  trialText: {
-    fontSize: 11,
+  trialToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 16,
+  },
+  trialToggleDisabled: {
+    opacity: 0.6,
+  },
+  trialToggleContent: {
+    flex: 1,
+  },
+  trialToggleLabel: {
+    fontSize: 15,
     fontWeight: '600',
-    marginTop: 4,
+  },
+  trialToggleSwitch: {
+    width: 51,
+    height: 31,
+    borderRadius: 16,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  trialToggleSwitchOn: {},
+  trialToggleThumb: {
+    width: 27,
+    height: 27,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  trialToggleThumbOn: {
+    alignSelf: 'flex-end',
   },
   bottomSection: {
     paddingHorizontal: 20,

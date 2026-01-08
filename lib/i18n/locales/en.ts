@@ -276,6 +276,8 @@ export const en = {
       oneTime: 'one-time payment',
       save: 'Save {{percent}}%',
       freeTrial: '{{days}}-day free trial',
+      enableFreeTrial: 'Enable Free Trial',
+      trialDays: '{{days}}-day free trial',
       saveWithTrial: 'Save {{percent}}% + {{days}} days free',
       badges: {
         bestValue: 'Best Value',
@@ -284,10 +286,10 @@ export const en = {
       },
     },
     cta: {
-      startTrial: 'Start {{days}}-Day Free Trial',
+      startTrial: 'Start Free Trial',
       subscribeNow: 'Subscribe Now',
       buyNow: 'Buy Now',
-      thenPrice: 'then {{price}}/year',
+      thenPrice: '{{price}}/week after trial',
       perWeek: '{{price}}/week',
       perWeekly: '{{price}}/week',
       perMonthly: '{{price}}/month',

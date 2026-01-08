@@ -26,7 +26,6 @@ import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { FilterModal } from '@/components/ui/filter-modal';
 import { ReceiptListItem } from '@/components/receipts/receipt-list-item';
-import { PendingReceiptItem } from '@/components/receipts/pending-receipt-item';
 import { ExportModal } from '@/components/receipts/export-modal';
 import {
   ReceiptListSkeleton,
@@ -362,7 +361,7 @@ export default function ReceiptsScreen() {
             /* Receipt List */
             <View style={styles.receiptList}>
               {/* Pending Receipt - show at top while scanning */}
-              {pendingReceipt && <PendingReceiptItem pendingReceipt={pendingReceipt} />}
+              {pendingReceipt && <ReceiptListItem pendingReceipt={pendingReceipt} />}
               {receipts.map((receipt) => (
                 <ReceiptListItem key={receipt.id} receipt={receipt} />
               ))}
