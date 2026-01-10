@@ -311,14 +311,12 @@ export default function PaywallScreen() {
             numberOfLines={1}
             adjustsFontSizeToFit
           >
-            {planData.id === 'yearly' && planData.pricePerMonthString
-              ? `${planData.pricePerMonthString}${t('paywall.plans.perMonth')}`
-              : planData.priceString}
+            {planData.priceString}
           </Text>
 
           <Text style={[styles.planPeriod, dynamicStyles.planPeriod]} numberOfLines={1}>
-            {planData.id === 'yearly'
-              ? `${planData.priceString}${t('paywall.plans.perYear')}`
+            {planData.id === 'yearly' && planData.pricePerMonthString
+              ? `${planData.pricePerMonthString}${t('paywall.plans.perMonth')}`
               : planData.id === 'lifetime'
                 ? t('paywall.plans.oneTime')
                 : t(`paywall.plans.per${planData.id.charAt(0).toUpperCase() + planData.id.slice(1)}`)}

@@ -157,12 +157,7 @@ export default function ScanScreen() {
             onPress={requestPermission}
             style={[styles.permissionButton, { backgroundColor: colors.primary }]}
           >
-            <Text style={styles.permissionButtonText}>{t('scan.grantPermission')}</Text>
-          </Pressable>
-          <Pressable onPress={handleClose} style={styles.cancelButton}>
-            <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
-              {t('common.cancel')}
-            </Text>
+            <Text style={styles.permissionButtonText}>{t('common.continue')}</Text>
           </Pressable>
         </SafeAreaView>
       </View>
