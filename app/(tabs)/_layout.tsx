@@ -1,7 +1,7 @@
 // Modal disabled for initial release
 // import { useState } from 'react';
 import { Tabs } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, Linking } from 'react-native';
 // Modal disabled for initial release
 // import { Modal, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -108,16 +108,23 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
   const handleScanPress = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    const { status } = await Camera.requestCameraPermissionsAsync();
+    const { status, canAskAgain } = await Camera.requestCameraPermissionsAsync();
 
     if (status === 'granted') {
       hideTabBar(); // Hide tab bar before navigating to scan screen
       router.push('/(tabs)/scan');
-    } else {
-      Alert.alert(t('scan.permissionTitle'), t('scan.permissionText'), [
-        { text: t('common.close') },
-      ]);
+    } else if (!canAskAgain) {
+      // User previously denied - offer Settings option
+      Alert.alert(
+        t('scan.permissionTitle'),
+        t('scan.permissionDeniedText'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('scan.openSettings'), onPress: () => Linking.openSettings() },
+        ]
+      );
     }
+    // If canAskAgain is true but status is not granted, user dismissed the dialog - don't show another prompt
   };
 
   // Modal handlers disabled for initial release

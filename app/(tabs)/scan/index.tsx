@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, StatusBar, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, StatusBar, Alert, Image, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { X, RotateCcw, Image as ImageIcon, Zap, ZapOff } from 'lucide-react-native';
+import { X, RotateCcw, Image as ImageIcon, Zap, ZapOff, Settings } from 'lucide-react-native';
 import { useThemedColors } from '@/lib/utils/theme';
 import { useTheme } from '@/context/theme-provider';
 import { useTabBar } from '@/context/tab-bar-provider';
@@ -98,14 +98,21 @@ export default function ScanScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== 'granted') {
-      Alert.alert(
-        'Permission Required',
-        'Please allow access to your photo library to select receipt images.',
-        [{ text: 'OK' }]
-      );
+      // Only show Settings option if user previously denied (can't ask again)
+      if (!canAskAgain) {
+        Alert.alert(
+          t('scan.galleryPermissionTitle'),
+          t('scan.galleryPermissionDeniedText'),
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            { text: t('scan.openSettings'), onPress: () => Linking.openSettings() },
+          ]
+        );
+      }
+      // If canAskAgain is true, the system dialog was just dismissed - don't show another prompt
       return;
     }
 
@@ -141,8 +148,10 @@ export default function ScanScreen() {
     );
   }
 
-  // Permission denied
+  // Permission not granted - check if we can still ask or if user explicitly denied
   if (!permission.granted) {
+    const canAskAgain = permission.canAskAgain;
+
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
@@ -151,13 +160,30 @@ export default function ScanScreen() {
             {t('scan.permissionTitle')}
           </Text>
           <Text style={[styles.permissionText, { color: colors.textSecondary }]}>
-            {t('scan.permissionText')}
+            {canAskAgain ? t('scan.permissionText') : t('scan.permissionDeniedText')}
           </Text>
-          <Pressable
-            onPress={requestPermission}
-            style={[styles.permissionButton, { backgroundColor: colors.primary }]}
-          >
-            <Text style={styles.permissionButtonText}>{t('common.continue')}</Text>
+          {canAskAgain ? (
+            // First time asking - show request button
+            <Pressable
+              onPress={requestPermission}
+              style={[styles.permissionButton, { backgroundColor: colors.primary }]}
+            >
+              <Text style={styles.permissionButtonText}>{t('scan.grantPermission')}</Text>
+            </Pressable>
+          ) : (
+            // User previously denied - show Settings button
+            <Pressable
+              onPress={() => Linking.openSettings()}
+              style={[styles.permissionButton, { backgroundColor: colors.primary }]}
+            >
+              <Settings size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.permissionButtonText}>{t('scan.openSettings')}</Text>
+            </Pressable>
+          )}
+          <Pressable onPress={handleClose} style={styles.cancelButton}>
+            <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
+              {t('common.cancel')}
+            </Text>
           </Pressable>
         </SafeAreaView>
       </View>
@@ -477,6 +503,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   permissionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,

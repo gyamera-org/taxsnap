@@ -66,7 +66,9 @@ export const en = {
     alignReceipt: 'Align your receipt within the frame',
     permissionTitle: 'Camera Access Required',
     permissionText: 'TaxSnap needs camera access to scan receipts and automatically extract tax deduction information.',
+    permissionDeniedText: 'Camera access was denied. To scan receipts, please enable camera access in Settings.',
     grantPermission: 'Enable Camera',
+    openSettings: 'Open Settings',
     // Scan options modal
     addReceipt: 'Add Receipt',
     takePhoto: 'Take Photo',
@@ -77,6 +79,7 @@ export const en = {
     uploadPDFDescription: 'Select a PDF receipt',
     galleryPermissionTitle: 'Photo Library Access Required',
     galleryPermissionText: 'TaxSnap needs access to your photo library to select receipt images.',
+    galleryPermissionDeniedText: 'Photo library access was denied. To select receipt images, please enable access in Settings.',
     pdfError: 'Failed to select PDF. Please try again.',
     scanComplete: 'Receipt scanned successfully',
     analysisFailed: 'Failed to analyze receipt',

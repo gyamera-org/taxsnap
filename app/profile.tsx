@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Image, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Image, Pressable, StyleSheet, ActivityIndicator, Linking, Alert } from 'react-native';
 import { useAuth } from '@/context/auth-provider';
 import { useAccount, useUpdateAccount } from '@/lib/hooks/use-accounts';
 import { toast } from 'sonner-native';
@@ -42,9 +42,20 @@ export default function ProfileScreen() {
   const pickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      toast.error('Sorry, we need camera roll permissions to upload an avatar');
+      // Only show Settings option if user previously denied (can't ask again)
+      if (!canAskAgain) {
+        Alert.alert(
+          t('profile.photoPermissionTitle', 'Photo Library Access Required'),
+          t('profile.photoPermissionDeniedText', 'Photo library access was denied. To upload an avatar, please enable access in Settings.'),
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            { text: t('scan.openSettings'), onPress: () => Linking.openSettings() },
+          ]
+        );
+      }
+      // If canAskAgain is true, user dismissed the dialog - don't show another prompt
       return;
     }
 
