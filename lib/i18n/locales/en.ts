@@ -67,7 +67,7 @@ export const en = {
     permissionTitle: 'Camera Access Required',
     permissionText: 'TaxSnap needs camera access to scan receipts and automatically extract tax deduction information.',
     permissionDeniedText: 'Camera access was denied. To scan receipts, please enable camera access in Settings.',
-    grantPermission: 'Enable Camera',
+    grantPermission: 'Continue',
     openSettings: 'Open Settings',
     // Scan options modal
     addReceipt: 'Add Receipt',
